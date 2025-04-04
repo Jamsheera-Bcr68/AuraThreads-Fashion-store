@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User Profile</title>
+  <link rel="stylesheet" href="/css/acount.css" />
+</head>
+
+<body>
+  <style>
+    #delete-address-modal {
+      width: 25em;
+      height: 18em;
+      margin-left: 40%;
+    }
+  </style>
+  <%- include('../partials/userHeader') %>
+
+    <!-- Container -->
+    <div class="container">
+      <div class="profile-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+          <div class="profile-pic">
+            <img src="<%= user.profilePicture || 'https://via.placeholder.com/100' %>" alt="Profile Picture">
+          </div>
+          <h3 class="user-name">
+            <%= user.fullName %>
+          </h3>
+          <ul class="sidebar-links">
+            <li>
+              <a href="#" class="active" onclick="showSection('profile-details')">Profile Details</a>
+            </li>
+            <li>
+              <a href="#" onclick="showSection('address-management')">Address Management</a>
+            </li>
+            <li>
+              <a href="#" onclick="showSection('order-history')">Order History</a>
+            </li>
+            <li>
+              <a href="#" onclick="showForgotPassword()">Change Password</a>
+            </li>
+            <li><a href="/logout">Logout</a></li>
+          </ul>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="main-content">
+          <!-- Profile Details Section -->
+          <div id="profile-details" class="content-section">
+            <h2 class="section-title">Profile Details</h2>
+            <form id="profile-form" action="/user/profile/update" method="POST" novalidate>
+              <div class="form-group">
+                <label for="full-name">Full Name</label>
+                <input type="text" id="full-name" name="fullName" value="<%= user.fullName %>">
+              </div>
+              <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" value="<%= user.email %>">
+              </div>
+              <div class="form-group">
+                <label for="phone">Phone Number</label>
+                <input type="tel" id="phone" name="phone" value="<%= user.phone %>">
+              </div>
+              <div class="form-group">
+                <label for="dob">Date of Birth</label>
+                <input type="date" id="dob" name="dob" value="<%= user.dob %>">
+              </div>
+              <button type="submit">Save Changes</button>
+            </form>
+          </div>
+
+          <!-- Address Management Section -->
+          <div id="address-management" class="content-section hide">
+            <h2 class="section-title">Address Management</h2>
+
+            <div id="address-list">
+              <% if (addresses && addresses.length> 0) { %>
+
+                <% addresses.forEach(function(address, index) { %>
+                  <!-- Address Card -->
+                  <div class="address-card">
+                    <div class="address-actions">
+                      <button class="edit-btn"
+                        onclick="editAddress('<%= address._id %>', '<%= address.label %>', '<%= address.line1 %>', '<%= address.line2 %>', '<%= address.city %>', '<%= address.state %>', '<%= address.zip %>', '<%= address.country %>', '<%= address.phone %>', '<%= address.isDefault ? true :false %>')">
+                        Edit
+                      </button>
+                      <button class="delete-btn" onclick="deleteAddress('<%= address._id %>')">
+                        Delete
+                      </button>
+                    </div>
+                    <% if (address.isDefault) { %>
+                      <h5>Default Address</h5>
+                      <% } %>
+                        <h4>
+                          <%= address.label %>
+                        </h4>
+                        <p>
+                          <%= address.line1 %>
+                            <%= address.line2 ? ', ' + address.line2 : '' %>
+                        </p>
+                        <p>
+                          <%= address.city %>, <%= address.state %>
+                              <%= address.zip %>
+                        </p>
+                        <p>
+                          <%= address.country %>
+                        </p>
+                        <p>Phone: <%= address.phone %>
+                        </p>
+                  </div>
+                  <% }); %>
+                    <% } else { %>
+                      <p>You don't have any saved addresses yet.</p>
+                      <% } %>
+            </div>
+
+            <button class="add-address-btn" onclick="showAddAddressForm()">
+              Add New Address
+            </button>
+          </div>
+
+          <!-- Add Address Form (Initially Hidden) -->
+          <div id="address-form" class="address-form">
+            <h3 id="address-form-title">Add New Address</h3>
+            <form id="address-form-element" action="/user/address/add" method="POST">
+              <input type="hidden" id="address-id" name="id" />
+              <div class="form-group">
+                <label for="address-label">Label (e.g., Home, Work)</label>
+                <input type="text" id="address-label" name="label">
+              </div>
+              <div class="form-group">
+                <label for="address-line1">Address Line 1</label>
+                <input type="text" id="address-line1" name="line1">
+              </div>
+              <div class="form-group">
+                <label for="address-line2">Address Line 2 (Optional)</label>
+                <input type="text" id="address-line2" name="line2">
+              </div>
+              <div class="form-group">
+                <label for="address-city">City</label>
+                <input type="text" id="address-city" name="city">
+              </div>
+              <div class="form-group">
+                <label for="address-state">State/Province</label>
+                <input type="text" id="address-state" name="state">
+              </div>
+              <div class="form-group">
+                <label for="address-zip">ZIP/Postal Code</label>
+                <input type="text" id="address-zip" name="zip">
+              </div>
+              <div class="form-group">
+                <label for="address-country">Country</label>
+                <input type="text" value="" name="country" id="address-country">
+
+              </div>
+              <div class="form-group">
+                <label for="address-phone">Phone Number</label>
+                <input type="tel" id="address-phone" name="phone">
+              </div>
+              <div class="form-group checkbox-group">
+                <input type="checkbox" id="default" name="isDefault" value="true">
+                <label for="default">Set as Default Address</label>
+              </div>
+              <div class="action-buttons">
+                <button type="button" class="btn-secondary" onclick="cancelAddressForm()">
+                  Cancel
+                </button>
+                <button type="submit">Save Address</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Edit Address Modal -->
+          <div id="address-edit-form" class="address-form">
+            <h3 id="address-form-title">Edit Address</h3>
+            <form id="edit-address-form" action="/user/address/edit" method="POST">
+              <input type="hidden" id="address-id" name="addressId" />
+
+              <div class="form-group">
+                <label for="address-label">Label</label>
+                <input type="text" id="edit-address-label" name="label" />
+              </div>
+
+              <div class="form-group">
+                <label for="address-line1">Address Line 1</label>
+                <input type="text" id="edit-address-line1" name="line1" />
+              </div>
+
+              <div class="form-group">
+                <label for="address-line2">Address Line 2</label>
+                <input type="text" id="edit-address-line2" name="line2" />
+              </div>
+
+              <div class="form-group">
+                <label for="address-city">City</label>
+                <input type="text" id="edit-address-city" name="city" />
+              </div>
+
+              <div class="form-group">
+                <label for="address-state">State/Province</label>
+                <input type="text" id="edit-address-state" name="state" />
+              </div>
+
+              <div class="form-group">
+                <label for="address-zip">ZIP/Postal Code</label>
+                <input type="text" id="edit-address-zip" name="zip" />
+              </div>
+
+              <div class="form-group">
+                <label for="address-country">Country</label>
+                <input type="text" id="edit-address-country" name="country" value="">
+
+              </div>
+
+              <div class="form-group">
+                <label for="address-phone">Phone Number</label>
+                <input type="tel" id="edit-address-phone" name="phone" />
+              </div>
+
+              <div class="form-group checkbox-group">
+                <input type="checkbox" id="edit-default" name="isDefault" value="true" />
+                <label for="default">Set as Default Address</label>
+              </div>
+
+              <div class="action-buttons">
+                <button type="button" class="btn-secondary" onclick="cancelEditAddressForm()">
+                  Cancel
+                </button>
+                <button type="submit">Save Address</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Order History Section -->
+          <div id="order-history" class="content-section hide">
+            <h2 class="section-title">Order History</h2>
+
+            <% if (orders && orders.length> 0) { %> <% orders.forEach(function(order) { %>
+                <!-- Order Card -->
+                <div class="order-card">
+                  <div class="order-header">
+                    <div>
+                      <strong>Order #<%= order.orderNumber %></strong>
+                      <div>
+                        Placed on: <%= new Date(order.orderDate).toLocaleDateString() %>
+                      </div>
+                    </div>
+                    <div>
+                      <span class="status">
+                        <%= order.status %>
+                      </span>
+                      <button class="btn-sm" onclick="showOrderDetails('<%= order.id %>')">
+                        View Details
+                      </button>
+                      <% if (order.canCancel) { %>
+                        <button class="btn-sm cancel-btn" onclick="cancelOrder('<%= order.id %>')">
+                          Cancel Order
+                        </button>
+                        <% } %>
+                    </div>
+                  </div>
+                  <div class="order-items">
+                    <div>
+                      <%= order.itemCount %> items | Total: $<%= order.total.toFixed(2) %>
+                    </div>
+                    <% if (order.estimatedDelivery) { %>
+                      <div>
+                        Estimated delivery: <%= new Date(order.estimatedDelivery).toLocaleDateString() %>
+                      </div>
+                      <% } %>
+                  </div>
+                </div>
+                <% }); %>
+                  <% } else { %>
+                    <p>You haven't placed any orders yet.</p>
+                    <% } %>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Forgot Password Modal -->
+    <div id="forgot-password-modal" class="modal">
+      <div class="modal-content">
+        <span class="close" onclick="closeForgotPassword()">&times;</span>
+        <h2 class="modal-title">Change Password</h2>
+
+        <form id="forgot-password-form" action="/profile/change-password" method="POST">
+          <div class="form-group">
+            <label for="current-password">Current Password</label>
+            <input type="password" id="current-password" name="currentPassword" required />
+          </div>
+
+          <div class="form-group">
+            <label for="new-password">New Password</label>
+            <input type="password" id="new-password" name="newPassword" required />
+          </div>
+
+          <div class="form-group">
+            <label for="confirm-password">Confirm New Password</label>
+            <input type="password" id="confirm-password" name="confirmPassword" required />
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" onclick="closeForgotPassword()">
+              Cancel
+            </button>
+            <button type="submit" class="btn-primary">Change Password</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Delete Address Confirmation Modal -->
+    <div id="delete-address-modal" class="modal">
+      <div class="modal-content">
+        <span class="close" onclick="closeDeleteModal()">&times;</span>
+        <h2>Confirm Deletion</h2>
+        <p>Are you sure you want to delete this address?</p>
+        <form id="delete-address-form" action="/user/address/delete" method="delete">
+          <input type="hidden" id="delete-address-id" name="addressId" />
+          <div class="action-buttons">
+            <button type="button" class="btn-secondary" onclick="closeDeleteModal()">
+              Cancel
+            </button>
+            <button type="submit" class="cancel-btn">Delete</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Cancel Order Confirmation Modal -->
+    <div id="cancel-order-modal" class="modal">
+      <div class="modal-content">
+        <span class="close" onclick="closeCancelOrderModal()">&times;</span>
+        <h2>Confirm Cancellation</h2>
+        <p>Are you sure you want to cancel this order?</p>
+        <form id="cancel-order-form" action="/order/cancel" method="POST">
+          <input type="hidden" id="cancel-order-id" name="orderId" />
+          <div class="form-group">
+            <label for="cancel-reason">Reason for cancellation</label>
+            <select id="cancel-reason" name="reason">
+              <option value="">Select a reason</option>
+              <% cancelReasons.forEach(function(reason) { %>
+                <option value="<%= reason.value %>">
+                  <%= reason.label %>
+                </option>
+                <% }); %>
+            </select>
+          </div>
+          <div class="form-group" id="other-reason-group" style="display: none">
+            <label for="other-reason">Please specify</label>
+            <textarea id="other-reason" name="otherReason" rows="3"></textarea>
+          </div>
+          <div class="action-buttons">
+            <button type="button" class="btn-secondary" onclick="closeCancelOrderModal()">
+              Keep Order
+            </button>
+            <button type="submit" class="cancel-btn">Cancel Order</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+      // Initialize the page
+      document.addEventListener("DOMContentLoaded", function () {
+        // Show the profile details section by default
+        showSection("profile-details");
+
+        // Add event listener for cancel reason dropdown
+        var cancelReasonSelect = document.getElementById("cancel-reason");
+        if (cancelReasonSelect) {
+          cancelReasonSelect.addEventListener("change", function () {
+            if (this.value === "other") {
+              document.getElementById("other-reason-group").style.display =
+                "block";
+            } else {
+              document.getElementById("other-reason-group").style.display =
+                "none";
+            }
+          });
+        }
+
+
+
+      });
+
+      // profile form validation
+      const profileForm = document.getElementById('profile-form')
+      document.getElementById('profile-form').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        console.log('Profile submit button clicked');
+
+        const formData = new FormData(this);
+
+        // Log Form Data
+        console.log('Form Data Entries:');
+        for (let [key, value] of formData.entries()) {
+          console.log(`${key}: ${value}`);
+        }
+
+        // Convert FormData to JSON
+        let jsonObject = {};
+        formData.forEach((value, key) => jsonObject[key] = value);
+
+        try {
+          const response = await fetch('/user/profile/update', {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(jsonObject)
+          });
+
+          const data = await response.json();
+
+          if (data && data.success) {
+            Swal.fire('Profile updated Successfully');
+          } else {
+            Swal.fire(data.message);
+          }
+        } catch (error) {
+          Swal.fire('Something went wrong. Please try again.');
+          console.error('Fetch error:', error);
+        }
+      });
+
+      // add addressform
+      const addAddressForm=document.getElementById('address-form-element')
+      addAddressForm.addEventListener('submit',function(e){
+        e.preventDefault()
+        console.log('add address form submitted');
+
+        const formData=new FormData(this)
+        let formObject = {};
+        formData.forEach((value, key) => { formObject[key] = value });
+
+        fetch('/user/address/add',{
+          method:"POST",
+          headers:{"content-Type":"application/json"},
+          body:JSON.stringify(formObject)
+        }).then(response=>response.json())
+        .then(data=>{
+          if(data && data.success){
+            Swal.fire(data.message)
+            cancelAddressForm()
+          }else{
+            Swal.fire(data.message)
+            cancelAddressForm()
+          }
+        }).catch(error=>{
+          Swal.fire('Something Went Wrong')
+          console.log('error is ',error);
+          cancelAddressForm()
+        })
+      })
+      //DELETE ADDRESS
+
+      const deleteAddressForm = document.getElementById('delete-address-form')
+
+
+      // Show/hide sections
+      function showSection(sectionId) {
+        // Hide all sections
+        document.querySelectorAll(".content-section").forEach((section) => {
+          section.classList.add("hide");
+        });
+
+        //hide forgot password modal
+        let forgotPasswordModal = document.getElementById(
+          "forgot-password-modal"
+        );
+        if (forgotPasswordModal) {
+          forgotPasswordModal.style.display = "none";
+        }
+        // Remove active class from all sidebar links
+        document.querySelectorAll(".sidebar-links a").forEach((link) => {
+          link.classList.remove("active");
+        });
+
+        // Show the selected section
+        document.getElementById(sectionId).classList.remove("hide");
+
+        // Add active class to the clicked link
+        event.target.classList.add("active");
+      }
+
+      // Address Management Functions
+      function showAddAddressForm() {
+        document.getElementById("address-form-title").textContent =
+          "Add New Address";
+        document.getElementById("address-form").classList.add("show");
+        document.getElementById("address-id").value = "";
+        document.getElementById("address-form-element").reset();
+      }
+      let editAddressId
+      function editAddress(id, label, line1, line2, city, state, zip, country, phone, isDefault) {
+        console.log('edit button clicked');
+        editAddressId = id
+        console.log("Editing address:", id);
+        console.log(id, label, line1, line2, city, state, zip, country, phone, isDefault);
+
+        // Set values in the modal
+        // document.getElementById("address-id").value = id;
+        document.getElementById("edit-address-label").value = label;
+        document.getElementById("edit-address-line1").value = line1;
+        document.getElementById("edit-address-line2").value = line2 || '';
+        document.getElementById("edit-address-city").value = city;
+        document.getElementById("edit-address-state").value = state;
+        document.getElementById("edit-address-zip").value = zip;
+        document.getElementById("edit-address-country").value = country;
+        document.getElementById("edit-address-phone").value = phone;
+
+        // Handle checkbox for default address
+        document.getElementById("edit-default").checked = isDefault;
+
+        // Show modal
+        document.getElementById("address-edit-form").classList.add("show");
+      }
+
+           // handle edit form submission
+      const editAddressForm = document.getElementById('edit-address-form')
+      editAddressForm.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        console.log('Edit form submitted');
+
+        let formData = new FormData(this);
+        let formObject = {};
+        formData.forEach((value, key) => { formObject[key] = value });
+
+        try {
+          fetch(`/user/address/edit/${editAddressId}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(formObject)
+          }).then(response => response.json())
+            .then(data => {
+              if (data && data.success) {
+                Swal.fire(data.message)
+                cancelEditAddressForm()
+              } else {
+                Swal.fire(data.message)
+              }
+            }).catch(error => {
+              console.log('error is', error);
+              Swal.fire("Some thing went wrong")
+            })
+
+        } catch (error) {
+          Swal.fire("error in fetching address", error)
+        }
+      })
+      function cancelAddressForm() {
+        document.getElementById("address-form").classList.remove("show");
+      }
+
+      //close edit address modal
+      function cancelEditAddressForm() {
+        document.getElementById("address-edit-form").classList.remove("show");
+      }
+      let deleteAddressId
+      function deleteAddress(addressId) {
+        // Show the delete confirmation modal
+        console.log(addressId, 'is delete adressid');
+        deleteAddressId = addressId
+        document.getElementById("delete-address-modal").style.display = "block";
+        document.getElementById("delete-address-id").value = addressId;
+
+      }
+
+      function closeDeleteModal() {
+        document.getElementById("delete-address-modal").style.display = "none";
+      }
+
+      // delete Address function
+      deleteAddressForm.addEventListener('submit', async function (event) {
+        event.preventDefault()
+        console.log('delete address button clicked');
+        const addressId = this.getAttribute('data-id')
+        console.log('addressId from delete function is ', deleteAddressId);
+
+        fetch(`/user/address/delete/${deleteAddressId}`, {
+          method: 'delete',
+
+        }).then(response => response.json())
+          .then(data => {
+            if (data && data.success) {
+              Swal.fire('Address deleted successfully')
+              closeDeleteModal()
+            } else (
+              Swal.fire('Error in deleteing address')
+
+            )
+          }).catch(error => {
+            Swal.fire('Some thing went wrong')
+          })
+
+      })
+
+      // Password Functions
+      function showForgotPassword() {
+        document.getElementById("forgot-password-modal").style.display =
+          "block";
+      }
+
+      function closeForgotPassword() {
+        document.getElementById("forgot-password-modal").style.display = "none";
+      }
+ //     //handle forgot password
+      const forgotForm=document.getElementById('forgot-password-form')
+      forgotForm.addEventListener('submit',function(e){
+        e.preventDefault()
+        console.log('forgot form submitted');
+        
+        const currentPassword=document.getElementById('current-password').value
+        const newPassword=document.getElementById('new-password').value
+        const confirmPassword=document.getElementById('confirm-password').value
+        console.log('newPassword',newPassword);
+          console.log('confirmPassword',confirmPassword);
+        if(newPassword!==confirmPassword){
+          console.log('passwords are not matching');
+           Swal.fire('Passwords are not matching')
+        }
+        if(currentPassword=='' || newPassword=='' ||confirmPassword==''){
+          Swal.fire('All fields are required')
+        }
+
+        fetch('/user/profile/change-password',{
+          method:"POST",
+          headers:{"content-Type":"application/json"},
+          body:JSON.stringify({currentPassword,newPassword,confirmPassword})
+        }).then(response=>response.json())
+        .then(data=>{
+          if(data && data.success){
+            Swal.fire(data.message)
+          }else{
+            Swal.fire(data.message)
+          }
+        }).catch(error=>{
+          Swal.fire("Something Went Wrong")
+          console.log('error is ',error);
+          
+        })
+      })
+
+      // Order Functions
+      function showOrderDetails(orderId) {
+        // Redirect to order details page
+        window.location.href = "/order/" + orderId;
+      }
+
+      function cancelOrder(orderId) {
+        // Show the cancel order confirmation modal
+        document.getElementById("cancel-order-modal").style.display = "block";
+        document.getElementById("cancel-order-id").value = orderId;
+      }
+
+      function closeCancelOrderModal() {
+        document.getElementById("cancel-order-modal").style.display = "none";
+      }
+    </script>
+</body>
+
+</html>

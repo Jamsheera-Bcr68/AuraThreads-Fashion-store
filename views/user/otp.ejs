@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>OTP Verification</title>
+  <link rel="stylesheet" href="/css/otp.css">
+</head>
+<body>
+  <div class="otp-container">
+    <h2>Enter OTP</h2>
+    <span id="textSpan">An OTP is send to your email</span>
+    <form id="otpForm" action="/user/verifyOtp" method="POST">
+      <div class="otp-inputs">
+        <input class="otp-field" type="text" name="otp[]" maxlength="1" required />
+        <input class="otp-field" type="text" name="otp[]" maxlength="1" required />
+        <input class="otp-field" type="text" name="otp[]" maxlength="1" required />
+        <input class="otp-field" type="text" name="otp[]" maxlength="1" required />
+        <input class="otp-field" type="text" name="otp[]" maxlength="1" required />
+        <input class="otp-field" type="text" name="otp[]" maxlength="1" required />
+      </div>
+      <button type="submit">Verify</button>
+    </form>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    const inputs = document.querySelectorAll('.otp-field');
+  
+    // Auto-move & backspace navigation
+    inputs.forEach((input, index) => {
+      input.addEventListener('input', () => {
+        if (input.value.length === 1 && index < inputs.length - 1) {
+          inputs[index + 1].focus();
+        }
+      });
+  
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && !input.value && index > 0) {
+          inputs[index - 1].focus();
+        }
+      });
+    });
+  
+    // OTP form submission
+    const otpForm = document.getElementById('otpForm');
+    otpForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      console.log('OTP form submitted');
+  
+      const otpInputs = document.querySelectorAll('.otp-field');
+      let otp = "";
+  
+      otpInputs.forEach(input => {
+        otp += input.value.trim();
+      });
+  
+      if (otp.length !== 6 || isNaN(otp)) {
+        Swal.fire("Please enter a valid 6-digit OTP");
+        return;
+      }
+  
+      fetch('/user/verifyOtp', {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ otp }) // sending the joined string
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.success) {
+            Swal.fire("Success!", data.message, "success").then(() => {
+              window.location.href = '/user/login';
+            });
+          } else {
+            Swal.fire("Failed", data.message, "error").then(() => {
+              window.location.href = '/user/register';
+            });
+          }
+        })
+        .catch(error => {
+          Swal.fire("Something went wrong");
+          console.error(error);
+        });
+    });
+  </script>
+  
+</body>
+</html>

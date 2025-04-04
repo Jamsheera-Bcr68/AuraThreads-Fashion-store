@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Details</title>
+  
+    <link rel="stylesheet" href="/css/singleproduct.css">
+</head>
+<body>
+    <div class="product-container">
+        <div class="product-section">
+            <div class="breadcrumbs">Home > <%= singleProduct.category %> > <%= singleProduct.productName %>
+            </div>
+              <div class="product-image">
+            <img src="<%= singleProduct.image %>" alt="<%= singleProduct.productName %>" onclick="zoomImage(this)">
+        </div>
+
+        <div class="product-info">
+            <% singleProduct.reviews = ['good', 'very good', 'super'] %>
+            <% singleProduct.highlights = ['good material', 'recent price', 'long lasting'] %>
+            <% singleProduct.relatedProducts = [{ name: 'churidar', image: singleProduct.images[0] }] %>
+
+            <h1><%= singleProduct.productName %></h1>
+            <div class="price">$<%= singleProduct.price %> <span class="discount">(<%= singleProduct.discount %>% Off)</span></div>
+            <div class="ratings">⭐⭐⭐⭐☆ (<%= singleProduct.reviews.length %> Reviews)</div>
+            <div class="stock"><%= singleProduct.stock > 0 ? 'In Stock' : 'Out of Stock' %></div>
+
+            <p><b>Highlights:</b></p>
+            <ul class="highlight-list">
+                <% singleProduct.highlights.forEach(highlight => { %>
+                    <li><%= highlight %></li>
+                <% }) %>
+            </ul>
+
+            <p><b>Reviews:</b></p>
+            <div class="reviews">
+                <% singleProduct.reviews.forEach(review => { %>
+                    <p><b><%= review %></b></p>
+                <% }) %>
+            </div>
+
+            <p><b>Related Products:</b></p>
+            <div class="related-products">
+                <% singleProduct.relatedProducts.forEach(related => { %>
+                    <img src="<%= related.image %>" alt="<%= related.name %>">
+                <% }) %>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <script src="/js/singleProduct.js"></script>
+    <script>
+        function zoomImage(img) {
+            const zoomedImg = document.createElement('div');
+            zoomedImg.innerHTML = `<img src="${img.src}" style="width: 100%; height: auto;">`;
+            zoomedImg.style.position = 'fixed';
+            zoomedImg.style.top = '0';
+            zoomedImg.style.left = '0';
+            zoomedImg.style.width = '100%';
+            zoomedImg.style.height = '100%';
+            zoomedImg.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
+            zoomedImg.style.display = 'flex';
+            zoomedImg.style.alignItems = 'center';
+            zoomedImg.style.justifyContent = 'center';
+            zoomedImg.style.cursor = 'pointer';
+            zoomedImg.onclick = () => document.body.removeChild(zoomedImg);
+            document.body.appendChild(zoomedImg);
+        }
+    </script>
+</body>
+</html>

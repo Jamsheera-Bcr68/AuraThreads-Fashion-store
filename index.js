@@ -1,0 +1,95 @@
+
+ const express = require('express');
+const app = express();
+const path = require('path');
+const dbConnect = require('./config/dbConnect');
+const product=require('./model/productModel')
+const dotenv=require('dotenv').config()
+const passport=require('./config/passport')
+const session=require('express-session')
+const flash=require('connect-flash')
+const cors=require('cors')
+const nocache = require("nocache");
+
+
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json())
+dbConnect();
+
+//app.set('view options', { compileDebug: true, debug: true });
+
+app.use("/uploads", express.static("uploads"));
+
+// Set the view engine to EJS
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
+
+
+// Serve static files like CSS and images
+app.use(express.static(path.join(__dirname, 'public')));
+app.use('/css',express.static(__dirname+'public/css'))
+app.use('/js',express.static(__dirname+'public/js'))
+app.use('/images',express.static(__dirname+'public/images'))
+app.use(session({
+    secret: 'admin',  
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: false } 
+}))
+
+
+
+app.use(cors()) 
+app.use(passport.initialize());
+app.use(passport.session())
+app.use(nocache());
+
+// Apply no-cache headers middleware
+app.use((req, res, next) => {
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
+  next();
+});
+
+//using flash for temporarly storing messages when redirecting success,warning,failure situations
+app.use(flash());
+app.use((req, res, next) => {
+  res.locals.errorMessage = req.flash('errorMessage'); // Store messages in locals
+  res.locals.successMessage = req.flash('successMessage');
+ 
+  
+  next();
+});
+
+
+//adminroute
+const adminRoute=require('./routes/admin');
+const userRoute=require('./routes/user');
+const productRoute=require('./routes/product')
+const searchRoute=require('./routes/search')
+
+
+
+app.use('/admin',adminRoute)
+app.use('/user',userRoute)
+
+app.get("/google/callback",
+  passport.authenticate("google", { failureRedirect: "/register" }),(req, res) => {
+    console.log("Google authentication successful!--------");
+    res.redirect("/user/home"); // Redirect to the appropriate frontend route
+  }
+);
+
+app.use('/product',productRoute)
+app.use('/search',searchRoute)
+
+
+
+
+
+// Start the server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+});

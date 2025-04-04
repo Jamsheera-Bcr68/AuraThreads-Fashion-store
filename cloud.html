@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Verify OTP</title>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+ <link rel="stylesheet" href="/css/otp.css">
+</head>
+<body>
+
+  <div class="otp-container">
+    <h2>OTP Verification</h2>
+    <p>Please enter the OTP sent to your email</p>
+    <input type="text" id="otp" placeholder="Enter OTP" required />
+    <button onclick="verifyOtp()">Verify</button>
+  </div>
+
+  <script>
+    function verifyOtp() {
+      const otp = document.getElementById("otp").value;
+
+      if (otp.trim() === "") {
+        Swal.fire("Please enter the OTP");
+        return;
+      }
+
+      fetch("/user/verify-otp", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ otp })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          Swal.fire("OTP Verified!", data.message, "success")
+            .then(() => {
+              window.location.href = "/login.html"; // or your actual login page
+            });
+        } else {
+          Swal.fire("Failed", data.message, "error");
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        Swal.fire("Error", "Something went wrong", "error");
+      });
+    }
+  </script>
+
+</body>
+</html>

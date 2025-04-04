@@ -1,0 +1,147 @@
+
+    <!DOCTYPE html>
+    <html lang="en">
+ 
+    <head>
+    <title>Aura Threads</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Mukta:300,400,700"> 
+    <link rel="stylesheet" href="/icomoon/style.css">
+
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/magnific-popup.css">
+    <link rel="stylesheet" href="/css/jquery-ui.css">
+    <link rel="stylesheet" href="/css/owl.carousel.min.css">
+    <link rel="stylesheet" href="/css/owl.theme.default.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="/css/aos.css">
+
+    <link rel="stylesheet" href="/css/style.css">
+    
+  </head>
+    
+  <body>
+  <style>
+    .site-navbar .site-navbar-top {
+  background: #cbb6ac;
+ }
+   .nav-text{
+        font-weight: bold;
+    }
+    .js-logo-clone{
+        font-weight: bold;
+        color: rgb(1, 135, 197);
+        font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    }
+    header{
+      padding-top: 0;
+    }
+  </style>
+  <div class="site-wrap">
+    <header class="site-navbar" role="banner">
+      <div class="site-navbar-top">
+        <div class="container">
+          <div class="row align-items-center">
+            <div class="col-6 col-md-4 order-2 order-md-1 site-search-icon text-left">
+              <form action="/product/productList" method="GET" class="site-block-top-search d-flex align-items-center">
+                <span class="icon icon-search2 me-2"></span>
+            
+                <% if (categoryId) { %>
+                    <input type="hidden" name="categoryId" value="<%= categoryId %>">
+                <% } %>
+            
+                <% if (priceRange) { %>
+                    <input type="hidden" name="priceRange" value="<%= priceRange %>">
+                <% } %>
+            
+                <% if (sort) { %>
+                    <input type="hidden" name="sort" value="<%= sort %>">
+                <% } %>
+            
+                <input type="text" id="searchInput" name="query" class="form-control border-0 flex-grow-1"
+                    placeholder="Search" value="<%= query || '' %>">
+            
+                <button type="button" onclick="clearSearch()" class="btn btn-light btn-sm ms-2">Clear</button>
+            </form>
+          </div>
+          
+            <div class="col-12 mb-3 mb-md-0 col-md-4 order-1 order-md-2 text-center">
+              <div class="site-logo">
+                <a href="/user/home" class="js-logo-clone">Aura Threads</a>
+              </div>
+            </div>
+
+            <div class="col-6 col-md-4 order-3 order-md-3 text-right">
+              <div class="site-top-icons">
+                <ul>
+                  <li>
+                    <li>
+                      <a href="/user/account?userId=<%= user ? user._id : '' %>">
+                        <span class="icon icon-person"></span>
+                      </a>
+                    </li>
+                  <li><a href="#"><span class="icon icon-heart-o"></span></a></li>
+                  <li>
+                    <a href="/user/cart" class="site-cart">
+                      <span class="icon icon-shopping_cart"></span>
+                      <% if (cartCount && cartCount > 0) { %>
+                        <span class="count"><%= cartCount %></span>
+                    <% } %>
+                    </a>
+                  </li> 
+                  <li class="d-inline-block d-md-none ml-md-0"><a href="#" class="site-menu-toggle js-menu-toggle"><span class="icon-menu"></span></a></li>
+                </ul>
+              </div> 
+            </div>
+
+          </div>
+        </div>
+      </div> 
+      <nav class="site-navigation text-right text-md-center" role="navigation">
+        <div class="container">
+          <ul class="site-menu js-clone-nav d-none d-md-block">
+            <li class="has-children active">
+              <a class="nav-text" href="/user/home">Home</a>
+              <ul class="dropdown">
+                <li><a href="#">Menu One</a></li>
+                <li><a href="#">Menu Two</a></li>
+                <li><a href="#">Menu Three</a></li>
+                <li class="has-children">
+                  <a href="#">Sub Menu</a>
+                  <ul class="dropdown">
+                    <li><a href="#">Menu One</a></li>
+                    <li><a href="#">Menu Two</a></li>
+                    <li><a href="#">Menu Three</a></li>
+                  </ul>
+                </li>
+              </ul>
+            </li>
+            <li class="has-children">
+              <a class="nav-text" href="about.html">About</a>
+              <ul class="dropdown">
+                <li><a href="#">Menu One</a></li>
+                <li><a href="#">Menu Two</a></li>
+                <li><a href="#">Menu Three</a></li>
+              </ul>
+            </li>
+            <li><a class="nav-text" href="/product/productList">Shop</a></li>
+            <li><a class="nav-text" href="#">Catalogue</a></li>
+            <li><a class="nav-text" href="#">New Arrivals</a></li>
+            <li><a class="nav-text" href="contact.html">Contact</a></li>
+          </ul>
+        </div>
+      </nav>
+    </header>
+
+    <script>
+      function clearSearch(){
+        document.getElementById('searchInput').value='' // clear search bar
+        document.querySelector("form").submit()
+      }
+    </script>
+</body>
+ </html>

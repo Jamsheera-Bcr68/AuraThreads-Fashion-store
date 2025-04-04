@@ -1,0 +1,279 @@
+
+<head>
+    <link rel="stylesheet" href="/css/productList.css">
+    
+</head>
+<body>
+    <style>
+       .card-img-top{
+        width: auto;
+        height: auto;
+       }
+    </style>
+    <%- include('../partials/userHeader') %>
+
+    <div class="hero-section">
+        <div class="container text-center">
+            <h1 class="display-5 fw-bold"><%= title %></h1>
+            <p class="lead">Discover our latest styles for every occasion</p>
+        </div>
+    </div>
+
+    <div class="container py-2">
+
+        <div class="row">
+            <div class="col-lg-3 mb-4">
+                <div class="card p-3">
+                   <form action="/product/productList" method="get">
+                    <h5>Filter Collection</h5>
+                    <hr>
+                    <!-- Hidden Inputs to Preserve categoryId and priceRange -->
+                    <input type="hidden" name="sort" value="<%= sort %>">
+                    <input type="hidden" name="query" value="<%= query %>">
+    
+                     <!--categories-->
+                    <div class="mb-4">
+                        <h6 class="filter-title">Categories</h6>
+                    
+                        <% categories.forEach(category => { %>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="<%= category._id %>" name="categoryId" value="<%= category._id %>">
+                                <label class="form-check-label" for="<%= category._id %>">
+                                    <%= category.categoryName %>
+                                </label>
+                            </div>
+                        <% }) %>
+                    </div>
+                    <!--price ranges-->
+                    <div class="mb-4">
+                        <h6 class="filter-title">Price Range</h6>
+                    
+                        <% const priceRanges = ["0-200", "200-400", "400-600", "600-800", "800-1000", "1000-2000"]; %>
+                    
+                        <% priceRanges.forEach((range, index) => { %>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="priceRange" value="<%= range %>" id="price<%= index %>">
+                                <label class="form-check-label" for="price<%= index %>">
+                                    ₹<%= range.replace("-", " - $") %>
+                                </label>
+                            </div>
+                        <% }) %>
+                    </div>
+                   
+                    <!--
+                    <div class="mb-4">
+                        <h6 class="filter-title">Size</h6>
+                        <div class="d-flex flex-wrap gap-2 mb-2">
+                            <button class="btn btn-sm btn-outline-secondary">XS</button>
+                            <button class="btn btn-sm btn-outline-secondary">S</button>
+                            <button class="btn btn-sm btn-outline-secondary">M</button>
+                            <button class="btn btn-sm btn-outline-secondary">L</button>
+                            <button class="btn btn-sm btn-outline-secondary">XL</button>
+                            <button class="btn btn-sm btn-outline-secondary">XXL</button>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h6 class="filter-title">Colors</h6>
+                        <div>
+                            <span class="color-option" style="background-color: #000000;"></span>
+                            <span class="color-option" style="background-color: #FFFFFF;"></span>
+                            <span class="color-option" style="background-color: #FF0000;"></span>
+                            <span class="color-option" style="background-color: #0000FF;"></span>
+                            <span class="color-option" style="background-color: #FFC0CB;"></span>
+                            <span class="color-option" style="background-color: #008000;"></span>
+                            <span class="color-option" style="background-color: #808080;"></span>
+                            <span class="color-option" style="background-color: #FFFF00;"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h6 class="filter-title">Price Range</h6>
+                        <input type="range" class="form-range" min="0" max="500" id="priceRange">
+                        <div class="d-flex justify-content-between">
+                            <span>$0</span>
+                            <span>$500</span>
+                        </div>
+                    </div>
+                    -->
+                    <button type="submit" class="  btn btn-dark w-100" >Apply Filters</button>
+                </form>
+                </div>
+            </div>
+
+            <div class="col-lg-9">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <p class="mb-0">Showing <span id="productCount"><%= products.length %></span> dresses</p>
+                    <form action="/product/productList" method="get">
+                        <div class="d-flex gap-2">
+                            <!-- Hidden Inputs to Preserve categoryId and priceRange -->
+                            <input type="hidden" name="categoryId" value="<%= categoryId %>">
+                            <input type="hidden" name="query" value="<%= query %>">
+                             <input type="hidden" name="priceRange" value="<%= priceRange %>">
+                            <select class="form-select form-select-sm" name="sort" id="sortSelect" style="width: auto;">
+                                <option value="">Sort By </option>
+                                <option value="newest" >Newest First</option>
+                                <option value="lowToHigh">Price: Low to High</option>
+                                <option value="highToLow"%>>Price: High to Low</option>
+                                <option value="az" >A - Z</option>
+                                <option value="za" >Z - A</option>
+                            </select>
+                        </div>
+                    </form>
+                    
+                    
+                </div>
+              <% products %>
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                    <% products.forEach(function(product) { %>
+                        <div class="col">
+                            <div class="card h-100">
+                                <div class="position-relative">
+                                    <a href="/product/products/<%= product._id %>"><img  src="<%= product.images[0] %>" class=" card-img-top" alt="<%= product.productName %>"></a>
+                                    <% if (product.sale) { %>
+                                        <span class="badge bg-danger">SALE</span>
+                                    <% } %>
+                                    <div class="wishlist-icon">
+                                        <i class="far fa-heart"></i>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    
+                                    <h5 class="card-title"><%= product.productName %></h5>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <div>
+                                            <% if (product.salePrice) { %>
+                                                <span class="text-decoration-line-through text-muted">$<%= product.price.toFixed(2) %></span>
+                                                <span class="text-danger fw-bold ms-2">$<%= product.salePrice.toFixed(2) %></span>
+                                            <% } else { %>
+                                                <span class="fw-bold">$<%= product.price.toFixed(2) %></span>
+                                            <% } %>
+                                        </div>
+                                        <div class="d-flex align-items-center">
+                                            <div class="rating-box ratings" id="product-rating">
+                                                <span class="rating-number">5</span>
+                                                <span class="rating-star">★</span>
+                                              </div>
+                                            
+                                           <!--<small class="text-muted ms-1">(<%= product.reviews %>)</small>--> 
+                                        </div>
+                                    </div>
+                                    <p class="card-text small text-muted"><%= product.description.substring(0, 60) %>...</p>
+                                   <div class="mt-2 mb-3">  
+                                        <small class="text-muted">Available sizes: S,M,L,XL</small>
+                                        
+                                      </div>
+                                </div>
+                                <div class="card-footer bg-transparent border-top-0">
+                                    <div class="d-grid">
+                                        <button data-id="<%= product._id %>"  class="btn addToCart bg-success text-white">Add to Cart</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <% }); %>
+                </div>
+
+                <nav class="mt-5">
+                    <ul class="pagination justify-content-center">
+                        
+                        <!-- Previous Button -->
+                        <nav>
+                            <ul class="pagination justify-content-center">
+                                <% if (currentPage > 1) { %>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=<%= currentPage - 1 %>&categoryId=<%= categoryId %>&priceRange=<%= priceRange %>&sort=<%= sort %>&query=<%= query %>">Previous</a>
+                                    </li>
+                                <% } %>
+                        
+                                <% for (let i = 1; i <= totalPages; i++) { %>
+                                    <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                                        <a class="page-link" href="?page=<%= i %>&categoryId=<%= categoryId %>&priceRange=<%= priceRange %>&sort=<%= sort %>&query=<%= query %>"><%= i %></a>
+                                    </li>
+                                <% } %>
+                        
+                                <% if (currentPage < totalPages) { %>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=<%= currentPage + 1 %>&categoryId=<%= categoryId %>&priceRange=<%= priceRange %>&sort=<%= sort %>&query=<%= query %>">Next</a>
+                                    </li>
+                                <% } %>
+                            </ul>
+                        </nav>
+                        
+                    </ul>
+                </nav>
+                
+            </div>
+        </div>
+    </div>
+
+    <%- include('../partials/userFooter') %>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+      
+      const cartButton=document.querySelectorAll('.addToCart')
+      cartButton.forEach(btn=>btn.addEventListener('click',function(){
+        const productId=this.getAttribute('data-id')
+        console.log('product id is',productId);
+
+        fetch('/user/cart/add',{
+            method:'post',
+            headers:{'content-Type':'application/json'},
+            body:JSON.stringify({productId,quantity:Number(1)})
+        }).then(response=>response.json())
+        .then(data=>{
+            if(data && data.success){
+                Swal.fire(data.message)
+            }else{
+                Swal.fire(data.message)
+            }
+        })
+        
+       
+      }))
+      
+        
+     
+        document.getElementById('sortSelect').addEventListener('change', function () {
+        this.form.submit(); 
+        });
+                           
+        /* Sample JavaScript for the EJS template */
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Dress shop page loaded with <%= products.length %> dresses');
+            
+            // Toggle wishlist hearts
+            const wishlistIcons = document.querySelectorAll('.wishlist-icon');
+            wishlistIcons.forEach(icon => {
+                icon.addEventListener('click', function() {
+                    const heart = this.querySelector('i');
+                    if (heart.classList.contains('far')) {
+                        heart.classList.remove('far');
+                        heart.classList.add('fas');
+                        heart.style.color = '#dc3545';
+                    } else {
+                        heart.classList.remove('fas');
+                        heart.classList.add('far');
+                        heart.style.color = '';
+                    }
+                });
+            });
+            
+            // Example of how you might handle add to cart functionality
+            const addToCartButtons = document.querySelectorAll('.btn-outline-primary');
+            addToCartButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    const productCard = e.target.closest('.card');
+                    const productName = productCard.querySelector('.card-title').textContent;
+                    console.log(`Added ${productName} to bag`);
+                    // Here you would typically make an AJAX call to add to cart
+                });
+            });
+        });
+    </script>
+    <script src="/js/jquery.magnific-popup.min.js"></script>
+    <script src="/js/aos.js"></script>
+    <script src="/js/main.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

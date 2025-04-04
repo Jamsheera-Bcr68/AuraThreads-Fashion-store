@@ -1,0 +1,65 @@
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <a class="navbar-brand title" href="/"><%= title %> </a>
+
+    <!--search bar-->
+    <div class="product-search-bar ms-5 bg-white d-flex  align-items-center ">
+      <input type="text" id="searchInput" class="form-control " placeholder="Search" />
+  
+      <!-- Search Button -->
+      <button class="searchbtn btn btn-white mx-1" id="searchbtn" onclick="searchProducts()">🔍</button>
+  
+      <!-- Clear Button -->
+      <button class="clearbtn btn btn-white" id="clearbtn" onclick="clearSearch()">✖</button>
+  </div>
+  
+  <!--logout button-->
+    <div class="ms-auto">
+      <button type="button" style="margin-right: 1rem;" class="btn btn-danger">Logout</button>
+  </div>
+  </nav>
+  
+  <script src="/js/management.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <script>
+   
+   function clearSearch(){
+    document.getElementById('searchInput').value=''
+   }
+    async function searchProducts() {
+    const query = document.getElementById('searchInput').value;
+    console.log('query is '+query);
+    const currentPage =window.location.pathname.split('/').pop()
+    console.log('current page is '+currentPage);
+    
+    let searchType='products'
+    if(currentPage.includes('users')){
+      searchType='users'
+    }
+    if(currentPage.includes('category')){
+      searchType='category'
+    }
+
+    window.location.href=`/search/adminSearch?query=${query}&type=${searchType}`
+    
+    }
+  
+  </script>
+
+  
+</body>
+</html>
+
+  
