@@ -25,6 +25,7 @@ const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString()
 //Handle post Register
 const postRegister = async (req, res) => {
   console.log('from post register');
+  console.log('this ia google regiser');
 
   try {
     let { email, password, phone } = req.body;
@@ -54,7 +55,7 @@ const postRegister = async (req, res) => {
         from: process.env.EMAIL_USER,
         to: email,
         subject: "Your OTP for Account Verification",
-        text: `Your OTP is: ${otp}. It is valid for 5 minutes.`,
+        text: `Your OTP is: ${otp}. It is valid for 1 minutes.`,
       };
 
        await transporter.sendMail(mailOptions);
@@ -78,6 +79,53 @@ const postRegister = async (req, res) => {
   }
 }
 
+//google signup user set password 
+const getSetPassword=async (req,res)=>{
+  console.log('this is from google user signup set password');
+console.log('req.session.passport.user is ',req.session.passport.user);
+const userId=req.session.passport.user
+  const user=await User.findOne({_id:userId})
+  console.log('user found ',user);
+ const email=user.email
+  
+  console.log('email is ',email);
+  
+  res.render('user/setPassword',{email})
+}
+
+
+//post set password
+const postSetPassword=async (req,res)=>{
+  console.log('from post set password');
+  try {
+    const {password,confirmPassword,email}=req.body
+    console.log('pwd,confirm pwd',password,confirmPassword);
+    
+    if(password==''||confirmPassword==""){
+      return res.json({success:false,message:'Both field are required'})
+    }
+    if(password!==confirmPassword){
+      return res.json({success:false,message:'Paswords are not matching'})
+    }
+    const user=await User.findOne({email})
+    console.log('google user is ',user);
+    
+    if(!user){
+      console.log('user not found');
+      
+      return res.json({success:false,message:"User not found"})
+    }
+ 
+    const hashedPassword=await bcrypt.hash(password,10)
+    user.hashedPassword=hashedPassword
+    await user.save()
+    return res.json({success:true,message:"Passwrd set successfully"})
+  } catch (error) {
+    console.log('error is',error)
+    return res.json({success:false,message:"error in fetching email"})
+  }
+}
+
 //getOtp page
 const getOtp = async (req, res) => {
   try {
@@ -89,18 +137,49 @@ const getOtp = async (req, res) => {
   }
 };
 
+
+//  Send OTP
+const sendOTP = async (req, res) => {
+  console.log('from send otp');
+  
+  try {
+    const { email } = req.body;
+
+    if (!email) return res.status(400).json({ message: "Email is required" });
+
+    const otp = generateOTP();
+    otpStore[email] = { otp, expiresAt: Date.now() + 1 * 60 * 1000 }; // 5-minute expiry
+
+    // Send email with OTP
+    await transporter.sendMail({
+      to: email,
+      subject: "Your OTP Code",
+      text: `Your OTP is ${otp}. It expires in 1 minutes.`,
+    });
+
+    console.log( "OTP sent successfully");
+    
+    res.json({ message: "OTP sent successfully" });
+  } catch (error) {
+    console.error("Error resending OTP:", error);
+    res.status(500).json({ message: "Failed to resend OTP" });
+  }
+};
+
+
+//otp verification
 const varifyOtp = async (req, res) => {
   console.log('from varify otp');
   
   let { otp } = req.body;
   console.log('req.body otp is ',otp);
-  
+ 
  
   console.log('session otp is ',req.session.otp);
   
   try {
     if (!req.session.otp || !req.session.userData) {
-      return res.json({ success: false, message: "Session expired. Please register again." });
+      return res.json({ success: false, message: "OTP expired. Please register again." });
     }
   
     console.log('typ of session otp is ',typeof(req.session.otp));
@@ -129,8 +208,35 @@ const varifyOtp = async (req, res) => {
   }
 }
 
-// get login
+//resend OTP
+const resendOtp = async (req, res) => {
+  console.log('from resent otp page');
+  console.log(req.session.userData);
+ 
+  try {
+    const email = req.session.userData?.email;
+    if (!email) return res.status(400).json({ message: "Email is required" });
+    req.session.userData.otp=null
+    const newOtp = generateOTP();
+    req.session.otp=newOtp;
+    otpStore[email] = { otp: newOtp, expiresAt: Date.now() + 60 * 1000 }; // 1 minute validity
 
+    await transporter.sendMail({
+      to: email,
+      subject: "Your New OTP Code",
+      text: `Your new OTP is ${newOtp}. It expires in 1 minute.`,
+    });
+    console.log('new otp send succesfully');
+    
+    res.json({ message: "New OTP sent successfully", expiresAt: otpStore[email].expiresAt });
+  } catch (error) {
+    console.error("Error resending OTP:", error);
+    res.status(500).json({ message: "Failed to resend OTP" });
+  }
+};
+
+
+// get login
 const getLogin = async (req, res) => {
   res.render("user/userLogin", { errorMessage: null });
 };
@@ -150,7 +256,7 @@ const postLogin = async (req, res) => {
 
 
     if (!user) {
-      return res.render("user/userLogin", { error: "Error in finding user" });
+      return res.render("user/userLogin", { errorMessage: "You are not registered" });
     } else {
       const isMatch = await bcrypt.compare(password, user.hashedPassword);
       console.log(isMatch);
@@ -235,61 +341,8 @@ const getHome = async (req, res) => {
 const otpStore = {}; //  OTP store temporarly
 
 
-//  Send OTP
-const sendOTP = async (req, res) => {
-  try {
-    const { email } = req.body;
-
-    if (!email) return res.status(400).json({ message: "Email is required" });
-
-    const otp = generateOTP();
-    otpStore[email] = { otp, expiresAt: Date.now() + 2 * 60 * 1000 }; // 5-minute expiry
-
-    // Send email with OTP
-    await transporter.sendMail({
-      to: email,
-      subject: "Your OTP Code",
-      text: `Your OTP is ${otp}. It expires in 1 minutes.`,
-    });
-
-    res.json({ message: "OTP sent successfully" });
-  } catch (error) {
-    console.error("Error sending OTP:", error);
-    res.status(500).json({ message: "Failed to send OTP" });
-  }
-};
 
 
-//  Resend OTP
-const resendOTP = async (req, res) => {
-  try {
-    const { email } = req.body;
-
-    if (!email) return res.status(400).json({ message: "Email is required" });
-
-    // Check if OTP was previously generated
-    if (!otpStore[email]) {
-      return res
-        .status(400)
-        .json({ message: "No OTP request found for this email" });
-    }
-
-    const newOtp = generateOTP();
-    otpStore[email] = { otp: newOtp, expiresAt: Date.now() + 1 * 60 * 1000 };
-
-    // Send new OTP email
-    await transporter.sendMail({
-      to: email,
-      subject: "Your New OTP Code",
-      text: `Your new OTP is ${newOtp}. It expires in 1 minutes.`,
-    });
-
-    res.json({ message: "New OTP sent successfully" });
-  } catch (error) {
-    console.error("Error resending OTP:", error);
-    res.status(500).json({ message: "Failed to resend OTP" });
-  }
-};
 
 const getAccount = async (req, res) => {
   console.log('from user profile');
@@ -767,7 +820,7 @@ module.exports = {
   getHome,
   sendOTP,
   varifyOtp,
-  resendOTP,
+  resendOtp,
   getAccount,
   getCart,
   addToCart,
@@ -779,6 +832,8 @@ module.exports = {
   editAddress,
   deleteAddress,
   changePassword,
-  getOtp
+  getOtp,
+  getSetPassword,
+  postSetPassword
 }
 

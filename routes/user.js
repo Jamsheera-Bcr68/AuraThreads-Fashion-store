@@ -21,11 +21,10 @@ router.get("/login", userController.getLogin);
 router.post("/login", userController.postLogin);
 
 router.post('/verifyOtp',userController.varifyOtp);
-//  router.post("/resend-otp", userController.resendOTP);
+ router.post("/resendOtp", userController.resendOtp);
 
 // Route to start Google OAuth login
-router.get(
-  "/auth/google",
+router.get("/auth/google",
   passport.authenticate("google", {
     scope: ["profile", "email"],
     prompt: "select_account",
@@ -38,6 +37,13 @@ router.get("/home", userController.getHome);
 
 //google authenticaion
 router.post('/google/callback',userController.postRegister)
+
+//googleuser set password
+router.get('/setPassword',userController.getSetPassword)
+
+//post user passwrd
+router.post('/setPassword',userController.postSetPassword)
+
 //get all prooducts page
 router.get("/products", (req, res) => {
   console.log('allproducts');

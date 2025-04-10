@@ -1,8 +1,8 @@
 const passport=require('passport')
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
-const user=require('../model/userModel')
+const User=require('../model/userModel')
 const env=require('dotenv').config();
-
+const bcrypt=require('bcrypt')
 
 passport.use(new GoogleStrategy({
     clientID:process.env.GOOGLE_CLIENT_ID,
@@ -11,19 +11,20 @@ passport.use(new GoogleStrategy({
 },
 async (accessToken, refreshToken, profile, done) => {
     try {
-        let User = await user.findOne({ googleId: profile.id });
+        let user = await User.findOne({ googleId: profile.id });
 
-        if (User) {
+        if (user) {
+           
             return done(null, User);
         } else {
-            User = new user({
+            user = new User({
                 userName: profile.displayName,
                 email: profile.emails && profile.emails.length > 0 ? profile.emails[0].value : null, 
                 googleId: profile.id
             });
 
-            await User.save();
-            return done(null, User);
+            await user.save();
+            return done(null, user);
         }
     } catch (error) {
         return done(error, null);
@@ -34,15 +35,44 @@ async (accessToken, refreshToken, profile, done) => {
 
 //assign user to session
 
-passport.serializeUser((User,done)=>{
-    done(null,User.id)
+// passport.use(new GoogleStrategy({
+//     clientID: process.env.GOOGLE_CLIENT_ID,
+//     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+//     callbackURL: 'http://localhost:3000/google/callback'
+//   },
+//   async (accessToken, refreshToken, profile, done) => {
+//     try {
+//       let user = await User.findOne({ googleId: profile.id });
+
+//       if (user) {
+//         return done(null, user);
+//       } else {
+//         // Don’t save to DB yet
+//         const userData = {
+//           userName: profile.displayName,
+//           email: profile.emails?.[0]?.value || null,
+//           googleId: profile.id
+//         };
+
+//         return done(null, userData); // Pass this to req.user
+//       }
+//     } catch (error) {
+//       return done(error, null);
+//     }
+//   }
+// ));
+
+
+
+passport.serializeUser((user,done)=>{
+    done(null,user.id)
 })
 
 //fetching user from db
 passport.deserializeUser((id,done)=>{
-    user.findById(id)
-    .then(User=>{
-        done(null,User)
+    User.findById(id)
+    .then(user=>{
+        done(null,user)
     })
     .catch((error)=>{
         done(error,null)
@@ -51,22 +81,3 @@ passport.deserializeUser((id,done)=>{
 
 module.exports=passport
 
-// //async (accessTocken,refreshTocken,profile,done)=>{
-//     try {
-//         let User=await user.findOne({googleId:profile.id})
-//         if(User){
-//             return done(null,User)
-
-//         }else{
-//             User=new user({
-//                 userName:profile.displayName,
-//                 email:profile.email.value,
-//                 googleId:profile.id
-//             })
-//             await User.save()
-//             return done(null,User)
-//         }
-//     } catch (error) {
-//         return done(error,null)
-//     }
-// }

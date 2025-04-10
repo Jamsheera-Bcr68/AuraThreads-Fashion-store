@@ -10,6 +10,8 @@
   <div class="otp-container">
     <h2>Enter OTP</h2>
     <span id="textSpan">An OTP is send to your email</span>
+    <p id="timer">01:00</p>
+
     <form id="otpForm" action="/user/verifyOtp" method="POST">
       <div class="otp-inputs">
         <input class="otp-field" type="text" name="otp[]" maxlength="1" required />
@@ -20,6 +22,8 @@
         <input class="otp-field" type="text" name="otp[]" maxlength="1" required />
       </div>
       <button type="submit">Verify</button>
+      <button id="resendBtn" onclick="callResendOtp()" disabled>Resend OTP</button>
+      
     </form>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -40,49 +44,95 @@
         }
       });
     });
-  
-    // OTP form submission
-    const otpForm = document.getElementById('otpForm');
-    otpForm.addEventListener('submit', function (e) {
-      e.preventDefault();
-      console.log('OTP form submitted');
-  
-      const otpInputs = document.querySelectorAll('.otp-field');
-      let otp = "";
-  
-      otpInputs.forEach(input => {
-        otp += input.value.trim();
-      });
-  
-      if (otp.length !== 6 || isNaN(otp)) {
-        Swal.fire("Please enter a valid 6-digit OTP");
-        return;
+
+    let countdownInterval;
+  let expiryTime;
+  function startOtpTimer(durationMs) {
+    const timerDisplay = document.getElementById('timer');
+    const resendBtn = document.getElementById('resendBtn');
+
+    // Reset state
+    resendBtn.disabled = true;
+    resendBtn.style.display = "none";
+    timerDisplay.textContent = "01:00";
+
+    expiryTime = Date.now() + durationMs;
+
+    countdownInterval = setInterval(() => {
+      const remaining = expiryTime - Date.now();
+
+      if (remaining > 0) {
+        const minutes = Math.floor(remaining / 60000).toString().padStart(2, '0');
+        const seconds = Math.floor((remaining % 60000) / 1000).toString().padStart(2, '0');
+        timerDisplay.textContent = `${minutes}:${seconds}`;
+      } else {
+        clearInterval(countdownInterval);
+        timerDisplay.textContent = "00:00";
+
+        // OTP expired
+        setTimeout(() => {
+          swal.fire("OTP expired");
+          resendBtn.disabled = false;
+          resendBtn.style.display = "block";
+        }, 5000); // Enable resend button after 5 seconds
       }
+    }, 1000);
+  }
+
+  async function callResendOtp() {
+    console.log('resent button clicked');
+    
+    resendBtn.disabled = true;
+    try {
+      const res = await fetch('/user/resendOtp', {
+        method: "POST"
+      });
+      const data = await res.json();
+      Swal.fire(data.message);
+
+      if (data.expiresAt) {
+        const duration = data.expiresAt - Date.now();
+        startOtpTimer(duration); // Start timer again with new OTP
+        inputs.forEach(input => input.value = '');
+inputs[0].focus();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  // Start timer initially when page loads
+  window.onload = () => {
+    startOtpTimer(60000); // 1 minute = 60000ms
+  };
+
+  // otp submit handling
+const otpForm=document.getElementById('otpForm')
+otpForm.addEventListener('submit',function(e){
+  e.preventDefault()
+  console.log('otp form submitted');
+
+  const otpInputs = document.querySelectorAll('.otp-field');
+const otp = Array.from(otpInputs).map(input => input.value).join('');
+  console.log('otp is',otp );
   
-      fetch('/user/verifyOtp', {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ otp }) // sending the joined string
-      })
-        .then(res => res.json())
-        .then(data => {
-          if (data && data.success) {
-            Swal.fire("Success!", data.message, "success").then(() => {
-              window.location.href = '/user/login';
-            });
-          } else {
-            Swal.fire("Failed", data.message, "error").then(() => {
-              window.location.href = '/user/register';
-            });
-          }
-        })
-        .catch(error => {
-          Swal.fire("Something went wrong");
-          console.error(error);
-        });
-    });
+  fetch('/user/verifyOtp',{
+    method:"POST",
+    headers: { "Content-Type": "application/json" },
+    body:JSON.stringify({otp})
+  }).then(res=>res.json())
+  .then(data=>{
+    if(data && data.success){
+      Swal.fire(data.message)
+      window.location.href="/user/login"
+    }else{
+      Swal.fire(data.message)
+    }
+  }).catch(err=>{
+    console.log('error is ',err);
+    Swal.fire('some thing went wrong')
+  })
+})
   </script>
   
 </body>
