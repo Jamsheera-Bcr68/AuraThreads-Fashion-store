@@ -1,54 +1,483 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Verify OTP</title>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
- <link rel="stylesheet" href="/css/otp.css">
-</head>
-<body>
 
-  <div class="otp-container">
-    <h2>OTP Verification</h2>
-    <p>Please enter the OTP sent to your email</p>
-    <input type="text" id="otp" placeholder="Enter OTP" required />
-    <button onclick="verifyOtp()">Verify</button>
+<!-- Main Content -->
+<div class="container ">
+  <%- include('../partials/header.ejs') %>
+  <div class="d-flex" id="wrapper">
+    <%- include('../partials/sidebar') %>
+
+    <div class="main-content">
+      <!-- Header -->
+      <div class="header">
+          <div class="menu-toggle">
+              <i class="fas fa-bars"></i>
+          </div>
+          <div class="user-info">
+              <img src="<%= adminUser.profileImage || '/images/default-admin.png' %>" alt="<%= adminUser.name %>">
+              <div>
+                  <h4><%= adminUser.name %></h4>
+                  <small><%= adminUser.role %></small>
+              </div>
+          </div>
+      </div>
+      
+      <!-- Orders Section -->
+      <div class="orders-container">
+          <div class="orders-header">
+              <h2>Manage Orders</h2>
+          </div>
+          
+          <!-- Filters and Search -->
+          <div class="filter-container">
+              <div class="filter-item">
+                  <label for="status-filter">Status:</label>
+                  <select id="status-filter">
+                      <option value="all" <%= filter.status === 'all' ? 'selected' : '' %>>All</option>
+                      <option value="pending" <%= filter.status === 'pending' ? 'selected' : '' %>>Pending</option>
+                      <option value="processing" <%= filter.status === 'processing' ? 'selected' : '' %>>Processing</option>
+                      <option value="shipped" <%= filter.status === 'shipped' ? 'selected' : '' %>>Shipped</option>
+                      <option value="delivered" <%= filter.status === 'delivered' ? 'selected' : '' %>>Delivered</option>
+                      <option value="cancelled" <%= filter.status === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
+                  </select>
+              </div>
+              <div class="filter-item">
+                  <label for="date-filter">Date:</label>
+                  <input type="date" id="date-filter" value="<%= filter.date %>">
+              </div>
+              <div class="search-box">
+                  <i class="fas fa-search"></i>
+                  <input type="text" placeholder="Search orders..." value="<%= filter.search %>">
+              </div>
+          </div>
+          
+          <!-- Orders Table -->
+          <div class="table-responsive">
+              <table class="orders-table">
+                  <thead>
+                      <tr>
+                          <th>Order ID</th>
+                          <th>Customer</th>
+                          <th>Date</th>
+                          <th>Total</th>
+                          <th>Status</th>
+                          <th>Actions</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                      <% if (orders && orders.length > 0) { %>
+                          <% orders.forEach(order => { %>
+                              <tr>
+                                  <td>#<%= order.orderNumber %></td>
+                                  <td><%= order.customer.name %></td>
+                                  <td><%= new Date(order.orderDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) %></td>
+                                  <td>$<%= order.total.toFixed(2) %></td>
+                                  <td><span class="status <%= order.status %>"><%= order.status.charAt(0).toUpperCase() + order.status.slice(1) %></span></td>
+                                  <td class="actions">
+                                      <button class="btn btn-view" onclick="openOrderDetails('<%= order._id %>')"><i class="fas fa-eye"></i></button>
+                                      <button class="btn btn-edit" onclick="openUpdateStatus('<%= order._id %>')"><i class="fas fa-edit"></i></button>
+                                      <button class="btn btn-delete" onclick="confirmDeleteOrder('<%= order._id %>')"><i class="fas fa-trash"></i></button>
+                                  </td>
+                              </tr>
+                          <% }); %>
+                      <% } else { %>
+                          <tr>
+                              <td colspan="6" style="text-align: center;">No orders found</td>
+                          </tr>
+                      <% } %>
+                  </tbody>
+              </table>
+          </div>
+          
+          <!-- Pagination -->
+          <div class="pagination">
+              <% if (pagination.totalPages > 1) { %>
+                  <button onclick="changePage(<%= pagination.currentPage - 1 %>)" <%= pagination.currentPage === 1 ? 'disabled' : '' %>><i class="fas fa-angle-left"></i></button>
+                  
+                  <% for(let i = 1; i <= pagination.totalPages; i++) { %>
+                      <button class="<%= pagination.currentPage === i ? 'active' : '' %>" onclick="changePage(<%= i %>)"><%= i %></button>
+                  <% } %>
+                  
+                  <button onclick="changePage(<%= pagination.currentPage + 1 %>)" <%= pagination.currentPage === pagination.totalPages ? 'disabled' : '' %>><i class="fas fa-angle-right"></i></button>
+              <% } %>
+          </div>
+      </div>
   </div>
+  <%- include('../partials/footer.ejs') %>
+  </div>
+</div>
 
-  <script>
-    function verifyOtp() {
-      const otp = document.getElementById("otp").value;
 
-      if (otp.trim() === "") {
-        Swal.fire("Please enter the OTP");
-        return;
+<!-- Order Details Modal -->
+<div id="orderDetailsModal" class="modal">
+  <div class="modal-content">
+      <div class="modal-header">
+          <h3>Order Details #<span id="detailOrderId"></span></h3>
+          <span class="close" onclick="closeModal('orderDetailsModal')">&times;</span>
+      </div>
+      <div id="orderDetailsContent" class="order-details">
+          <!-- This will be populated with AJAX -->
+      </div>
+      <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="closeModal('orderDetailsModal')">Close</button>
+          <button class="btn btn-primary" onclick="printOrder()">Print Order</button>
+      </div>
+  </div>
+</div>
+
+<!-- Update Status Modal -->
+<div id="updateStatusModal" class="modal">
+  <div class="modal-content">
+      <div class="modal-header">
+          <h3>Update Order Status</h3>
+          <span class="close" onclick="closeModal('updateStatusModal')">&times;</span>
+      </div>
+      <div>
+          <p>Order ID: <strong>#<span id="updateOrderId"></span></strong></p>
+          <p>Current Status: <span id="currentStatus" class="status"></span></p>
+          
+          <form id="updateStatusForm" action="/admin/orders/update-status" method="POST">
+              <input type="hidden" id="orderIdInput" name="orderId">
+              
+              <div class="status-options">
+                  <div class="status-option">
+                      <input type="radio" id="status-pending" name="status" value="pending">
+                      <label for="status-pending">Pending</label>
+                  </div>
+                  <div class="status-option">
+                      <input type="radio" id="status-processing" name="status" value="processing">
+                      <label for="status-processing">Processing</label>
+                  </div>
+                  <div class="status-option">
+                      <input type="radio" id="status-shipped" name="status" value="shipped">
+                      <label for="status-shipped">Shipped</label>
+                  </div>
+                  <div class="status-option">
+                      <input type="radio" id="status-delivered" name="status" value="delivered">
+                      <label for="status-delivered">Delivered</label>
+                  </div>
+                  <div class="status-option">
+                      <input type="radio" id="status-cancelled" name="status" value="cancelled">
+                      <label for="status-cancelled">Cancelled</label>
+                  </div>
+              </div>
+              
+              <div>
+                  <label for="status-notes">Notes:</label>
+                  <textarea id="status-notes" name="notes" rows="3" style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ddd; border-radius: 4px;"></textarea>
+              </div>
+              
+              <div class="status-option" style="margin-top: 10px;">
+                  <input type="checkbox" id="notify-customer" name="notifyCustomer" value="true">
+                  <label for="notify-customer">Notify customer about this status update</label>
+              </div>
+              
+              <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" onclick="closeModal('updateStatusModal')">Cancel</button>
+                  <button type="submit" class="btn btn-primary">Update Status</button>
+              </div>
+          </form>
+      </div>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteConfirmModal" class="modal">
+  <div class="modal-content" style="max-width: 400px;">
+      <div class="modal-header">
+          <h3>Confirm Delete</h3>
+          <span class="close" onclick="closeModal('deleteConfirmModal')">&times;</span>
+      </div>
+      <div style="padding: 20px 0;">
+          <p>Are you sure you want to delete this order?</p>
+          <p>Order ID: <strong>#<span id="deleteOrderId"></span></strong></p>
+          <p style="color: #e53935; margin-top: 10px;"><i class="fas fa-exclamation-triangle"></i> This action cannot be undone.</p>
+      </div>
+      <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="closeModal('deleteConfirmModal')">Cancel</button>
+          <form id="deleteOrderForm" action="/admin/orders/delete" method="POST" style="display: inline;">
+              <input type="hidden" id="deleteOrderIdInput" name="orderId">
+              <button type="submit" class="btn btn-danger">Delete</button>
+          </form>
+      </div>
+  </div>
+</div>
+
+<script>
+  // Function to open order details modal
+  function openOrderDetails(orderId) {
+      document.getElementById('detailOrderId').textContent = orderId;
+      
+      // In a real app, you would fetch the order details with AJAX
+      // For this example, we'll use dummy data
+      const orderDetailsHtml = generateOrderDetailsHtml(orderId);
+      document.getElementById('orderDetailsContent').innerHTML = orderDetailsHtml;
+      
+      document.getElementById('orderDetailsModal').style.display = 'block';
+  }
+  
+  // Function to generate order details HTML (simulating AJAX response)
+  function generateOrderDetailsHtml(orderId) {
+      // This is dummy data for demonstration
+      return `
+          <div class="customer-info">
+              <h4>Customer Information</h4>
+              <div class="detail-row">
+                  <div class="detail-label">Name:</div>
+                  <div class="detail-value">Emily Johnson</div>
+              </div>
+              <div class="detail-row">
+                  <div class="detail-label">Email:</div>
+                  <div class="detail-value">emily.johnson@example.com</div>
+              </div>
+              <div class="detail-row">
+                  <div class="detail-label">Phone:</div>
+                  <div class="detail-value">(555) 123-4567</div>
+              </div>
+          </div>
+          
+          <div class="order-info">
+              <h4>Order Information</h4>
+              <div class="detail-row">
+                  <div class="detail-label">Order ID:</div>
+                  <div class="detail-value">#ORD-${orderId}</div>
+              </div>
+              <div class="detail-row">
+                  <div class="detail-label">Date:</div>
+                  <div class="detail-value">April 11, 2025 - 14:30</div>
+              </div>
+              <div class="detail-row">
+                  <div class="detail-label">Status:</div>
+                  <div class="detail-value"><span class="status pending">Pending</span></div>
+              </div>
+          </div>
+          
+          <div class="shipping-info">
+              <h4>Shipping Information</h4>
+              <div class="detail-row">
+                  <div class="detail-label">Address:</div>
+                  <div class="detail-value">123 Main Street, Apt 4B</div>
+              </div>
+              <div class="detail-row">
+                  <div class="detail-label">City:</div>
+                  <div class="detail-value">New York</div>
+              </div>
+              <div class="detail-row">
+                  <div class="detail-label">State/Province:</div>
+                  <div class="detail-value">NY</div>
+              </div>
+              <div class="detail-row">
+                  <div class="detail-label">Zip/Postal Code:</div>
+                  <div class="detail-value">10001</div>
+              </div>
+              <div class="detail-row">
+                  <div class="detail-label">Country:</div>
+                  <div class="detail-value">United States</div>
+              </div>
+              <div class="detail-row">
+                  <div class="detail-label">Shipping Method:</div>
+                  <div class="detail-value">Express Shipping (2-3 days)</div>
+              </div>
+          </div>
+          
+          <div class="payment-info">
+              <h4>Payment Information</h4>
+              <div class="detail-row">
+                  <div class="detail-label">Payment Method:</div>
+                  <div class="detail-value">Credit Card (Visa ending in 4567)</div>
+              </div>
+              <div class="detail-row">
+                  <div class="detail-label">Payment Status:</div>
+                  <div class="detail-value">Paid</div>
+              </div>
+          </div>
+          
+          <div class="products-info">
+              <h4>Ordered Products</h4>
+              <div class="product-item">
+                  <img src="/images/products/dress-001.jpg" alt="Evening Gown" class="product-image">
+                  <div class="product-details">
+                      <div class="product-name">Elegant Evening Gown</div>
+                      <div class="product-info">Size: M | Color: Navy Blue | SKU: DRESS-001</div>
+                      <div class="product-info">Quantity: 1</div>
+                  </div>
+                  <div class="product-price">$179.99</div>
+              </div>
+              <div class="product-item">
+                  <img src="/images/products/acc-056.jpg" alt="Sequin Shawl" class="product-image">
+                  <div class="product-details">
+                      <div class="product-name">Sequin Shawl</div>
+                      <div class="product-info">Color: Silver | SKU: ACC-056</div>
+                      <div class="product-info">Quantity: 1</div>
+                  </div>
+                  <div class="product-price">$49.99</div>
+              </div>
+              <div class="order-total">
+                  <div class="detail-label">Subtotal:</div>
+                  <div class="detail-value">$229.98</div>
+              </div>
+              <div class="order-total">
+                  <div class="detail-label">Shipping:</div>
+                  <div class="detail-value">$15.00</div>
+              </div>
+              <div class="order-total">
+                  <div class="detail-label">Tax:</div>
+                  <div class="detail-value">$22.99</div>
+              </div>
+              <div class="order-total">
+                  <div class="detail-label">Discount:</div>
+                  <div class="detail-value">-$27.98</div>
+              </div>
+              <div class="order-total">
+                  <div class="detail-label">Total:</div>
+                  <div class="detail-value">$239.99</div>
+              </div>
+          </div>
+      `;
+  }
+  
+  // Function to open update status modal
+  function openUpdateStatus(orderId) {
+      document.getElementById('updateOrderId').textContent = orderId;
+      document.getElementById('orderIdInput').value = orderId;
+      
+      // Set current status (in a real app, fetch this from server)
+      const currentStatus = document.getElementById('currentStatus');
+      currentStatus.textContent = 'Pending'; // This would be dynamic in a real app
+      currentStatus.className = 'status pending'; // This would be dynamic too
+      
+      // Select the current status radio button
+      document.getElementById('status-pending').checked = true;
+      
+      document.getElementById('updateStatusModal').style.display = 'block';
+  }
+  
+  // Function to confirm delete order
+  function confirmDeleteOrder(orderId) {
+      document.getElementById('deleteOrderId').textContent = orderId;
+      document.getElementById('deleteOrderIdInput').value = orderId;
+      document.getElementById('deleteConfirmModal').style.display = 'block';
+  }
+  
+  // Function to close modal
+  function closeModal(modalId) {
+      document.getElementById(modalId).style.display = 'none';
+  }
+  
+  // Function to print order
+  function printOrder() {
+      window.print();
+  }
+  
+  // Function to change page (for pagination)
+  function changePage(pageNumber) {
+      // In a real app, you would redirect to the new page or use AJAX
+      // For this example, we'll just simulate a page reload
+      window.location.href = '/admin/orders?page=' + pageNumber;
+  }
+  
+  // Close modal when clicking outside
+  window.onclick = function(event) {
+      if (event.target.className === 'modal') {
+          event.target.style.display = 'none';
       }
+  }
+</script>
 
-      fetch("/user/verify-otp", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ otp })
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          Swal.fire("OTP Verified!", data.message, "success")
-            .then(() => {
-              window.location.href = "/login.html"; // or your actual login page
-            });
-        } else {
-          Swal.fire("Failed", data.message, "error");
-        }
-      })
-      .catch(err => {
-        console.error(err);
-        Swal.fire("Error", "Something went wrong", "error");
-      });
-    }
-  </script>
+<!-- Dummy data for initial render -->
+<script>
+  // This is just for demonstration purposes
+  // In a real app, this would come from your server-side code
+  const dummyData = {
+      adminUser: {
+          name: 'Admin User',
+          role: 'Administrator',
+          profileImage: '/images/admin-avatar.jpg'
+      },
+      filter: {
+          status: 'all',
+          date: '',
+          search: ''
+      },
+      orders: [
+          {
+              _id: '2025-001',
+              orderNumber: 'ORD-2025-001',
+              customer: { name: 'Emily Johnson' },
+              orderDate: '2025-04-11T14:30:00',
+              total: 239.99,
+              status: 'pending'
+          },
+          {
+              _id: '2025-002',
+              orderNumber: 'ORD-2025-002',
+              customer: { name: 'Michael Torres' },
+              orderDate: '2025-04-10T09:15:00',
+              total: 159.95,
+              status: 'processing'
+          },
+          {
+              _id: '2025-003',
+              orderNumber: 'ORD-2025-003',
+              customer: { name: 'Sophia Martinez' },
+              orderDate: '2025-04-10T16:45:00',
+              total: 349.90,
+              status: 'shipped'
+          },
+          {
+              _id: '2025-004',
+              orderNumber: 'ORD-2025-004',
+              customer: { name: 'James Wilson' },
+              orderDate: '2025-04-09T11:20:00',
+              total: 129.99,
+              status: 'delivered'
+          },
+          {
+              _id: '2025-005',
+              orderNumber: 'ORD-2025-005',
+              customer: { name: 'Olivia Smith' },
+              orderDate: '2025-04-08T13:50:00',
+              total: 89.95,
+              status: 'cancelled'
+          }
+      ],
+      pagination: {
+          currentPage: 1,
+          totalPages: 3
+      }
+  };
+  
+  // This is to simulate EJS rendering in this static demo
+  // In a real EJS template, you wouldn't need this
+  document.addEventListener('DOMContentLoaded', function() {
+      console.log('Dummy data is available for demonstration purposes.');
+  });
+</script>
 
-</body>
-</html>
+<%- include('../partials/footer') %>
+
+ <!-- Filters and Search -->
+ <div class="filter-container">
+    <div class="filter-item">
+        <label for="status-filter">Status:</label>
+        <select id="status-filter">
+            <option value="all" <%=filter.status==='all' ? 'selected' : '' %>>All</option>
+            <option value="pending" <%=filter.status==='pending' ? 'selected' : '' %>>Pending
+            </option>
+            <option value="processing" <%=filter.status==='processing' ? 'selected' : '' %>
+                >Processing</option>
+            <option value="shipped" <%=filter.status==='shipped' ? 'selected' : '' %>>Shipped
+            </option>
+            <option value="delivered" <%=filter.status==='delivered' ? 'selected' : '' %>>Delivered
+            </option>
+            <option value="cancelled" <%=filter.status==='cancelled' ? 'selected' : '' %>>Cancelled
+            </option>
+        </select>
+    </div>
+    <div class="filter-item">
+        <label for="date-filter">Date:</label>
+        <input type="date" id="date-filter" value="<%= filter.date %>">
+    </div>
+    <div class="search-box">
+        <i class="fas fa-search"></i>
+        <input type="text" placeholder="Search orders..." value="<%= filter.search %>">
+    </div>
+</div>

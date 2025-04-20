@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin - Order Management</title>
+    <link rel="stylesheet" href="/css/adminOrders.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+
+<body>
+    <div class="container ">
+        <%- include('../partials/header.ejs') %>
+
+            <div class="d-flex" id="wrapper">
+                <%- include('../partials/sidebar') %>
+
+                    <div class="container p-4">
+                        <!-- Orders Section -->
+                        <div class="orders-container p-4">
+                            <div class="orders-header">
+                                <h2>Order Mangement</h2>
+                            </div>
+
+
+                            <!-- Orders Table -->
+                            <div class="table-responsive">
+                                <table class="orders-table">
+                                    <thead style="background-color: black;color: white;">
+                                        <tr>
+                                            <th>No:</th>
+                                            <th>Order ID</th>
+                                            <th>Customer</th>
+                                            <th>Date</th>
+                                            <th>Total</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% if (orders && orders.length> 0) { %>
+                                            <% orders.forEach((order,index)=> { %>
+                                                <tr>
+                                                    <td><%= index+1 %>
+                                                    <td>#<%= order._id %>
+                                                    </td>
+                                                    <td>
+                                                        <%= order.userId.fullName %>
+                                                    </td>
+                                                    <td>
+                                                        <%= new Date(order.createdAt).toLocaleDateString('en-US', {
+                                                            year: 'numeric' , month: 'long' , day: 'numeric' }) %>
+                                                    </td>
+                                                    <td>$<%= order.totalAmount.toFixed(2) %>
+                                                    </td>
+                                                    <td><span class="status <%= order.status %>">
+                                                            <%= order.status.charAt(0).toUpperCase() +
+                                                                order.status.slice(1) %>
+                                                        </span></td>
+                                                    <td class="actions">
+                                                        <button class="btn btn-view btn-info"
+                                                            onclick="openOrderDetails('<%= order._id %>')">View<i
+                                                                class="fas fa-eye"></i></button>
+                                                        <button class="btn btn-edit btn-warning"
+                                                            onclick="openUpdateStatus('<%= order._id %>')">Edit<i
+                                                                class="fas fa-edit"></i></button>
+                                                        <button class="btn btn-delete btn-danger"
+                                                            onclick="deleteOrder('<%= order._id %>')">Delete<i
+                                                                class="fas fa-trash"></i></button>
+                                                    </td>
+                                                </tr>
+                                                <% }); %>
+                                                    <% } else { %>
+                                                        <tr>
+                                                            <td colspan="6" style="text-align: center;">No orders found
+                                                            </td>
+                                                        </tr>
+                                                        <% } %>
+                                    </tbody>
+                                </table>
+                            </div>
+
+
+                        </div>
+
+
+
+                    </div>
+            </div>
+
+            <!-- Pagination -->
+            <nav>
+                <ul class="pagination justify-content-center">
+                    <!-- Previous Button -->
+                    <% if (currentPage> 1) { %>
+                        <li class="page-item">
+                            <a class="page-link" href="?page=<%= currentPage - 1 %>&limit=5">Previous</a>
+                        </li>
+                        <% } else { %>
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" tabindex="-1">Previous</a>
+                            </li>
+                            <% } %>
+
+                                <!-- Page Numbers -->
+                                <% for (let i=1; i <=totalPages; i++) { %>
+                                    <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+                                        <a class="page-link" href="?page=<%= i %>&limit=5">
+                                            <%= i %>
+                                        </a>
+                                    </li>
+                                    <% } %>
+
+                                        <!-- Next Button -->
+                                        <% if (currentPage < totalPages) { %>
+                                            <li class="page-item">
+                                                <a class="page-link"
+                                                    href="?page=<%= currentPage + 1 %>&limit=5">Next</a>
+                                            </li>
+                                            <% } else { %>
+                                                <li class="page-item disabled">
+                                                    <a class="page-link" href="#">Next</a>
+                                                </li>
+                                                <% } %>
+                </ul>
+            </nav>
+
+    </div>
+    <%- include('../partials/footer.ejs') %>
+
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script>
+            function openOrderDetails(orderId) {
+                console.log('Admin edit rder button clicked,order id is ', orderId);
+                window.location.href = `/admin/orderDetails/${orderId}`
+            }
+            function openUpdateStatus(orderId) {
+                console.log('Admin edit order button clicked,order id is ', orderId);
+                window.location.href = `/admin/updateOrder/${orderId}`
+            }
+            function deleteOrder(orderId) {
+                console.log("order delete button clicked");
+
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "Do you really want to cancel this order?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, cancel it!',
+                    cancelButtonText: 'No, keep it'
+                }).then(result => {
+                    if (result.isConfirmed) {
+                        fetch(`/admin/deleteOrder/${orderId}`, {
+                            method: "DELETE"
+                        }).then(res => res.json())
+                            .then(data => {
+                                if (data && data.success) {
+                                    Swal.fire(data.message)
+                                } else {
+                                    Swal.fire(data.message)
+                                }
+                            }).catch(error => {
+                                console.log('error is ', error);
+                                Swal.fire("Error in fetching Data")
+                            })
+                    }
+                })
+
+
+            }
+        </script>
+</body>
+
+</html>

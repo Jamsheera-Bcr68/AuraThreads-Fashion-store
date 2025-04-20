@@ -1,0 +1,116 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f5f7fa;
+    margin: 0;
+    padding: 0;
+    color: #333;
+    font-weight: bold;
+  }
+  
+  .container {
+    max-width: 900px;
+    margin: 40px auto;
+    background: #efeaea;
+    padding: 30px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+  }
+  
+  h2 {
+    margin-bottom: 20px;
+    color: #2c3e50;
+    text-align: center;
+  }
+  
+  .section {
+    margin-bottom: 30px;
+  }
+  
+  h3 {
+    color: #34495e;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 5px;
+  }
+  
+  p {
+    margin: 5px 0;
+    line-height: 1.6;
+  }
+  
+  .table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+  }
+  
+  .table th, .table td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #967575;
+  }
+  
+  .table th {
+    background: #538de3;
+    color: #fff;
+  }
+  
+  select {
+    padding: 6px 10px;
+    font-size: 14px;
+    margin-right: 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+  }
+  
+  button {
+    background-color: #3498db;
+    color: white;
+    padding: 8px 14px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  
+  button:hover {
+    background-color: #2980b9;
+  }
+  
+  .btn-back {
+    display: inline-block;
+    margin-top: 20px;
+    color: #fff;
+    text-decoration: none;
+    background:#3498db;
+  }
+  
+  .btn-back:hover {
+    text-decoration: underline;
+  }
+  .cancelled{
+    color: red;
+    font-weight: bold;
+    font-size: large;
+    background: #e1c0c0;
+  }
+  .Delivered{
+    color: green;
+    font-weight: bold;
+    background: #97e4bb;
+  }
+  .Pending{
+    color: rgb(0, 8, 255);
+    font-weight: bold;
+    background: #95b5c6;
+  }
+  .Shipped{
+    color: rgb(12, 121, 27);
+    font-weight: bold;
+    background: #a9c9a8;
+  }
+  .Processing{
+    color: rgb(34, 91, 90);
+    font-weight: bold;
+    background: #98c6bc;
+  }

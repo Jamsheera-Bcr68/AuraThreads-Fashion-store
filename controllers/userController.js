@@ -9,7 +9,7 @@ const { default: mongoose } = require("mongoose");
 const Cart = require('../model/cartModel');
 const Address = require('../model/addressModel');
 const { use } = require("passport");
-
+const Order = require('../model/orderModel')
 
 
 //get Register
@@ -39,16 +39,17 @@ const postRegister = async (req, res) => {
 
     if (userExist) {
       console.log("User already exists");
-      return res.render("user/userLogin", {
-        errorMessage: "User Already registered",
-      });
+      return res.json({ success: false, message: "User alredy exist" })
+      // return res.render("user/userLogin", {
+      //   errorMessage: "User Already registered",
+      // });
     } else {
       // Generate OTP
       console.log('User not existing');
 
       const otp = generateOTP()
       req.session.otp = otp //store otp in session
-      req.session.userData = { email, password,phone }; // Store user data temporarily
+      req.session.userData = { email, password, phone }; // Store user data temporarily
 
       //send otp through email
       const mailOptions = {
@@ -58,9 +59,9 @@ const postRegister = async (req, res) => {
         text: `Your OTP is: ${otp}. It is valid for 1 minutes.`,
       };
 
-       await transporter.sendMail(mailOptions);
-       console.log('otp send to email');
-       return res.json({success:true,message:'check your mail for OTP'})
+      await transporter.sendMail(mailOptions);
+      console.log('otp send to email');
+      return res.json({ success: true, message: 'check your mail for OTP' })
       // Store user data temporarily with OTP (but not verified yet)
       // const newUser = new User({
       //   email,
@@ -75,54 +76,54 @@ const postRegister = async (req, res) => {
     }
   } catch (error) {
     console.log(error);
-   return res.status(500).send("Server error");
+    return res.status(500).send("Server error");
   }
 }
 
 //google signup user set password 
-const getSetPassword=async (req,res)=>{
+const getSetPassword = async (req, res) => {
   console.log('this is from google user signup set password');
-console.log('req.session.passport.user is ',req.session.passport.user);
-const userId=req.session.passport.user
-  const user=await User.findOne({_id:userId})
-  console.log('user found ',user);
- const email=user.email
-  
-  console.log('email is ',email);
-  
-  res.render('user/setPassword',{email})
+  console.log('req.session.passport.user is ', req.session.passport.user);
+  const userId = req.session.passport.user
+  const user = await User.findOne({ _id: userId })
+  console.log('user found ', user);
+  const email = user.email
+
+  console.log('email is ', email);
+
+  res.render('user/setPassword', { email })
 }
 
 
 //post set password
-const postSetPassword=async (req,res)=>{
+const postSetPassword = async (req, res) => {
   console.log('from post set password');
   try {
-    const {password,confirmPassword,email}=req.body
-    console.log('pwd,confirm pwd',password,confirmPassword);
-    
-    if(password==''||confirmPassword==""){
-      return res.json({success:false,message:'Both field are required'})
+    const { password, confirmPassword, email } = req.body
+    console.log('pwd,confirm pwd', password, confirmPassword);
+
+    if (password == '' || confirmPassword == "") {
+      return res.json({ success: false, message: 'Both field are required' })
     }
-    if(password!==confirmPassword){
-      return res.json({success:false,message:'Paswords are not matching'})
+    if (password !== confirmPassword) {
+      return res.json({ success: false, message: 'Paswords are not matching' })
     }
-    const user=await User.findOne({email})
-    console.log('google user is ',user);
-    
-    if(!user){
+    const user = await User.findOne({ email })
+    console.log('google user is ', user);
+
+    if (!user) {
       console.log('user not found');
-      
-      return res.json({success:false,message:"User not found"})
+
+      return res.json({ success: false, message: "User not found" })
     }
- 
-    const hashedPassword=await bcrypt.hash(password,10)
-    user.hashedPassword=hashedPassword
+
+    const hashedPassword = await bcrypt.hash(password, 10)
+    user.hashedPassword = hashedPassword
     await user.save()
-    return res.json({success:true,message:"Passwrd set successfully"})
+    return res.json({ success: true, message: "Passwrd set successfully" })
   } catch (error) {
-    console.log('error is',error)
-    return res.json({success:false,message:"error in fetching email"})
+    console.log('error is', error)
+    return res.json({ success: false, message: "error in fetching email" })
   }
 }
 
@@ -141,7 +142,7 @@ const getOtp = async (req, res) => {
 //  Send OTP
 const sendOTP = async (req, res) => {
   console.log('from send otp');
-  
+
   try {
     const { email } = req.body;
 
@@ -157,8 +158,8 @@ const sendOTP = async (req, res) => {
       text: `Your OTP is ${otp}. It expires in 1 minutes.`,
     });
 
-    console.log( "OTP sent successfully");
-    
+    console.log("OTP sent successfully");
+
     res.json({ message: "OTP sent successfully" });
   } catch (error) {
     console.error("Error resending OTP:", error);
@@ -170,31 +171,31 @@ const sendOTP = async (req, res) => {
 //otp verification
 const varifyOtp = async (req, res) => {
   console.log('from varify otp');
-  
+
   let { otp } = req.body;
-  console.log('req.body otp is ',otp);
- 
- 
-  console.log('session otp is ',req.session.otp);
-  
+  console.log('req.body otp is ', otp);
+
+
+  console.log('session otp is ', req.session.otp);
+
   try {
     if (!req.session.otp || !req.session.userData) {
       return res.json({ success: false, message: "OTP expired. Please register again." });
     }
-  
-    console.log('typ of session otp is ',typeof(req.session.otp));
-    
-    console.log('otp is ',otp);
+
+    console.log('typ of session otp is ', typeof (req.session.otp));
+
+    console.log('otp is ', otp);
     if (otp !== req.session.otp) {
       return res.json({ success: false, message: "Invalid OTP" });
     }
 
     // OTP is correct → Hash password & save user
-    const isVerified=true
-    const { name, email, password,phone } = req.session.userData;
+    const isVerified = true
+    const { name, email, password, phone } = req.session.userData;
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const newUser = new User({ phone,name, email, hashedPassword,isVerified });
+    const newUser = new User({ phone, name, email, hashedPassword, isVerified });
     await newUser.save();
 
     // Clear session
@@ -212,13 +213,13 @@ const varifyOtp = async (req, res) => {
 const resendOtp = async (req, res) => {
   console.log('from resent otp page');
   console.log(req.session.userData);
- 
+
   try {
     const email = req.session.userData?.email;
     if (!email) return res.status(400).json({ message: "Email is required" });
-    req.session.userData.otp=null
+    req.session.userData.otp = null
     const newOtp = generateOTP();
-    req.session.otp=newOtp;
+    req.session.otp = newOtp;
     otpStore[email] = { otp: newOtp, expiresAt: Date.now() + 60 * 1000 }; // 1 minute validity
 
     await transporter.sendMail({
@@ -227,7 +228,7 @@ const resendOtp = async (req, res) => {
       text: `Your new OTP is ${newOtp}. It expires in 1 minute.`,
     });
     console.log('new otp send succesfully');
-    
+
     res.json({ message: "New OTP sent successfully", expiresAt: otpStore[email].expiresAt });
   } catch (error) {
     console.error("Error resending OTP:", error);
@@ -359,39 +360,15 @@ const getAccount = async (req, res) => {
       res.redirect('/user/home')
     } else {
       const addresses = await Address.find({ userId })
-      //   user.addresses= [{
-      //     name: "John Doe",
-      //     street: "123 Main Street",
-      //     city: "New York",
-      //     state: "NY",
-      //     zip: "10001",
-      //     phone: "+1 234 567 890"
-      // }];
 
+      //fetching orders
+      const orders = await Order.find({ userId }).populate('items.productId').sort({ createdAt: -1 })
+      if (!orders) {
+        console.log("orders are not found");
 
-      const orders = [
-        {
-          _id: "1",
-          itemCount: 3,
-          total: 45.99,
-          estimatedDelivery: new Date("2025-03-25"),
-          status: "Shipped"
-        },
-        {
-          _id: "2",
-          itemCount: 2,
-          total: 29.49,
-          estimatedDelivery: new Date("2025-03-27"),
-          status: "Processing"
-        },
-        {
-          _id: "3",
-          itemCount: 5,
-          total: 79.99,
-          estimatedDelivery: new Date("2025-03-30"),
-          status: "Delivered"
-        }
-      ];
+        res.json({ success: false, message: "orders are not found" })
+      }
+
       const cancelReasons = ['reason1', 'reason2', 'reason3']
 
       //get cart count
@@ -575,7 +552,7 @@ const getCart = async (req, res) => {
       .populate({
         path: 'items.productId',
         model: 'Product',
-        select: 'productName price images'
+        select: 'productName price images stock'
       })
     if (!cart) {
       console.log('No existing cart');
@@ -625,12 +602,18 @@ const addToCart = async (req, res) => {
     const user = req.session.user;
     const userId = user._id;
     const { productId } = req.body;
+    console.log('product id is ',productId);
+    
     const quantity = req.body.quantity || 1;
+    const subTotal = req.body.subTotal
 
+    if (!user) {
+      return res.json({ success: false, message: "User not resistered" })
+    }
     console.log('quantity is ', quantity);
 
     // Find the product and check stock
-    const product = await Product.findById(productId);
+    const product = await Product.findOne({_id:productId});
 
     if (!product) {
       return res.json({ success: false, message: 'Product not found' });
@@ -663,7 +646,7 @@ const addToCart = async (req, res) => {
         }
       } else {
         // Add the product to the cart if it's not already in
-        cart.items.push({ productId, quantity });
+        cart.items.push({ productId, quantity, subTotal });
       }
     }
 
@@ -726,9 +709,11 @@ const updateCart = async (req, res) => {
     const userId = req.session.user._id;
 
     // Find cart and product
-    const cart = await Cart.findOne({ userId });
-    const product = await Product.findById(productId);
 
+    const product = await Product.findById(productId);
+    const cart = await Cart.findOne({ userId });
+    const price = product.price
+    const subTotal = price * quantity
     if (!cart) {
       return res.json({ success: false, message: "Cart not found" });
     }
@@ -756,6 +741,7 @@ const updateCart = async (req, res) => {
 
     // Update quantity
     item.quantity = quantity;
+    item.subTotal = subTotal
 
     // Save cart update
     await cart.save();
@@ -809,9 +795,314 @@ const changePassword = async (req, res) => {
 
 const getCheckout = async (req, res) => {
   console.log("this is from user checkout page");
+  const userId = req.session.user._id
+  if (!userId) {
+    return res.json({ success: false, message: "user not fount" })
+  }
+  const user = await User.findOne({ _id: userId })
+  if (!user) {
+    console.log('User is not found');
+
+    return res.json({ success: false, message: "user not found" })
+  }
+
+
+  const cart = await Cart.findOne({ userId }).populate('items.productId')
+  if (cart) {
+    cartCount = cart.items.length
+    console.log('cart count is ', cartCount);
+  } else {
+    console.log('cart not fount');
+
+  }
+
+  const shipping = 'shipping charge'
+  let totalAmount = 0;
+  let subTotal = 0
+  let cartItems = cart.items.map(item => {
+    subTotal = item.productId.price * item.quantity;
+    totalAmount += subTotal;
+
+    return {
+      productName: item.productId.productName,
+      price: item.productId.price,
+      quantity: item.quantity,
+      subTotal,
+      totalAmount,
+      shipping,
+      images: item.productId.images
+    };
+  })
+  //fetching address
+
+  const addresses = await Address.find({ userId })
+  if (!addresses) {
+    return res.json({ success: false, message: "You dont have any saved address" })
+  }
+
+  return res.render('user/userCkeckout', {
+    categoryId: null,
+    priceRange: null,
+    cartCount: cartCount || '',
+    user: req.session.user || '',
+    sort: null, query: null,
+    addresses: addresses || "",
+    user,
+    cartItems,
+
+    totalAmount
+  })
+}
+
+const placeOrder = async (req, res) => {
+  console.log('from place order');
+
+  try {
+    const { paymentMethod, paymentDetails, totalAmount } = req.body
+    let addressId = req.body.addressId?.trim();
+    //validatiing essential fields
+    if (addressId == '' || paymentMethod == '' || totalAmount == '') {
+      console.log('missing reuired fileds', addressId, paymentMethod, paymentDetails, totalAmount);
+
+      return res.status(400).send('Missing required fields');
+    }
+    console.log("address id ", addressId, ' type ', typeof (addressId));
+    addressId = new mongoose.Types.ObjectId(addressId)
+    console.log("address id ", addressId, 'new type ', typeof (addressId));
+    console.log('paymentDetails', paymentDetails);
+    let { upiId, cardNumber, expiry, cvv, cardName } = paymentDetails
+    if (paymentMethod == 'Credit Card') {
+      if (cardNumber == '' || expiry == '' || cvv == '' || cardName == '') {
+        return res.json({ success: false, message: 'Payment details are missing' })
+      }
+    } else if (paymentMethod == 'UPI') {
+      upiId = paymentDetails?.upiId;
+      if (!upiId) {
+        return res.json({ success: false, message: 'UPI id is missing' })
+      }
+      console.log(upiId);
+
+    } else { }
+
+
+    //fetching full address from database
+
+    const address = await Address.findById(addressId);
+    if (!address) {
+      console.log('address is not found');
+      return res.json({ success: false, message: 'Selected address is not found' })
+    }
+    //getting cartItems
+    // console.log('user is ',req.session.user);
+
+    const userId = req.session.user._id
+    const cart = await Cart.findOne({ userId })
+    console.log('cart is ', cart);
+
+    console.log('Cart items are ', cart.items);
+
+    if (!cart) {
+      return res.json({ success: false, message: "Cart  is not found" })
+    }
+
+    //checking product availability
+    let items = cart.items
+
+    for (let item of items) {
+      const product = await Product.findById(item.productId);
+
+      if (!product) {
+        return res.status(404).json({ success: false, message: "Product not found" });
+      }
+
+      if (product.stock < item.quantity) {
+        console.log('the product is out of stock from route');
+        
+        return res.status(400).json({
+          success: false,
+          message: ` ${product.productName} is out of stock`
+        });
+      }
+    }
+
+    const createdAt = new Date();
+    const deliveryDate = new Date(createdAt.getTime() + 5 * 24 * 60 * 60 * 1000); // Add 5 days
+
+
+    //creating new order document
+    const order = new Order({
+      userId: req.session.user._id,
+      address,
+      paymentMethod,
+      totalAmount,
+      status: paymentMethod === 'COD' ? 'Pending' : 'Processing',
+      paymentDetails: paymentMethod == 'Credit Card' ? {
+        cardNumber,
+        expiry,
+        cvv,
+        cardName
+      } : paymentMethod == 'UPI' ? {
+        upiId
+      } : null,
+
+      items: cart.items,
+      createdAt,
+      deliveryDate
+    })
+    await order.save()
+    for (let item of cart.items) {
+      await Product.findByIdAndUpdate(item.productId, {
+        $inc: { stock: -item.quantity }
+      });
+    }
+
+    // making cart empty
+    await Cart.updateOne({ userId }, { $set: { items: [] } });
+
+    console.log('order save succesfully,order._id', order._id);
+
+    return res.json({
+      success: true,
+      message: "Order completed successfully",
+      orderId: order._id  //this line sends the ID to frontend
+    });
+
+
+  } catch (error) {
+    console.log('error in placing order', error);
+    return res.json({ success: false, message: "Error in placing order" })
+  }
 
 }
 
+const getOrderSuccess = async (req, res) => {
+  try {
+    console.log('from order success page');
+    const orderId = req.query.orderId;
+    console.log("order id is ", orderId);
+    console.log('type of order id ', typeof (orderId))
+
+
+    const order = await Order.findOne({ _id: orderId }).populate('items.productId')
+    console.log('order.items', order.items);
+
+
+
+    res.render('user/orderSuccess', { title: 'Order Success', order })
+  } catch (error) {
+    console.log(error);
+    res.status(500).send('Something went wrong');
+  }
+}
+
+//user get all orders page
+
+const getOrders = async (req, res) => {
+  console.log('from user all orders page');
+  try {
+    const userId = req.session.user._id
+    if (!userId) {
+      console.log("user not found");
+
+      res.json({ success: false, message: "User not found" })
+    }
+    const orders = await Order.find({ userId }).populate('items.productId').sort({ createdAt: -1 })
+    if (!orders) {
+      console.log("orders are not found");
+
+      res.json({ success: false, message: "orders are not found" })
+    }
+    console.log('your orders are ', orders);
+
+    //get cart count
+    const cart = await Cart.findOne({ userId }).populate('items.productId')
+    if (cart) {
+      cartCount = cart.items.length
+      console.log('cart count is ', cartCount);
+    } else {
+      console.log('cart not fount');
+
+    }
+
+    res.render('user/userOrders', {
+      title: "see Your All-Orders",
+      orders,
+      categoryId: null,
+      priceRange: null,
+      cartCount: cartCount || '',
+      user: req.session.user || '',
+      sort: null, query: null,
+    })
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: "error in fetching orders" })
+  }
+}
+
+//get order details page
+const getOrderDetails = async (req, res) => {
+  console.log('from user order details page');
+  try {
+    const orderId = req.params.orderId
+    console.log(' orderId ', orderId);
+
+    //fetching orders
+    const order = await Order.findOne({ _id: orderId }).populate('items.productId')
+    if (!order) {
+      res.json({ success: false, message: "Order not found" })
+    }
+    res.render('user/orderDetails', { title: "order details page", order })
+  } catch (error) {
+    console.log('error:', error);
+    res.json({ success: false, message: "Error in fetching order detais" })
+  }
+}
+
+//delete order
+const deleteOrder = async (req, res) => {
+  console.log('form order delete route');
+  try {
+    let orderId = req.params.orderId
+    console.log('order id ', orderId);
+    if (!orderId) {
+      console.log('order id is not fount');
+      return res.json({ success: false, message: "order id is not getting" })
+    }
+    orderId = new mongoose.Types.ObjectId(orderId);
+    const order = await Order.findOne({ _id: orderId })
+    order.status = "cancelled"
+    order.save()
+
+    // restoring stock
+
+    for(item of order.items){
+      const product=await Product.findById(item.productId)
+      console.log(`user cancelling before restoring ${product.productName} is ${product.stock}`);
+      product.stock=product.stock+item.quantity
+       await product.save()
+       console.log(`after restoring ${product.productName} is ${product.stock}`);
+    }
+
+    console.log('order cancelled succeccfully');
+    return res.json({ success: true, message: 'Order cancelled successfully' })
+
+  } catch (error) {
+    console.log('error is ', error);
+    return res.json({ success: false, message: "error in deleteing cart" })
+  }
+}
+
+const logout=async (req,res)=>{
+  console.log('from user logout');
+  try {
+    req.session.user=null
+    return res.json({success:true,message:'User Logout Successfull'})
+  } catch (error) {
+    console.log(error);
+    res.json({success:false,message:"Error in user logout"})
+  }
+
+}
 module.exports = {
   getLogin,
   postLogin,
@@ -834,6 +1125,12 @@ module.exports = {
   changePassword,
   getOtp,
   getSetPassword,
-  postSetPassword
+  postSetPassword,
+  placeOrder,
+  getOrderSuccess,
+  getOrders,
+  getOrderDetails,
+  deleteOrder,
+  logout
 }
 

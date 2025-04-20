@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Order Details</title>
+  <link rel="stylesheet" href="/css/adminViewOrder.css"> <!-- Your CSS path -->
+</head>
+<body>
+
+  <div class="container">
+    <h2>Order Details - ORD<%= order._id.toString().slice(-6).toUpperCase() %></h2>
+
+    <div class="section">
+      <h3>User Info</h3>
+      <p><strong>Name:</strong> <%= user.fullName %></p>
+      <p><strong>Email:</strong> <%= user.email %></p>
+      <p><strong>Phone:</strong> <%= user.phone %></p>
+    </div>
+    <div style="font-weight: bold;"><p>Order Status:<span  class="<%= order.status %>">  <%= order.status %></span> </p></div>
+    <div class="section">
+      <h3>Shipping Address</h3>
+      <p>
+        <%= order.address.name %><br>
+        <%= order.address.street %>, <%= order.address.city %>, <%= order.address.state %> - <%= order.address.pincode %><br>
+        Phone: <%= order.address.phone %>
+      </p>
+    </div>
+
+    <div class="section">
+      <h3>Items Ordered</h3>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Qty</th>
+            <th>Price</th>
+            <th>Subtotal</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% order.items.forEach(item => { %>
+            <tr>
+              <td><%= item.productId.productName %></td>
+              <td><%= item.quantity %></td>
+              <td>₹<%= item.productId.price %></td>
+              <td>₹<%= (item.quantity * item.productId.price).toFixed(2) %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <h3>Payment & Status</h3>
+      <p><strong>Payment Method:</strong> <%= order.paymentMethod %></p>
+      <p><strong>Total Amount:</strong> ₹<%= order.totalAmount.toFixed(2) %></p>
+      <p><strong>Order Status:</strong> <%= order.status %> </p>
+       
+    </div>
+
+    <a href="/admin/orders" class="button btn-back"><button>← Back to Orders</button></a>
+  </div>
+
+</body>
+</html>

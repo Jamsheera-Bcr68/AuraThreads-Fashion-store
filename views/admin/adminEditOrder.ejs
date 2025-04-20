@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Edit Order Status</title>
+  <link rel="stylesheet" href="/css/adminEditOrder.css">
+</head>
+<body>
+
+  <div class="container">
+    <h2>Edit Order Status - ORD<%= order._id.toString().slice(-6).toUpperCase() %></h2>
+
+    <div class="section">
+      <h3>Current Status:</h3>
+      <span><strong><%= order.status %></strong></span>
+    </div>
+
+    <form id="editOrderForm" action="/admin/orders/<%= order._id %>/update-status" method="POST">
+      <div class="section">
+        <h3>Update Status</h3>
+        <!-- Hidden field for orderId -->
+        <input type="hidden" name="orderId" value="<%= order._id %>">
+        <select name="status" required>
+
+          <option value="">-- Select Status --</option>
+          <option value="Pending" <%= order.status === 'Pending' ? 'selected' : '' %>>Pending</option>
+          <option value="Processing" <%= order.status === 'Processing' ? 'selected' : '' %>>Processing</option>
+          <option value="Shipped" <%= order.status === 'Shipped' ? 'selected' : '' %>>Shipped</option>
+          <option value="Delivered" <%= order.status === 'Delivered' ? 'selected' : '' %>>Delivered</option>
+          <option value="Cancelled" <%= order.status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
+        </select>
+
+        <button type="submit">Update</button>
+      </div>
+    </form>
+
+    <a href="/admin/orders" class="btn-back">← Back to Orders</a>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+ const editOrderForm=document.getElementById('editOrderForm')
+
+ editOrderForm.addEventListener("submit",function(e){
+  e.preventDefault()
+  console.log('editOrderForm submitted');
+  
+  const formData=new FormData(this)
+
+const formObject={}
+  formData.forEach((value, key) => {
+    formObject[key] = value;
+  });
+console.log('form data is ',formObject);
+
+  fetch('/admin/updateOrder',{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(formObject)
+  }).then(res=>res.json())
+  .then(data=>{
+    if(data && data.success){
+      Swal.fire(data.message)
+    }else{
+      Swal.fire(data.message)
+      window.location.href='/admin/orders'
+    }
+  }).catch(error=>{console.log('error is ',error);
+  
+    Swal.fire('Some thing went wrong')
+  })
+ })
+</script>
+</body>
+</html>

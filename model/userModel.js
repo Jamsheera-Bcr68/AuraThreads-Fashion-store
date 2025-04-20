@@ -21,4 +21,4 @@ const userShema=mongoose.Schema({
     otpExpiry: { type: Date }
    
 })
-module.exports=mongoose.model('user',userShema)
+module.exports=mongoose.model('User',userShema)

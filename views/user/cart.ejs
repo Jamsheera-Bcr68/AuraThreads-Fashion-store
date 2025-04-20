@@ -63,7 +63,7 @@
                         <td class="product-name">
                           <h2 class="h5 text-black"><%= item.productId.productName %></h2>
                         </td>
-                        <td>$<%= item.productId.price.toFixed(2) %></td>
+                        <td>₹ <%= item.productId.price.toFixed(2) %></td>
                         <td>
                           <div class="input-group mb-3" style="max-width: 120px;">
                             <div class="input-group-prepend">
@@ -73,11 +73,11 @@
                             </div>
                             <input type="text" id="quantity" class="form-control text-center"  value="<%= item.quantity %>" name="quantity-<%= item.id %>">
                             <div class="input-group-append">
-                              <button class="btn btn-outline-primary js-btn-plus" data-productId="<%= item.productId._id %>" data-id="<%= item.quantity %>" type="button">&plus;</button>
+                              <button class="btn btn-outline-primary js-btn-plus" data-productId="<%= item.productId._id %>" data-max="<%= item.productId.stock %>" data-id="<%= item.quantity %>" type="button">&plus;</button>
                             </div>
                           </div>
                         </td>
-                        <td>$<%= (item.productId.price * item.quantity).toFixed(2) %></td>
+                        <td>₹ <%= (item.productId.price * item.quantity).toFixed(2) %></td>
                         <td>
                           <button class="btn btn-danger text-white btn-sm js-remove-item" data-id="<%= item.productId._id %>">
                               X Remove
@@ -103,7 +103,7 @@
                 <a href="/user/cart" class="btn btn-success btn-sm btn-block" type="submit">Update Cart</a>
               </div>
               <div class="col-md-6">
-                <a href="/shop" class="btn btn-outline-primary btn-sm btn-block">Continue Shopping</a>
+                <a href="/product/productList" class="btn btn-outline-primary btn-sm btn-block">Continue Shopping</a>
               </div>
             </div>
             <div class="row">
@@ -132,7 +132,7 @@
                     <span class="text-black">Subtotal</span>
                   </div>
                   <div class="col-md-6 text-right">
-                    <strong class="text-black">$<%= cart.items.reduce((sum, item) => sum + (item.productId.price * item.quantity), 0).toFixed(2) %></strong>
+                    <strong class="text-black">₹ <%= cart.items.reduce((sum, item) => sum + (item.productId.price * item.quantity), 0).toFixed(2) %></strong>
                   </div>
                 </div>
                 <div class="row mb-5">
@@ -140,7 +140,7 @@
                     <span class="text-black">Total</span>
                   </div>
                   <div class="col-md-6 text-right">
-                    <strong class="text-black">$<%= cart.items.reduce((sum, item) => sum + (item.productId.price * item.quantity), 0).toFixed(2) %></strong>
+                    <strong class="text-black">₹ <%= cart.items.reduce((sum, item) => sum + (item.productId.price * item.quantity), 0).toFixed(2) %></strong>
                   </div>
                 </div>
     

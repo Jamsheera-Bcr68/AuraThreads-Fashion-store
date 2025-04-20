@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Orders | Aura Threads</title>
+    <link rel="stylesheet" href="/css/userOrders.css">
+</head>
+<body>
+    <div class="site-wrap">
+        <%- include('../partials/userHeader') %>
+
+        <div class="container">
+            <h1 class="order-title">My Orders</h1>
+            
+            <!-- <div class="search-filter">
+                <div class="search-bar">
+                    <input type="text" placeholder="Search orders...">
+                    <button>Search</button>
+                </div>
+                <select class="filter-dropdown">
+                    <option value="all">All Orders</option>
+                    <option value="processing">Processing</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="shipped">Shipped</option>
+                    <option value="delivered">Delivered</option>
+                    <option value="cancelled">Cancelled</option>
+                </select>
+            </div> -->
+            
+            <table class="orders-table">
+                <thead>
+                    <tr style="background-color: #cbb6ac;">
+                        <th>Order ID</th>
+                        <th>Items</th>
+                        <th>Date</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% orders.forEach(order => { %>
+                        <tr>
+                            <td style="color: black;" class="order-id">ORD<%= order._id.toString().slice(-6).toUpperCase() %></td>
+                            
+                            <td>
+                                <div style="display: flex; flex-direction: column; gap: 4px; color: green;">
+                                   
+                                    <div><strong>Items:</strong> 
+                                        <%= Array.isArray(order.items) ? order.items.length : 1 %>
+                                    </div>
+                                    <div><strong>Placed:</strong> <%= new Date(order.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) %></div>
+                                    <% if (order.estimatedDelivery) { %>
+                                        <div><strong>Est. Delivery:</strong> <%= new Date(order.estimatedDelivery).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) %></div>
+                                    <% } %>
+                                </div>
+                            </td>
+            
+                            <td><%= new Date(order.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) %></td>
+                            
+                            <td style="color: red;"> ₹ <%= order.totalAmount.toFixed(2) %></td>
+                            
+                            <td>
+                                <span class="status-badge status-<%= order.status.toLowerCase() %>">
+                                    <%= order.status %>
+                                </span>
+                            </td>
+                            
+                            <td>
+                                <div class="action-btns" style="display: flex; flex-direction: row; gap: 6px; flex-wrap: wrap;">
+                                  <button onclick="displayOrderDetails('<%= order._id %>?source=all')" class="btn btn-sm bg-success text-white btn-details">Details</button>
+                              
+                                  <% if (order.status === 'cancelled') { %>
+                                    <button class="btn btn-sm btn-secondary" disabled>Cancelled</button>
+                                  <% } else if (order.status === 'Processing') { %>
+                                    <button onclick="cancelOrder('<%= order._id %>', this)" class="btn btn-sm bg-danger text-white btn-cancel">Cancel</button>
+                                  <% } else if (order.status === 'Shipped' || order.status === 'Delivered') { %>
+                                    <button class="btn btn-sm btn-track">Track</button>
+                                    <button class="btn btn-sm btn-cancel btn-disabled" disabled>Cancel</button>
+                                  <% } else { %>
+                                    <button onclick="cancelOrder('<%= order._id %>', this)" class="btn btn-sm bg-danger text-white btn-cancel">Cancel</button>
+                                  <% } %>
+                                </div>
+                              </td>
+                              
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+            
+            
+            
+            <!-- Pagination -->
+            <!-- <div class="pagination">
+                <button class="page-btn active">1</button>
+                <button class="page-btn">2</button>
+                <button class="page-btn">3</button>
+                <button class="page-btn">Next</button>
+            </div> -->
+            
+            <!-- Empty state (hidden by default, show when no orders) -->
+            <div class="empty-state" style="display: none;">
+                <h3>No Orders Found</h3>
+                <p>You haven't placed any orders yet. Start shopping to see your orders here.</p>
+            </div>
+        </div>
+        <%- include('../partials/userFooter') %>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function displayOrderDetails(orderIdWithQuery){
+            console.log('from user display order details scrit');
+            window.location.href=`/user/order-details/${orderIdWithQuery}`
+        }
+        function cancelOrder(orderId, btn) {
+    console.log(' Function called: cancelOrder');
+    console.log(' Order ID:', orderId);
+    console.log(' Button element:', btn);
+
+    Swal.fire({
+        title: "Are you sure to cancel this order?",
+        text: "You won't be able to revert this!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Yes, cancel it!"
+    }).then((result) => {
+        console.log('🧾 Swal result:', result);
+        if (result.isConfirmed) {
+            console.log(' Confirmed. Sending DELETE request...');
+
+            fetch(`/user/cancel-order/${orderId}`, {
+                method: "DELETE",
+            })
+            .then(res => {
+                return res.json();
+            })
+            .then(data => {
+                if (data && data.success) {
+                    console.log(' Cancellation successful');
+                    
+                    Swal.fire({
+                        title: "Cancelled!",
+                        text: "Your order has been cancelled.",
+                        icon: "success"
+                    });
+
+                    if (btn) {
+                        btn.disabled = true;
+                        btn.innerText = "Cancelled";
+                        btn.classList.remove('bg-danger', 'text-white');
+                        btn.classList.add('btn-secondary');
+                        console.log(' Button disabled and updated');
+                    } else {
+                        console.warn(' Button element is undefined or not passed');
+                    }
+                } else {
+                    console.error(' Cancellation failed:', data.message);
+                    Swal.fire(data.message || "Failed to cancel order.");
+                }
+            })
+            .catch(err => {
+                console.error(' Fetch error:', err);
+                Swal.fire("Something went wrong.");
+            });
+        } 
+    });
+}
+      // document.addEventListener('DOMContentLoaded', function() {
+        //     // Example: Fetch orders from your Node.js/Express backend
+        //     // fetchOrders();
+            
+        //     // Cancel button functionality
+        //     const cancelButtons = document.querySelectorAll('.btn-cancel:not(.btn-disabled)');
+        //     cancelButtons.forEach(button => {
+        //         button.addEventListener('click', function() {
+        //             const row = this.closest('tr');
+        //             const orderId = row.querySelector('.order-id').textContent;
+                    
+        //             if (confirm(`Are you sure you want to cancel order ${orderId}?`)) {
+        //                 // Call your Node.js API to cancel the order
+        //                 // cancelOrder(orderId);
+        //                 console.log(`Cancelling order: ${orderId}`);
+        //             }
+        //         });
+        //     });
+            
+        //     // Filter dropdown functionality
+        //     const filterDropdown = document.querySelector('.filter-dropdown');
+        //     filterDropdown.addEventListener('change', function() {
+        //         const selectedStatus = this.value;
+        //         console.log(`Filtering by: ${selectedStatus}`);
+        //         // fetchOrders(selectedStatus);
+        //     });
+            
+        //     // Search functionality
+        //     const searchButton = document.querySelector('.search-bar button');
+        //     searchButton.addEventListener('click', function() {
+        //         const searchText = document.querySelector('.search-bar input').value;
+        //         console.log(`Searching for: ${searchText}`);
+        //         // searchOrders(searchText);
+        //     });
+            
+        //     // Details button functionality
+        //     const detailButtons = document.querySelectorAll('.btn-details');
+        //     detailButtons.forEach(button => {
+        //         button.addEventListener('click', function() {
+        //             const row = this.closest('tr');
+        //             const orderId = row.querySelector('.order-id').textContent;
+        //             console.log(`View details for order: ${orderId}`);
+        //             // window.location.href = `/orders/${orderId}`;
+        //         });
+        //     });
+            
+        //     // Track button functionality
+        //     const trackButtons = document.querySelectorAll('.btn-track');
+        //     trackButtons.forEach(button => {
+        //         button.addEventListener('click', function() {
+        //             const row = this.closest('tr');
+        //             const orderId = row.querySelector('.order-id').textContent;
+        //             console.log(`Track order: ${orderId}`);
+        //             // openTrackingModal(orderId);
+        //         });
+        //     });
+        // });
+        
+        // // Function to fetch orders from backend
+        // function fetchOrders(status = 'all') {
+        //     // Example fetch call to your Node.js/Express backend
+        //     // fetch(`/api/orders?status=${status}`)
+        //     //     .then(response => response.json())
+        //     //     .then(data => {
+        //     //         renderOrders(data);
+        //     //     })
+        //     //     .catch(error => {
+        //     //         console.error('Error fetching orders:', error);
+        //     //     });
+        // }
+        
+        // // Function to cancel an order
+        // function cancelOrder(orderId) {
+        //     // Example fetch call to your Node.js/Express backend
+        //     // fetch(`/api/orders/${orderId}/cancel`, {
+        //     //     method: 'PUT'
+        //     // })
+        //     //     .then(response => response.json())
+        //     //     .then(data => {
+        //     //         if (data.success) {
+        //     //             alert('Order cancelled successfully');
+        //     //             fetchOrders(); // Refresh the order list
+        //     //         } else {
+        //     //             alert('Failed to cancel order: ' + data.message);
+        //     //         }
+        //     //     })
+        //     //     .catch(error => {
+        //     //         console.error('Error cancelling order:', error);
+        //     //     });
+        // }
+        
+        // // Function to render orders in the table
+        // function renderOrders(orders) {
+        //     const tableBody = document.querySelector('.orders-table tbody');
+        //     const emptyState = document.querySelector('.empty-state');
+            
+        //     // Clear current table
+        //     tableBody.innerHTML = '';
+            
+        //     // Show empty state if no orders
+        //     if (orders.length === 0) {
+        //         document.querySelector('.orders-table').style.display = 'none';
+        //         emptyState.style.display = 'block';
+        //         return;
+        //     }
+            
+        //     // Hide empty state and show table
+        //     document.querySelector('.orders-table').style.display = 'table';
+        //     emptyState.style.display = 'none';
+            
+        //     // Render each order row
+        //     orders.forEach(order => {
+        //         // Create table row for each order
+        //         // Append to tableBody
+        //     });
+     //   }
+    </script> 
+</body>
+</html>

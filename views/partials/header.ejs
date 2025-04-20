@@ -26,7 +26,7 @@
   
   <!--logout button-->
     <div class="ms-auto">
-      <button type="button" style="margin-right: 1rem;" class="btn btn-danger">Logout</button>
+      <button id="logoutBtn" type="button" style="margin-right: 1rem;" class="btn btn-danger">Logout</button>
   </div>
   </nav>
   
@@ -55,6 +55,23 @@
     window.location.href=`/search/adminSearch?query=${query}&type=${searchType}`
     
     }
+
+    const logoutBtn=document.getElementById('logoutBtn')
+    logoutBtn.addEventListener("click",function(){
+      fetch('/admin/logout',{method:"POST"})
+      .then(res=>res.json())
+      .then(data=>{
+        if(data.success){
+          Swal.fire(data.message).then(()=>{
+            window.location.href='/admin/login'
+          })
+        }
+      }).catch(error=>{
+        console.log('error ',error);
+        
+        Swal.fire("Something went wrong")
+      })
+    })
   
   </script>
 

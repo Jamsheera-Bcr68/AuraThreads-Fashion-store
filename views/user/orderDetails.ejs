@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Order Details</title>
+    <link rel="stylesheet" href="/css/orderDetails.css">
+</head>
+
+<body>
+
+    <div class="order-container">
+
+        <h2>Order Details - ORD<%= order._id.toString().slice(-6).toUpperCase() %>
+        </h2>
+
+        <div class="section">
+            <h3>Status</h3>
+            <span class="badge <%= order.status.toLowerCase() %>">
+                <%= order.status %>
+            </span>
+        </div>
+
+        <div class="section">
+            <h3>Order Info</h3>
+            <p><strong>Order Date:</strong>
+                <%= new Date(order.createdAt).toLocaleDateString() %>
+            </p>
+            <% if (order.deliveryDate) { %>
+                <p><strong>Delivery Date:</strong>
+                    <%= new Date(order.deliveryDate).toLocaleDateString() %>
+                </p>
+                <% } %>
+                    <p><strong>Payment Method:</strong>
+                        <%= order.paymentMethod %>
+                    </p>
+                    <p><strong>Total Amount:</strong>₹ <%= order.totalAmount.toFixed(2) %>
+                    </p>
+        </div>
+
+        <div class="section">
+            <h3>Shipping Address</h3>
+            <p>
+                <%= order.address.name %><br>
+                    <%= order.address.street %>, <%= order.address.city %>, <%= order.address.state %> - <%=
+                                    order.address.pincode %><br>
+                                    Phone: <%= order.address.phone %>
+            </p>
+        </div>
+
+        <div class="section">
+            <h3>Items</h3>
+            <table class="table items-table">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Image</th>
+                        <th>Qty</th>
+                        <th>Price</th>
+                        <th>Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% order.items.forEach(item=> { %>
+                        <tr>
+                            <td>
+                                <%= item.productId.productName %>
+                            </td>
+                            <td>
+                                <img src="<%= item.productId.images[0] %>" alt="<%= item.productId.productName %>">
+                            </td>
+                            <td>
+                                <%= item.quantity %>
+                            </td>
+                            <td>₹ <%= item.productId.price.toFixed(2) %>
+                            </td>
+                            <td>₹ <%= (item.quantity * item.productId.price).toFixed(2) %>
+                            </td>
+                        </tr>
+                        <% }) %>
+                </tbody>
+            </table>
+        </div>
+
+        <button class="btn-back" id="btn-back">← Back to Orders</button>
+
+    </div>
+
+    <script>
+
+        window.onload = function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            const source = urlParams.get('source');
+            console.log(source, 'source is');
+
+            const backBtn = document.getElementById("btn-back");
+
+            if (backBtn) {
+                backBtn.addEventListener('click', function () {
+                    if (source === 'all') {
+                        window.location.href = "/user/orders";
+                    } else {
+                        window.location.href = "/user/account";
+                    }
+                });
+            }
+        };
+
+    </script>
+
+
+
+</body>
+
+</html>

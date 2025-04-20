@@ -117,15 +117,28 @@ router.delete('/address/delete/:addressId',userController.deleteAddress)
 router.get('/cart',userController.getCart)
 
 //user add to cart
-router.post('/cart/add',userController.addToCart)
+router.post('/cart/add',userAuth,userController.addToCart)
 //user remove cart
 router.delete('/cart/remove/:productId',userController.deleteCart)
 
 //user cartupdate
-router.post('/cart/update/:productId/:quantity',userController.updateCart)
+router.post('/cart/update/:productId/:quantity/',userController.updateCart)
 
 //user forgot password
 router.post('/profile/change-password',userController.changePassword)
 //get user checkout
 router.get('/checkout',userController.getCheckout)
+ router.post('/place-order',userController.placeOrder)
+
+ router.get('/order-success',userController.getOrderSuccess)
+
+ //user all orderpage
+
+ router.get('/orders',userController.getOrders)
+ //get orderdetails page
+ router.get('/order-details/:orderId',userController.getOrderDetails)
+
+ router.delete('/cancel-order/:orderId',userController.deleteOrder)
+ //user logout
+ router.post('/logout',userController.logout)
 module.exports = router;

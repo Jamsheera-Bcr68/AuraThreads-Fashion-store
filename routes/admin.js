@@ -9,7 +9,9 @@ const user = require("../model/userModel");
 const multer = require("multer");
 const mongoose = require("mongoose");
 const sharp=require('sharp')
-const path=require('path')
+const path=require('path');
+const { route } = require("./product");
+const Order=require('../model/orderModel')
 
 
 
@@ -24,6 +26,7 @@ router.get("/dashboard", async (req, res) => {
   const userCount = await user.countDocuments();
   const productCount = await product.countDocuments({isDeleted:false});
   const categoryCount = await category.countDocuments({isDeleted:false});
+  const orderCount=await Order.countDocuments({});
   console.log(
     userCount +
       " userCount , " +
@@ -38,6 +41,7 @@ router.get("/dashboard", async (req, res) => {
     userCount,
     productCount,
     categoryCount,
+    orderCount
   });
 });
 
@@ -268,35 +272,10 @@ router.patch('/block-user/:userId',async (req,res)=>{
   
 })
 
-//admin edit user
-
-// router.patch('/users/edit/:userId',async (req,res)=>{
-//   console.log("from user edit page");
-//   try {
-//     const {userId}=req.params
-//   const {userName,email,phone}=req.body
-//   console.log(`user  id ${userId} email is ${email} phone number is ${phone} user name is${userName}`);
-  
-//   const updateUser=await user.findOneAndUpdate(
-//     {_id:userId},
-//     {$set:{userName,email,phone}},
-//     {new:true}
-//   )
-//   if(!updateUser){
-//     console.log('user not fount');
-//     req.flash('errorMessage','No user found')
-//     res.redirect('/admin/users')
-//   }
-//   console.log('user Updated succesfuly'+updateUser);
-//     req.flash('successMessage','user Updated succesfuly')
-//     res.redirect('/admin/users')
-
-//   } catch (error) {
-//     req.flash('errorMessage','Error in fetching user')
-//     res.redirect('/admin/users')
-//   }
-// })
-
-
-
+router.get('/orders',adminController.getOrder)
+router.get('/orderDetails/:orderId',adminController.getOrderDetails)
+router.get('/updateOrder/:orderId',adminController.getUpdateOrder)
+router.post('/updateOrder',adminController.postUpdateOrder)
+router.delete('/deleteOrder/:orderId',adminController.deleteOrder)
+router.post('/logout',adminController.postLogout)
 module.exports = router;

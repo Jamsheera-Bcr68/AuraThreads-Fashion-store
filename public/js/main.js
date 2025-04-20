@@ -130,9 +130,9 @@ jQuery(document).ready(function($) {
 	}; 
 	siteMenuClone();
 
-
 	function sitePlusMinus() {
 		let quantity
+		
 		document.querySelectorAll('.js-btn-minus').forEach(button => {
 			button.addEventListener('click', function(event) {
 				event.preventDefault();
@@ -143,6 +143,7 @@ jQuery(document).ready(function($) {
 					inputField.value = currentValue - 1;
 					 quantity=inputField.value
 					 let productId = button.dataset.productid;
+					
 					 updateQuantity(quantity,productId)
 				} else {
 					inputField.value = 0;
@@ -153,27 +154,32 @@ jQuery(document).ready(function($) {
 		document.querySelectorAll('.js-btn-plus').forEach(button => {
 			button.addEventListener('click', function(event) {
 				event.preventDefault();
+				console.log('increse btn clicked');
+				
 				let inputField = this.closest('.input-group').querySelector('.form-control');
 				let currentValue = parseInt(inputField.value, 10) || 0;
-	
-				if (currentValue < 5) { 
+				console.log("current value ",currentValue);
+				
+				let productStock=parseInt(button.dataset.max);
+				console.log('productStock ',productStock);
+				if(currentValue>=productStock){
+					Swal.fire("This product is Out of Stock")
+				}else if (currentValue > 4) { 
+					Swal.fire('You can add only 5 of the same product'); 
+				}else if(currentValue < 5  ) { 
 					inputField.value = currentValue + 1;
 					quantity=inputField.value
 					let productId = button.dataset.productid;
-					updateQuantity(quantity,productId)
-				}
-				
-				//  Only trigger alert when already at 5 and trying to increase more
-				if (currentValue === 4) { 
-					Swal.fire('You can add only 5 of the same product'); 
+					
+					updateQuantity(quantity,productId,productStock)
 				}
 			});
 		});
 	}
-	function updateQuantity(quantity,productId){
+
+	function updateQuantity(quantity,productId,productStock){
 		console.log('from use updatequantity');
-		console.log(`quantity is ${quantity} and product id is ${productId}`);
-		
+		console.log(`quantity is ${quantity} and product id is ${productId} productStock is ${productStock}`);
 		
 		fetch(`/user/cart/update/${productId}/${quantity}`,{
 			method:'post',

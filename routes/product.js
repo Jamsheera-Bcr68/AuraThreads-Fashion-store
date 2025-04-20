@@ -17,9 +17,9 @@ const router = express.Router();
 router.get("/products", async (req, res) => {
   
   try {
-   let page=parseInt(req.query.page)||1
-    limit=parseInt(req.query.limit) ||5
-    let skip=(page-1)*limit
+   let page=parseInt(req.query.page)|| 1
+   let limit=parseInt(req.query.limit) ||5
+   let skip=(page-1)*limit
 
     console.log(`page is ${page} and limt is ${limit}`);
     const products = await Product.find({ isDeleted: false }).sort({
@@ -30,12 +30,9 @@ router.get("/products", async (req, res) => {
     const totalProducts=await Product.countDocuments({isDeleted:false})
     const totalPages=Math.ceil(totalProducts/limit)
 
-   
-   
-
     res.render("admin/productManagement", {
       title: "Product Management",
-      currentPage:page,
+      currentPage:page ||1,
       totalPages,
      
       products,
@@ -350,6 +347,7 @@ router.get("/products/:productId", async (req, res) => {
       });
   }
 });
+
 //get product listing page
 router.get('/productList', async (req, res) => {
   console.log('product listing page');
@@ -388,7 +386,7 @@ router.get('/productList', async (req, res) => {
         $in: selectedCategories.map(id => new mongoose.Types.ObjectId(id))
       };
       
-      // If you still want to display a category name in the title, but only when a single category is selected
+      //  display a category name in the title, but only when a single category is selected
       if (selectedCategories.length === 1) {
         // Only get the category name if there's exactly one category selected
         const singleCategory = await category.findOne({ _id: new mongoose.Types.ObjectId(selectedCategories[0]) });
