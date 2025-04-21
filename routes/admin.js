@@ -278,4 +278,22 @@ router.get('/updateOrder/:orderId',adminController.getUpdateOrder)
 router.post('/updateOrder',adminController.postUpdateOrder)
 router.delete('/deleteOrder/:orderId',adminController.deleteOrder)
 router.post('/logout',adminController.postLogout)
+
+//admin coupenMangement
+router.get('/coupens',adminController.getCoupenPage)
+
+//admin add coupen 
+router.post('/addCoupon',adminController.addCoupen)
+
+//admin edit coupen
+router.put('/editCoupon/:couponId',adminController.editCoupen)
+
+//get coupen data
+router.get('/getCouponData/:coupenId',adminController.getCouponData)
+
+//remove coupon
+router.delete('/removeCoupon/:couponId',adminController.removeCoupon)
+
+//applyCoupon
+router.put('/applyCoupon/:couponId',adminController.applyCoupon)
 module.exports = router;
