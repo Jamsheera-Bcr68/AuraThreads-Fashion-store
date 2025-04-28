@@ -6,6 +6,9 @@ const Product = require("../model/productModel");
 const router = require("../routes/product");
 const Order = require('../model/orderModel')
 const Coupen = require('../model/coupenModel')
+const Offer = require('../model/offerModel');
+
+const Category = require('../model/categoryModel')
 
 console.log("Admin Controller Loaded!");
 // get login
@@ -345,16 +348,16 @@ const getCoupenPage = async (req, res) => {
     const limit = parseInt(req.query.limit) || 5
     const skip = (page - 1) * limit
     const coupons = await Coupen.find().sort({ createdAt: -1 }).skip(skip).limit(limit)
-    console.log(page,limit,skip,coupons);
-    
+    console.log(page, limit, skip, coupons);
+
     if (!coupons) {
       console.log('No coupens');
 
       return res.json({ success: false, message: "Coupens not found" })
     }
     const activeCouponsCount = await Coupen.countDocuments({ isActive: true })
-    const totalCoupons=await Coupen.countDocuments()
-    const totalPages=Math.floor(totalCoupons/limit)
+    const totalCoupons = await Coupen.countDocuments()
+    const totalPages = Math.floor(totalCoupons / limit)
 
     res.render('admin/coupenManagement', {
       title: 'Admin Coupen Management',
@@ -363,7 +366,7 @@ const getCoupenPage = async (req, res) => {
       totalRedemptions: 10,
       revenueImpact: 100,
       expiringSoonCount: 5,
-      currentPage:page,
+      currentPage: page,
       skip,
       limit,
       totalPages
@@ -505,6 +508,84 @@ const applyCoupon = async (req, res) => {
   }
 
 }
+
+//get offers
+const getOffers = async (req, res) => {
+  const stats = {
+    totalOffers: 24,
+    activeOffers: 16,
+    pendingOffers: 5,
+    expiredOffers: 3,
+  };
+  try {
+    const products = await Product.find({ isDeleted: false })
+    const categories = await Category.find({ isDeleted: false })
+    const offers=await Offer.find({})
+
+  console.log('from admin offer');
+  res.render('admin/offerManagement', {
+    title: "Offer Management",
+    stats,
+    offers, products, categories
+  })
+  } catch (error) {
+    console.log('error is ',error);
+    return res.json({success:false,message:'Server Error'})
+  }
+}
+
+//add offer
+const addOffer = async (req, res) => {
+  console.log('from admin add offer');
+  try {
+    const formObject = req.body
+    console.log('form Object ', formObject);
+
+    const offer = new Offer({
+      offerName: formObject.offerName,
+      description: formObject.offerDesc,
+      discountType: formObject.discountType == 'percentage' ? 'percentage' : 'amount',
+      discountValue: formObject.discountValue,
+      startDate: formObject.startDate,
+      endDate: formObject.endDate,
+      status: formObject.status,
+      productId: formObject.productId || null,
+      categoryId: formObject.categoryId || null,
+      applicableTo: formObject.offerOn,
+      createdAt:new Date()
+    })
+
+    await offer.save()
+    return res.json({ success: false, message: "Offer Created successfully" })
+  } catch (error) {
+    console.log('error is ', error);
+    return res.json({ success: false, message: "Error in Making offer" })
+  }
+}
+
+const deleteOffer=async (req,res)=>{
+  console.log('from delete offer');
+  try {
+    const  offerId=req.params.offerId
+    if(!offerId){
+      console.log('Offer id not found');
+      return res.json({success:false,message:"Offer id is missing"})
+    }
+    const offer=await Offer.findOne({_id:offerId})
+    if(!offer){
+      console.log('Offer not found');
+      return res.json({success:false,message:"Offer is not found"})
+    }
+
+    offer.status='pending'
+    await offer.save()
+    return res.json({success:true,message:"Offer deleted successfully"})
+  } catch (error) {
+    console.log('error is ',error);
+    return res.json({success:false,message:"server Error"})
+  }
+}
+
 module.exports = {
   getLogin,
   postLogin,
@@ -524,5 +605,8 @@ module.exports = {
   editCoupen,
   getCouponData,
   removeCoupon,
-  applyCoupon
+  applyCoupon,
+  getOffers,
+  addOffer,
+  deleteOffer
 };

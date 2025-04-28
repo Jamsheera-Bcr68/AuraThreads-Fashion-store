@@ -1,301 +1,326 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Admin - Category Management</title>
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-    />
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  </head>
-  <body>
-    <style>
-      .container {
-        margin-left: 0;
-        margin-right: 0;
-        margin-top: 0;
-        padding: 0;
-        max-width: 100%;
-      }
-      body {
-        margin: 0;
-        padding-top: 0;
-      }
-    </style>
-
-    <div class="container mt-5">
-      <%- include('../partials/header.ejs') %>
-
-      <div class="d-flex" id="wrapper">
-        <%- include('../partials/sidebar') %>
-
-        <div class="container mt-4">
-          <h2 class="text-center fw-bold mb-4">Category Management</h2>
-
-          <!-- Button to Open Modal -->
-          <div class="d-flex justify-content-end mb-3">
-            <button
-              class="btn btn-primary"
-              data-bs-toggle="modal"
-              data-bs-target="#addCategoryModal"
-            >
-              + Create Category
-            </button>
-          </div>
-
-          <!-- Category Table -->
-          <div class="card p-4 shadow">
-            <h4>Existing Categories</h4>
-            <table class="table table-striped mt-3">
-              <thead class="table-dark">
-                <tr>
-                  <th>#</th>
-                  <th>Category Name</th>
-                  <th>Description</th>
-                  <th>listed</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <% categories.forEach((category, index) => { %>
-                <tr>
-                  <td><%= index + 1 %></td>
-                  <td><%= category.categoryName %></td>
-                  <td><%= category.description %></td>
-                  <td><%= category.isListed %></td>
-                  <td>
-                    <button
-                      class="btn btn-warning btn-sm"
-                      onclick="openEditModal('<%= category._id %>', `<%= category.categoryName %>`, `<%= category.description %>`,'<%= category.isListed %>' )"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onclick="deleteCategory('<%= category._id %>')"
-                      class="btn btn-danger btn-sm"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-                <% }) %>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <%- include('../partials/footer.ejs') %>
-    </div>
-
-    <!--edit Category Modal -->
-
-    Edit Category Modal
-    <div
-      class="modal fade"
-      id="editCategoryModal"
-      tabindex="-1"
-      aria-labelledby="editCategoryModalLabel"
-      aria-hidden="true"
-    >
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="editCategoryModalLabel">
-              Edit Category
-            </h5>
-            <button
-              type="button"
-              class="btn-close"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-            ></button>
-          </div>
-          <div class="modal-body">
-            <form
-              id="editCategoryForm"
-              action="/admin/category/edit"
-              method="post"
-            >
-              <div class="mb-3">
-                <label class="form-label">Category Name</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  name="categoryName"
-                  id="editCategoryName"
-                  required
-                />
-              </div>
-              <div class="mb-3">
-                <label class="form-label">Description</label>
-                <textarea
-                  class="form-control"
-                  name="description"
-                  id="editCategoryDescription"
-                  rows="3"
-                ></textarea>
-              </div>
-              <!-- test-->
-              <div class="mb-3">
-                <label class="form-label">Is Listed</label>
-                <div class="form-check">
-                  <input
-                    type="checkbox"
-                    class="form-check-input"
-                    name="isListed"
-                    id="editCategoryIsListed"
-                  />
-                  <label class="form-check-label" for="editCategoryIsListed">Yes</label>
-                </div>
-              </div>
-              
-
-              <button type="submit" class="btn btn-primary">
-                Update Category
-              </button>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Add Category Modal -->
-    <div
-  class="modal fade"
-  id="addCategoryModal"
-  tabindex="-1"
-  aria-labelledby="addCategoryModalLabel"
-  aria-hidden="true"
->
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="addCategoryModalLabel">
-          Create New Category
-        </h5>
-        <button
-          type="button"
-          class="btn-close"
-          data-bs-dismiss="modal"
-          aria-label="Close"
-        ></button>
-      </div>
-      <div class="modal-body">
-        <form action="/admin/category/add" method="POST">
-          <div class="mb-3">
-            <label class="form-label">Category Name</label>
-            <input
-              type="text"
-              class="form-control"
-              name="categoryName"
-              required
-            />
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Description</label>
-            <textarea
-              class="form-control"
-              name="description"
-              rows="3"
-            ></textarea>
+<div class="container">
+  <!-- Sidebar -->
+  
+  
+  <!-- Main Content -->
+  <div class="main-content">
+      <!-- Header -->
+      <div class="header">
+          <div class="page-title">
+              <h1>Offer Management Dashboard</h1>
           </div>
           
-          <!-- Checkbox for Is Listed -->
-          <div class="mb-3">
-            <label class="form-label" id="categoryForm">Is Listed</label>
-            <div class="form-check">
-              <input
-                type="checkbox"
-                class="form-check-input"
-                name="isListed"
-                id="addCategoryIsListed"
-              />
-              <label class="form-check-label" for="addCategoryIsListed">Yes</label>
-            </div>
+          <div class="user-profile">
+              <img src="/api/placeholder/40/40" alt="Admin User">
+              <span>Admin User</span>
           </div>
-
-          <button type="submit" class="btn btn-primary">
-            Add Category
-          </button>
-        </form>
       </div>
-    </div>
+      
+      <!-- Stats Section -->
+      <div class="stats">
+          <div class="stat-card">
+              <h3>Total Offers</h3>
+              <p>24</p>
+          </div>
+          
+          <div class="stat-card">
+              <h3>Active Offers</h3>
+              <p>16</p>
+          </div>
+          
+          <div class="stat-card">
+              <h3>Pending Approval</h3>
+              <p>5</p>
+          </div>
+          
+          <div class="stat-card">
+              <h3>Expired Offers</h3>
+              <p>3</p>
+          </div>
+      </div>
+      
+      <!-- Offers Section -->
+      <div class="offers-section">
+          <div class="section-header">
+              <h2 class="section-title">All Offers</h2>
+              <button class="btn btn-primary" id="addOfferBtn"><i class="fas fa-plus"></i> Add New Offer</button>
+          </div>
+          
+          <div class="table-wrapper">
+              <table>
+                  <thead>
+                      <tr>
+                          <th>ID</th>
+                          <th>Offer Name</th>
+                          <th>Discount</th>
+                          <th>Start Date</th>
+                          <th>End Date</th>
+                          <th>Status</th>
+                          <th>Actions</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                      <tr>
+                          <td>#OFF001</td>
+                          <td>Summer Sale 2025</td>
+                          <td>25%</td>
+                          <td>01/05/2025</td>
+                          <td>31/07/2025</td>
+                          <td><span class="status status-active">Active</span></td>
+                          <td class="action-cell">
+                              <button class="btn btn-warning action-btn edit-btn"><i class="fas fa-edit"></i></button>
+                              <button class="btn btn-danger action-btn delete-btn"><i class="fas fa-trash-alt"></i></button>
+                          </td>
+                      </tr>
+                      <tr>
+                          <td>#OFF002</td>
+                          <td>New Customer Discount</td>
+                          <td>15%</td>
+                          <td>01/01/2025</td>
+                          <td>31/12/2025</td>
+                          <td><span class="status status-active">Active</span></td>
+                          <td class="action-cell">
+                              <button class="btn btn-warning action-btn edit-btn"><i class="fas fa-edit"></i></button>
+                              <button class="btn btn-danger action-btn delete-btn"><i class="fas fa-trash-alt"></i></button>
+                          </td>
+                      </tr>
+                      <tr>
+                          <td>#OFF003</td>
+                          <td>Flash Sale Weekend</td>
+                          <td>40%</td>
+                          <td>28/04/2025</td>
+                          <td>30/04/2025</td>
+                          <td><span class="status status-pending">Pending</span></td>
+                          <td class="action-cell">
+                              <button class="btn btn-warning action-btn edit-btn"><i class="fas fa-edit"></i></button>
+                              <button class="btn btn-danger action-btn delete-btn"><i class="fas fa-trash-alt"></i></button>
+                          </td>
+                      </tr>
+                      <tr>
+                          <td>#OFF004</td>
+                          <td>Valentine's Day Special</td>
+                          <td>20%</td>
+                          <td>01/02/2025</td>
+                          <td>14/02/2025</td>
+                          <td><span class="status status-expired">Expired</span></td>
+                          <td class="action-cell">
+                              <button class="btn btn-warning action-btn edit-btn"><i class="fas fa-edit"></i></button>
+                              <button class="btn btn-danger action-btn delete-btn"><i class="fas fa-trash-alt"></i></button>
+                          </td>
+                      </tr>
+                      <tr>
+                          <td>#OFF005</td>
+                          <td>Easter Holiday Discount</td>
+                          <td>30%</td>
+                          <td>10/04/2025</td>
+                          <td>15/04/2025</td>
+                          <td><span class="status status-expired">Expired</span></td>
+                          <td class="action-cell">
+                              <button class="btn btn-warning action-btn edit-btn"><i class="fas fa-edit"></i></button>
+                              <button class="btn btn-danger action-btn delete-btn"><i class="fas fa-trash-alt"></i></button>
+                          </td>
+                      </tr>
+                      <tr>
+                          <td>#OFF006</td>
+                          <td>Back to School</td>
+                          <td>25%</td>
+                          <td>15/08/2025</td>
+                          <td>15/09/2025</td>
+                          <td><span class="status status-pending">Pending</span></td>
+                          <td class="action-cell">
+                              <button class="btn btn-warning action-btn edit-btn"><i class="fas fa-edit"></i></button>
+                              <button class="btn btn-danger action-btn delete-btn"><i class="fas fa-trash-alt"></i></button>
+                          </td>
+                      </tr>
+                  </tbody>
+              </table>
+          </div>
+      </div>
   </div>
-   </div>
+</div>
 
-   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script>
-      function deleteCategory(id) {
-        Swal.fire({
-          title: "Are you sure?",
-          text: "You won't be able to revert this!",
-          icon: "warning",
-          showCancelButton: true,
-          confirmButtonColor: "#d33",
-          cancelButtonColor: "#3085d6",
-          confirmButtonText: "Yes, delete it!",
-        }).then((result) => {
-          if (result.isConfirmed) {
-            fetch(`/admin/category/delete/${id}`, { method: "DELETE" }).then(
-              () => location.reload()
-            );
-          }
-        });
-      }
+<!-- Add/Edit Offer Modal -->
+<div class="modal" id="offerModal">
+  <div class="modal-content">
+      <div class="modal-header">
+          <h2 id="modalTitle">Add New Offer</h2>
+          <button class="close">&times;</button>
+      </div>
+      <div class="modal-body">
+          <form id="offerForm">
+              <div class="form-group">
+                  <label for="offerName">Offer Name</label>
+                  <input type="text" id="offerName" required>
+              </div>
+              
+              <div class="form-group">
+                  <label for="offerDesc">Description</label>
+                  <textarea id="offerDesc"></textarea>
+              </div>
+              
+              <div class="form-group">
+                  <label for="discountType">Discount Type</label>
+                  <select id="discountType">
+                      <option value="percentage">Percentage (%)</option>
+                      <option value="fixed">Fixed Amount</option>
+                  </select>
+              </div>
+              
+              <div class="form-group">
+                  <label for="discountValue">Discount Value</label>
+                  <input type="number" id="discountValue" required>
+              </div>
+              
+              <div class="form-group">
+                  <label for="startDate">Start Date</label>
+                  <input type="date" id="startDate" required>
+              </div>
+              
+              <div class="form-group">
+                  <label for="endDate">End Date</label>
+                  <input type="date" id="endDate" required>
+              </div>
+              
+              <div class="form-group">
+                  <label for="status">Status</label>
+                  <select id="status">
+                      <option value="active">Active</option>
+                      <option value="pending">Pending</option>
+                      <option value="inactive">Inactive</option>
+                  </select>
+              </div>
+              
+              <div class="form-group">
+                  <label for="couponCode">Coupon Code (Optional)</label>
+                  <input type="text" id="couponCode">
+              </div>
+              
+              <div class="form-group">
+                  <label for="minPurchase">Minimum Purchase (Optional)</label>
+                  <input type="number" id="minPurchase">
+              </div>
+              
+              <div class="form-group">
+                  <label for="usageLimit">Usage Limit (Optional)</label>
+                  <input type="number" id="usageLimit">
+              </div>
+          </form>
+      </div>
+      <div class="modal-footer">
+          <button class="btn btn-danger" id="cancelBtn">Cancel</button>
+          <button class="btn btn-success" id="saveOfferBtn">Save Offer</button>
+      </div>
+  </div>
+</div>
 
-      //edit
-      function openEditModal(id, categoryName, description,isListed) {
-        console.log("from edit script");
+<!-- Delete Confirmation Modal -->
+<div class="modal" id="deleteModal">
+  <div class="modal-content">
+      <div class="modal-header">
+          <h2>Confirm Delete</h2>
+          <button class="close">&times;</button>
+      </div>
+      <div class="modal-body">
+          <p>Are you sure you want to delete this offer? This action cannot be undone.</p>
+      </div>
+      <div class="modal-footer">
+          <button class="btn btn-warning" id="cancelDeleteBtn">Cancel</button>
+          <button class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+      </div>
+  </div>
+</div>
 
-        document.getElementById("editCategoryName").value = categoryName;
-        document.getElementById("editCategoryDescription").value = description;
-        
-        const checkbox=document.getElementById('editCategoryIsListed')
-        checkbox.checked = isListed === 'true' || isListed === true;
-        console.log(isListed);
-        
-        document.getElementById(
-          "editCategoryForm"
-        ).action = `/admin/category/edit/${id}`;
-
-        var editModal = new bootstrap.Modal(
-          document.getElementById("editCategoryModal")
-        );
-        editModal.show();
-      }
-
-      document.getElementById("categoryForm").addEventListener("submit", async function (event) {
-    event.preventDefault(); // Prevent default form submission
-
-    const formData = new FormData(this);
-    const response = await fetch("/category/add", {
-      method: "POST",
-      body: formData
-    });
-
-    const result = await response.json();
-
-    if (!result.success) {
-      Swal.fire({
-        icon: "error",
-        title: "Oops...",
-        text: result.message
-      });
-    } else {
-      Swal.fire({
-        icon: "success",
-        title: "Success",
-        text: result.message
-      }).then(() => {
-        location.reload(); // Reload the page to update the category list
-      });
-    }
+<script>
+  // DOM Elements
+  const addOfferBtn = document.getElementById('addOfferBtn');
+  const offerModal = document.getElementById('offerModal');
+  const deleteModal = document.getElementById('deleteModal');
+  const modalTitle = document.getElementById('modalTitle');
+  const closeButtons = document.querySelectorAll('.close');
+  const cancelBtn = document.getElementById('cancelBtn');
+  const saveOfferBtn = document.getElementById('saveOfferBtn');
+  const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+  const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+  const editBtns = document.querySelectorAll('.edit-btn');
+  const deleteBtns = document.querySelectorAll('.delete-btn');
+  
+  // Open add offer modal
+  addOfferBtn.addEventListener('click', () => {
+      modalTitle.textContent = 'Add New Offer';
+      document.getElementById('offerForm').reset();
+      offerModal.classList.add('active');
   });
-    </script>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  </body>
-</html>
+  
+  // Close modals
+  closeButtons.forEach(button => {
+      button.addEventListener('click', () => {
+          offerModal.classList.remove('active');
+          deleteModal.classList.remove('active');
+      });
+  });
+  
+  // Cancel button in offer modal
+  cancelBtn.addEventListener('click', () => {
+      offerModal.classList.remove('active');
+  });
+  
+  // Save offer
+  saveOfferBtn.addEventListener('click', () => {
+      // Here you would normally save the offer to your backend
+      alert('Offer saved successfully!');
+      offerModal.classList.remove('active');
+  });
+  
+  // Edit offer
+  editBtns.forEach(button => {
+      button.addEventListener('click', () => {
+          modalTitle.textContent = 'Edit Offer';
+          
+          // Populate form with offer data (this would normally come from your backend)
+          // This is just for demonstration
+          const row = button.closest('tr');
+          const offerName = row.cells[1].textContent;
+          const discount = row.cells[2].textContent;
+          const startDate = row.cells[3].textContent;
+          const endDate = row.cells[4].textContent;
+          const status = row.cells[5].querySelector('.status').textContent.toLowerCase();
+          
+          document.getElementById('offerName').value = offerName;
+          document.getElementById('discountValue').value = discount.replace('%', '');
+          // Format dates (this is simplified)
+          document.getElementById('startDate').value = formatDateForInput(startDate);
+          document.getElementById('endDate').value = formatDateForInput(endDate);
+          document.getElementById('status').value = status === 'active' ? 'active' : status === 'pending' ? 'pending' : 'inactive';
+          
+          offerModal.classList.add('active');
+      });
+  });
+  
+  // Delete offer
+  deleteBtns.forEach(button => {
+      button.addEventListener('click', () => {
+          deleteModal.classList.add('active');
+          
+          // Store reference to the row to be deleted
+          const row = button.closest('tr');
+          confirmDeleteBtn.onclick = () => {
+              // Here you would normally delete the offer from your backend
+              row.remove();
+              deleteModal.classList.remove('active');
+              alert('Offer deleted successfully!');
+          };
+      });
+  });
+  
+  // Cancel delete
+  cancelDeleteBtn.addEventListener('click', () => {
+      deleteModal.classList.remove('active');
+  });
+  
+  // Helper function to format date for input field
+  function formatDateForInput(dateStr) {
+      // Simple implementation - in real app would need more robust conversion
+      const parts = dateStr.split('/');
+      return `${parts[2]}-${parts[1]}-${parts[0]}`;
+  }
+</script>

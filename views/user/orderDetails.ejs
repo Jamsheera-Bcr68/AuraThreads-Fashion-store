@@ -35,7 +35,9 @@
                         <%= order.paymentMethod %>
                     </p>
                     <p><strong>Total Amount:</strong>₹ <%= order.totalAmount.toFixed(2) %>
-                    </p>
+                            <p><strong>Discount:</strong>₹ <%= order.discountAmount.toFixed(2) %>
+                                    <p><strong>Net Total :</strong>₹ <%= order.finalAmount.toFixed(2) %>
+                                    </p>
         </div>
 
         <div class="section">
@@ -58,6 +60,7 @@
                         <th>Qty</th>
                         <th>Price</th>
                         <th>Subtotal</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -76,6 +79,22 @@
                             </td>
                             <td>₹ <%= (item.quantity * item.productId.price).toFixed(2) %>
                             </td>
+                            <td>
+                                <% if (item.status==='cancelled' ) { %>
+                                    <button class="" style="background-color: grey; color: white;"
+                                        disabled>Cancel</button>
+                                    <button class="" style="background-color: grey; color: white;"
+                                        disabled>Return</button>
+                                    <% } else { %>
+                                        <button
+                                            onclick="cancelSingleProduct('<%= item.productId._id %>', '<%= order._id %>')"
+                                            class="orderCancel">Cancel</button>
+                                        <button data-productid="<%= item.productId._id %>"
+                                            data-orderid="<%= order._id %>" class="returnProduct"
+                                            id="returnBtn">Return</button>
+                                        <% } %>
+
+                            </td>
                         </tr>
                         <% }) %>
                 </tbody>
@@ -86,6 +105,20 @@
 
     </div>
 
+    <!--return product Modal -->
+    <div id="returnModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Reason for Return</h2>
+            <textarea class="text" id="returnReason" placeholder="Enter your reason..." rows="4"
+                style="width: 100%;"></textarea>
+            <br><br>
+            <button class="btn" id="submitReason">Submit</button>
+        </div>
+    </div>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
 
         window.onload = function () {
@@ -105,7 +138,111 @@
                 });
             }
         };
+        function cancelSingleProduct(productId, orderId) {
+            console.log('cancelSingleProduct btn clicked');
+            console.log('product id ,orderid ', productId, orderId);
+            Swal.fire({
+                title: "Do you want to cancel this product?",
+                text: "You won't be able to revert this!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Yes, Cancel it!"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch('/user/cancelSingleProduct', {
+                        method: "DELETE",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ productId, orderId })
+                    }).then(res => res.json())
+                        .then(data => {
+                            if (data && data.succcess) {
+                                Swal.fire({
+                                    title: "Cancelled!",
+                                    text: "This Product Cancelled.",
+                                    icon: "success"
+                                });
+                            } else {
+                                Swal.fire(data.message)
+                            }
+                        }).catch(error => {
+                            Swal.fire("Server error")
+                        })
 
+                }
+            });
+
+        }
+
+        const returnBtn = document.getElementById('returnBtn');
+        const returnModal = document.getElementById('returnModal');
+        const closeBtn = document.querySelector('.close');
+        const submitBtn = document.getElementById('submitReason');
+
+        let productId = '';
+        let orderId = '';
+
+        // Open Modal
+        returnBtn.onclick = function () {
+            console.log('retun btn clicked');
+            
+            productId = this.getAttribute('data-productid');
+            orderId = this.getAttribute('data-orderid');
+            returnModal.style.display = 'block';
+        }
+
+        // Close Modal
+        closeBtn.onclick = function () {
+            returnModal.style.display = 'none';
+        }
+
+        // Close Modal if clicked outside content
+        window.onclick = function (event) {
+            if (event.target == returnModal) {
+                returnModal.style.display = 'none';
+            }
+        }
+
+        // Submit Reason
+        submitBtn.onclick = async function () {
+            console.log('reason submitted');
+            
+            const reason = document.getElementById('returnReason').value.trim();
+            console.log('reason ',reason);
+            
+            if (reason!=='') {
+                
+                try {
+                    const response = await fetch('/user/return-product', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            productId: productId,
+                            orderId: orderId,
+                            reason: reason
+                        })
+                    });
+
+                    const result = await response.json();
+                    if (result.success) {
+                        Swal.fire('Return request submitted successfully!');
+                        returnModal.style.display = 'none';
+                    } else {
+                        Swal.fire(result.message);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    Swal.fire('Something went wrong.');
+                }
+
+            } else {
+                Swal.fire("Please enter a reason.");
+            }
+        }
+    
     </script>
 
 

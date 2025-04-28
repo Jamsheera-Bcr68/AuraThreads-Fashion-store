@@ -1,162 +1,171 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <title>Aura Threads &mdash; User Cart</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Mukta:300,400,700"> 
-    <link rel="stylesheet" href="/fonts/icomoon/style.css">
+<head>
+  <title>Aura Threads &mdash; User Cart</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <link rel="stylesheet" href="/css/bootstrap.min.css">
-    <link rel="stylesheet" href="/css/magnific-popup.css">
-    <link rel="stylesheet" href="/css/jquery-ui.css">
-    <link rel="stylesheet" href="/css/owl.carousel.min.css">
-    <link rel="stylesheet" href="/css/owl.theme.default.min.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Mukta:300,400,700">
+  <link rel="stylesheet" href="/fonts/icomoon/style.css">
+
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/magnific-popup.css">
+  <link rel="stylesheet" href="/css/jquery-ui.css">
+  <link rel="stylesheet" href="/css/owl.carousel.min.css">
+  <link rel="stylesheet" href="/css/owl.theme.default.min.css">
 
 
-    <link rel="stylesheet" href="/css/aos.css">
+  <link rel="stylesheet" href="/css/aos.css">
 
-    <link rel="stylesheet" href="/css/style.css">
-    
-  </head>
-  <body>
-  
+  <link rel="stylesheet" href="/css/style.css">
+
+</head>
+
+<body>
+
   <div class="site-wrap">
     <%- include('../partials/userHeader') %>
 
-    <div class="bg-light py-3">
-      <div class="container">
-        <div class="row">
-          <div class="col-md-12 mb-0">
-            <a href="/user/home">Home</a> <span class="mx-2 mb-0">/</span> <strong class="text-black">Cart</strong>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <div class="site-section">
-      <div class="container">
-        <h4 class="text text-center text-success "><%= title %></h4>
-        <div class="row mb-5">
-          
-          <form class="col-md-12" method="post" action="/cart/update">
-            <div class="site-blocks-table">
-              <table class="table table-bordered">
-                <thead>
-                  <tr>
-                    <th class="product-thumbnail">Image</th>
-                    <th class="product-name">Product</th>
-                    <th class="product-price">Price</th>
-                    <th class="product-quantity">Quantity</th>
-                    <th class="product-total">Total</th>
-                    <th class="product-remove">Remove</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <% if (cart.items.length > 0) { %>
-                    <% cart.items.forEach(item => { %>
-                      <tr>
-                        <td class="product-thumbnail">
-                          <img src="<%= item.productId.images[0] %>" alt="Image" class="img-fluid">
-                        </td>
-                        <td class="product-name">
-                          <h2 class="h5 text-black"><%= item.productId.productName %></h2>
-                        </td>
-                        <td>₹ <%= item.productId.price.toFixed(2) %></td>
-                        <td>
-                          <div class="input-group mb-3" style="max-width: 120px;">
-                            <div class="input-group-prepend">
-                            <div class="input-group-append">
-                            <div class="input-group-append">
-                              <button class="btn btn-outline-primary js-btn-minus"  data-productId="<%= item.productId._id %>" data-id="<%= item.quantity %>" type="button">&minus;</button>
-                            </div>
-                            <input type="text" id="quantity" class="form-control text-center"  value="<%= item.quantity %>" name="quantity-<%= item.id %>">
-                            <div class="input-group-append">
-                              <button class="btn btn-outline-primary js-btn-plus" data-productId="<%= item.productId._id %>" data-max="<%= item.productId.stock %>" data-id="<%= item.quantity %>" type="button">&plus;</button>
-                            </div>
-                          </div>
-                        </td>
-                        <td>₹ <%= (item.productId.price * item.quantity).toFixed(2) %></td>
-                        <td>
-                          <button class="btn btn-danger text-white btn-sm js-remove-item" data-id="<%= item.productId._id %>">
-                              X Remove
-                          </button>
-                      </td>
-                      </tr>
-                    <% }) %>
-                  <% } else { %>
-                    <tr>
-                      <td colspan="6" class="text-center">Your cart is empty.</td>
-                    </tr>
-                  <% } %>
-                </tbody>
-              </table>
-            </div>
-          </form>
-        </div>
-    
-        <div class="row">
-          <div class="col-md-6">
-            <div class="row mb-5">
-              <div class="col-md-6 mb-3 mb-md-0">
-                <a href="/user/cart" class="btn btn-success btn-sm btn-block" type="submit">Update Cart</a>
-              </div>
-              <div class="col-md-6">
-                <a href="/product/productList" class="btn btn-outline-primary btn-sm btn-block">Continue Shopping</a>
-              </div>
-            </div>
-            <div class="row">
-              <div class="col-md-12">
-                <label class="text-black h4" for="coupon">Coupon</label>
-                <p>Enter your coupon code if you have one.</p>
-              </div>
-              <div class="col-md-8 mb-3 mb-md-0">
-                <input type="text" class="form-control py-3" id="coupon" placeholder="Coupon Code">
-              </div>
-              <div class="col-md-4">
-                <button class="btn btn-primary btn-sm">Apply Coupon</button>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-6 pl-5">
-            <div class="row justify-content-end">
-              <div style="background-color: antiquewhite;" class="col-md-7">
-                <div class="row">
-                  <div style="background-color: rgb(139, 137, 134);" class="col-md-12 text-right border-bottom mb-5">
-                    <h3 class="text-black h4 ">Cart Totals</h3>
-                  </div>
-                </div>
-                <div class="row mb-3">
-                  <div class="col-md-6">
-                    <span class="text-black">Subtotal</span>
-                  </div>
-                  <div class="col-md-6 text-right">
-                    <strong class="text-black">₹ <%= cart.items.reduce((sum, item) => sum + (item.productId.price * item.quantity), 0).toFixed(2) %></strong>
-                  </div>
-                </div>
-                <div class="row mb-5">
-                  <div class="col-md-6">
-                    <span class="text-black">Total</span>
-                  </div>
-                  <div class="col-md-6 text-right">
-                    <strong class="text-black">₹ <%= cart.items.reduce((sum, item) => sum + (item.productId.price * item.quantity), 0).toFixed(2) %></strong>
-                  </div>
-                </div>
-    
-                <div class="row">
-                  <div class="col-md-12">
-                    <button style="height: 40px;" class="btn btn-success text-white d-flex align-items-center justify-content-center text-center py-3 btn-block" onclick="window.location='/user/checkout'">Proceed To Checkout</button>
-                  </div>
-                </div>
-              </div>
+      <div class="bg-light py-3">
+        <div class="container">
+          <div class="row">
+            <div class="col-md-12 mb-0">
+              <a href="/user/home">Home</a> <span class="mx-2 mb-0">/</span> <strong class="text-black">Cart</strong>
             </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <%- include('../partials/userFooter') %>
+      <div class="site-section">
+        <div class="container">
+          <h4 class="text text-center text-success ">
+            <%= title %>
+          </h4>
+          <div class="row mb-5">
+
+            <form class="col-md-12" method="post" action="/cart/update">
+              <div class="site-blocks-table">
+                <table class="table table-bordered">
+                  <thead>
+                    <tr>
+                      <th class="product-thumbnail">Image</th>
+                      <th class="product-name">Product</th>
+                      <th class="product-price">Price</th>
+                      <th class="product-quantity">Quantity</th>
+                      <th class="product-total">Total</th>
+                      <th class="product-remove">Remove</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% if (cart.items.length> 0) { %>
+                      <% cart.items.forEach(item=> { %>
+                        <tr>
+                          <td class="product-thumbnail">
+                            <img src="<%= item.productId.images[0] %>" alt="Image" class="img-fluid">
+                          </td>
+                          <td class="product-name">
+                            <h2 class="h5 text-black">
+                              <%= item.productId.productName %>
+                            </h2>
+                          </td>
+                          <td>₹ <%= item.productId.price.toFixed(2) %>
+                          </td>
+                          <td>
+                            <div class="input-group mb-3" style="max-width: 120px;">
+                              <div class="input-group-prepend">
+                                <div class="input-group-append">
+                                  <div class="input-group-append">
+                                    <button class="btn btn-outline-primary js-btn-minus"
+                                      data-productId="<%= item.productId._id %>" data-id="<%= item.quantity %>"
+                                      type="button">&minus;</button>
+                                  </div>
+                                  <input type="text" id="quantity" class="form-control text-center"
+                                    value="<%= item.quantity %>" name="quantity-<%= item.id %>">
+                                  <div class="input-group-append">
+                                    <button class="btn btn-outline-primary js-btn-plus"
+                                      data-productId="<%= item.productId._id %>" data-max="<%= item.productId.stock %>"
+                                      data-id="<%= item.quantity %>" type="button">&plus;</button>
+                                  </div>
+                                </div>
+                          </td>
+                          <td>₹ <%= (item.productId.price * item.quantity).toFixed(2) %>
+                          </td>
+                          <td>
+                            <button class="btn btn-danger text-white btn-sm js-remove-item"
+                              data-id="<%= item.productId._id %>">
+                              X Remove
+                            </button>
+                          </td>
+                        </tr>
+                        <% }) %>
+                          <% } else { %>
+                            <tr>
+                              <td colspan="6" class="text-center">Your cart is empty.</td>
+                            </tr>
+                            <% } %>
+                  </tbody>
+                </table>
+              </div>
+            </form>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="row mb-5">
+                <div class="col-md-6 mb-3 mb-md-0">
+                  <a href="/user/cart" class="btn btn-success btn-sm btn-block" type="submit">Update Cart</a>
+                </div>
+                <div class="col-md-6">
+                  <a href="/product/productList" class="btn btn-outline-primary btn-sm btn-block">Continue Shopping</a>
+                </div>
+              </div>
+              
+             
+            </div>
+            <div class="col-md-6 pl-5">
+              <div class="row justify-content-end">
+                <div style="background-color: antiquewhite;" class="col-md-7">
+                  <div class="row">
+                    <div style="background-color: rgb(139, 137, 134);" class="col-md-12 text-right border-bottom mb-5">
+                      <h3 class="text-black h4 ">Cart Totals</h3>
+                    </div>
+                  </div>
+                  <div class="row mb-3">
+                    <div class="col-md-6">
+                      <span class="text-black">Subtotal</span>
+                    </div>
+                    <div class="col-md-6 text-right">
+                      <strong class="text-black">₹ <%= cart.items.reduce((sum, item)=> sum + (item.productId.price *
+                          item.quantity), 0).toFixed(2) %></strong>
+                    </div>
+                  </div>
+                  
+                  <div class="row mb-3">
+                    <div class="col-md-6">
+                      <span class="text-black">Net Total</span>
+                    </div>
+                    <div class="col-md-6 text-right">
+                      <strong class="text-black">₹ <span id="updatedCartTotal"><%= cart.items.reduce((sum, item)=> sum + (item.productId.price *
+                        item.quantity), 0).toFixed(2) %></span></strong>
+                    </div>
+                  </div>
+
+                  <div class="row">
+                    <div class="col-md-12">
+                      <button style="height: 40px;"
+                        class="btn btn-success text-white d-flex align-items-center justify-content-center text-center py-3 btn-block"
+                        onclick="window.location='/user/checkout'">Proceed To Checkout</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <%- include('../partials/userFooter') %>
   </div>
 
   <script src="/js/jquery-3.3.1.min.js"></script>
@@ -170,43 +179,77 @@
   <script src="/js/main.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
- <script>
+  <script>
 
-  const removeBtns=document.querySelectorAll('.js-remove-item')
-  removeBtns.forEach(btn=>btn.addEventListener('click',function(e){
-    e.preventDefault()
-    let productId=this.getAttribute('data-id')
-    console.log('prouct id is ',productId);
+    const removeBtns = document.querySelectorAll('.js-remove-item')
+    removeBtns.forEach(btn => btn.addEventListener('click', function (e) {
+      e.preventDefault()
+      let productId = this.getAttribute('data-id')
+      console.log('prouct id is ', productId);
 
-    Swal.fire({
-            title: "Are you sure?",
-            text: "This item will be removed from your cart!",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonText: "Yes, remove it!",
-            cancelButtonText: "Cancel"
-        }).then(result=>{
-          if( result.isConfirmed){
-            fetch(`/user/cart/remove/${productId}`,
-              {method:'delete',
-              headers:{"Content-Type": "application/json"}
+      Swal.fire({
+        title: "Are you sure?",
+        text: "This item will be removed from your cart!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Yes, remove it!",
+        cancelButtonText: "Cancel"
+      }).then(result => {
+        if (result.isConfirmed) {
+          fetch(`/user/cart/remove/${productId}`,
+            {
+              method: 'delete',
+              headers: { "Content-Type": "application/json" }
 
-              }
-            ).then(response=>response.json())
-            .then(data=>{
-              if(data && data.success){
+            }
+          ).then(response => response.json())
+            .then(data => {
+              if (data && data.success) {
                 Swal.fire("Removed!", "The item has been removed.", "success");
-              }else{
+              } else {
                 Swal.fire("Error!", "Failed to remove the item.", "error");
               }
-            }).catch(error=>{
+            }).catch(error => {
               console.error("Error:", error)
             })
-          }
-        })
-    
-  }))
- </script>
-    
-  </body>
+        }
+      })
+
+    }))
+
+    function applyCoupon(cartTotal) {
+      console.log('apply Coupon button clicked');
+      const inputCode = document.getElementById('coupon').value
+      console.log('cartTotal',cartTotal);
+      
+      console.log('inputCode', inputCode);
+      if (!inputCode) {
+        Swal.fire('Enter a Coupen code')
+      } else {
+        fetch(`/user/applyCoupon/${cartTotal}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ inputCode })
+        }).then(res => res.json())
+          .then(data => {
+            if (data && data.success) {
+              let newCartTotal=data.newCartTotal
+              console.log('new cart total is ',newCartTotal);
+              document.getElementById('discountAmount').textContent = data.discountAmount.toFixed(2);
+             
+              Swal.fire(data.message)
+            } else {
+              Swal.fire(data.message)
+            }
+          }).catch(error => {
+            console.log(error);
+            Swal.fire("Server error")
+          })
+      }
+
+    }
+  </script>
+
+</body>
+
 </html>

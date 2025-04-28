@@ -59,7 +59,20 @@ h3 {
 .badge.shipped {
     background-color: #17a2b8;
 }
-
+.orderCancel{
+    background: #9b1b1b;
+    border-radius: 3px;
+    border-color: red;
+    color: white;
+    font-weight: bold;
+}
+.returnProduct{
+    background-color: rgb(139, 139, 58);
+    color:white ;
+    font-weight:bold;
+    border-radius: 3px;
+    border-color: yellow
+}
 .badge.delivered {
     background-color: #28a745;
 }
@@ -91,4 +104,41 @@ h3 {
 
 .btn-back:hover {
     background-color: #3d2b24;
+}
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed;
+    z-index: 1;
+    padding-top: 100px;
+    left: 0; top: 0;
+    width: 100%; height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.5);
+  }
+
+  .modal-content {
+    background-color: #fefefe;
+    margin: auto;
+    padding: 20px;
+    border-radius: 8px;
+    width: 30%;
+    box-shadow: 0 5px 10px rgba(0,0,0,0.25);
+    font-weight: bold;
+  }
+
+  .close {
+    color: #aaa;
+    float: right;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  .close:hover {
+    color: black;
+  }
+.btn{
+    background: #086e38;
+    font-weight: bold;
+    border-radius: 5px;
+    color: white;
 }

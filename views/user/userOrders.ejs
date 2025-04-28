@@ -31,6 +31,7 @@
             <table class="orders-table">
                 <thead>
                     <tr style="background-color: #cbb6ac;">
+                        <th>Order No.</th>
                         <th>Order ID</th>
                         <th>Items</th>
                         <th>Date</th>
@@ -40,8 +41,9 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <% orders.forEach(order => { %>
+                    <% orders.forEach((order,index )=> { %>
                         <tr>
+                            <td style="color: black;" class="order-No"><%= index+1 %></td>
                             <td style="color: black;" class="order-id">ORD<%= order._id.toString().slice(-6).toUpperCase() %></td>
                             
                             <td>
@@ -59,7 +61,7 @@
             
                             <td><%= new Date(order.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) %></td>
                             
-                            <td style="color: red;"> ₹ <%= order.totalAmount.toFixed(2) %></td>
+                            <td style="color: red;"> ₹ <%= order.finalAmount.toFixed(2) %></td>
                             
                             <td>
                                 <span class="status-badge status-<%= order.status.toLowerCase() %>">
@@ -92,13 +94,40 @@
             
             
             <!-- Pagination -->
-            <!-- <div class="pagination">
-                <button class="page-btn active">1</button>
-                <button class="page-btn">2</button>
-                <button class="page-btn">3</button>
-                <button class="page-btn">Next</button>
-            </div> -->
+            <nav>
+                <ul class="pagination justify-content-center">
+                  <!-- Previous Button -->
+                  <% if (currentPage > 1) { %>
+                    <li class="page-item">
+                      <a class="page-link" href="?page=<%= currentPage - 1 %>&limit=5">Previous</a>
+                    </li>
+                    <% } else { %>
+                      <li class="page-item disabled">
+                        <a class="page-link" href="#" tabindex="-1">Previous</a>
+                      </li>
+                      <% } %>
             
+                        <!-- Page Numbers -->
+                        <% for (let i=1; i <=totalPages; i++) { %>
+                          <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+                            <a class="page-link" href="?page=<%= i %>&limit=5">
+                              <%= i %>
+                            </a>
+                          </li>
+                          <% } %>
+            
+                            <!-- Next Button -->
+                            <% if (currentPage < totalPages) { %>
+                              <li class="page-item">
+                                <a class="page-link" href="?page=<%= currentPage + 1 %>&limit=5">Next</a>
+                              </li>
+                              <% } else { %>
+                                <li class="page-item disabled">
+                                  <a class="page-link" href="#">Next</a>
+                                </li>
+                                <% } %>
+                </ul>
+              </nav>
             <!-- Empty state (hidden by default, show when no orders) -->
             <div class="empty-state" style="display: none;">
                 <h3>No Orders Found</h3>

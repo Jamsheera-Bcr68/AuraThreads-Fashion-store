@@ -65,7 +65,8 @@
               </div>
               <div class="col-sm-6 mb-3">
                 <h6 class="text-muted mb-1">Total Amount</h6>
-                <p class="mb-0 fw-bold">₹ <%= order.totalAmount %></p>
+                <p class="mb-0 fw-bold">₹ <%= order.finalAmount %></p>
+               
               </div>
               <div class="col-sm-6 mb-3">
                 <h6 class="text-muted mb-1">Payment Method</h6>
@@ -100,6 +101,27 @@
                   <span class="fw-bold">₹ <%= parseInt( item.productId.price) * parseInt( item.quantity) %></span>
                 </div>
               <% }) %>
+              <div class="item-row d-flex justify-content-between align-items-center">
+                <div>
+                  <p class="mb-0 fw-medium">Total Amount</p>
+                
+                </div>
+                <span class="fw-bold">₹ <%= order.totalAmount %></span>
+              </div>
+              <div class="item-row d-flex justify-content-between align-items-center">
+                <div>
+                  <p class="mb-0 fw-medium">Discount via Coupon</p>
+                  
+                </div>
+                <span class="fw-bold">₹ <%= order.discountAmount %></span>
+              </div>
+              <div class="item-row d-flex justify-content-between align-items-center">
+                <div>
+                  <p class="mb-0 fw-medium">Final Amount</p>
+                  
+                </div>
+                <span class="fw-bold">₹ <%= order.finalAmount %></span>
+              </div>
             </div>
           </div>
           

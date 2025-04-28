@@ -115,7 +115,7 @@
                 </div>
                 <div class="product-quantity" style="margin-top: 5px; font-size: 14px;">Quantity: <strong>
                     <%= item.quantity %> ,
-                  </strong> Price: Rs. <strong style="color: #1b6a2a; font-weight: bold; margin-top: 5px;">
+                  </strong> Price: ₹ <strong style="color: #1b6a2a; font-weight: bold; margin-top: 5px;">
                     ₹ <%= item.price %>
                   </strong></div>
                 <div class="product-price" style="color: #d81b60; font-weight: bold; margin-top: 5px;">₹ <%=
@@ -134,30 +134,45 @@
           <span>Subtotal</span><span style="color: #1b6a2a; font-weight: bold; margin-top: 5px;"> ₹ <%= totalAmount %>
           </span>
         </div>
+
         <div class="price-row" style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-          <span>Shipping</span><span style="color: #1b6a2a;">₹ 0.00</span>
+          <span>Shipping</span><span style="color: #1b6a2a;">₹ <%= shippingCharge %></span>
         </div>
         <div class="price-row" style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-          <span>Tax</span><span style="color: #1b6a2a;">₹ 0.00</span>
+          <span>Tax</span><span style="color: #1b6a2a;">₹ <%= taxAmount %></span>
+        </div>
+        <div class="price-row" style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+          <span>Discount</span><span id="discountAmount" style="color: #1b6a2a;">₹ <%= discountAmount %></span>
         </div>
         <div class="total-row"
           style="display: flex; justify-content: space-between; font-weight: bold; border-top: 1px solid #eee; padding-top: 10px; margin-top: 10px;">
-          <span>Total</span><span style="color: #1b6a2a;">₹ <%= totalAmount %></span>
+          <span>Total</span><span id="finalAmount" style="color: #1b6a2a;">₹ <%= (totalAmount-discountAmount).toFixed(2)
+              %></span>
         </div>
       </div>
 
       <!-- Promo Code -->
       <div class="form-group" style="margin-top: 25px;">
-        <label for="coupon">Promo Code</label>
+        <label for="coupon">Coupon Code</label>
         <div style="display: flex;">
-          <input type="text" id="coupon" placeholder="Enter promo code"
+          <input type="text" id="coupon" placeholder="Enter Coupon code"
             style="flex: 1; padding: 10px; border: 1px solid #ccc; border-right: none; border-radius: 4px 0 0 4px;">
-          <button
-            style="padding: 10px 16px; background-color: #333; color: white; border: none; border-radius: 0 4px 4px 0; cursor: pointer;">Apply</button>
+          <button id="coupenBtn"
+            style="padding: 10px 16px; background-color: #104615; color: white; border: none; border-radius: 0 4px 4px 0; cursor: pointer;">Apply</button>
         </div>
       </div>
       <!-- Payment Info -->
       <div class="payment-container" style="margin-top: 1em;">
+
+        <!--wallet -->
+        <div class="wallet-box"  >
+          <input class="form-check-input" type="checkbox" id="useWallet" name="useWallet"
+            style="width: 20px; height: 20px;" <% if (wallet.balance> 0) { %> checked <% } %>
+            >
+            <label class="form-check-label" for="useWallet" style="font-size: 18px; font-weight: bold; color: #155724;">
+              Use Wallet Balance (₹<%= wallet.balance.toFixed(2) %>)
+            </label>
+        </div>
 
 
         <div class="form-section">
@@ -266,7 +281,7 @@
 
       const placeorderform = document.getElementById('productCheckoutForm')
 
-      placeorderform.addEventListener('click', function (e) {
+      placeorderform.addEventListener('submit', function (e) {
         e.preventDefault()
         console.log('placeorderform submitted');
 
@@ -302,13 +317,23 @@
 
         console.log('Payment method', paymentMethod);
         console.log('payment detais ', paymentDetails);
-        const totalAmount = document.getElementById('totalAmount').value
+        let totalAmount = document.getElementById('totalAmount').value
+
         console.log('total amount is ', totalAmount);
+
+        totalAmount = parseFloat(totalAmount);
+
+
+        if (isNaN(totalAmount)) totalAmount = 0;
+
+        const useWallet=document.getElementById('useWallet').checked
+        console.log('useWallet ',useWallet);
+        
 
         const orderData = {
           addressId: selectedAddressId,
           paymentMethod, paymentDetails,
-          totalAmount
+          totalAmount,useWallet
         }
         fetch('/user/place-order', {
           method: "POST",
@@ -322,7 +347,7 @@
                 text: data.message,
                 icon: 'success',
                 confirmButtonText: 'View Order Details'
-              }).then(()=>{
+              }).then(() => {
                 window.location.href = `/user/order-success?orderId=${data.orderId}`;
               })
             } else {
@@ -337,6 +362,38 @@
 
       })
 
+      const coupenBtn = document.getElementById('coupenBtn')
+      coupenBtn.addEventListener('click', function () {
+        console.log('coupenBtn clicked');
+        const code = document.getElementById('coupon').value
+        console.log('code is ', code);
+
+
+        fetch('/user/applyCoupon', {
+          method: 'POST',
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ code })
+        }).then((res) => res.json())
+          .then((data) => {
+            Swal.fire(data.message);
+            if (data.success) {
+              Swal.fire(data.message)
+              console.log('final Amount is ', data.finalAmount);
+              console.log('Discount Amount is 0', data.discountAmount);
+              document.getElementById('discountAmount').innerText = data.discountAmount
+              document.getElementById('finalAmount').innerText = data.finalAmount
+              document.getElementById('coupon').innerText = code
+              // For example: document.getElementById("discountAmount").innerText = data.discount;
+            } else {
+              Swal.fire(data.message)
+            }
+          }).catch(error => {
+            console.log('errror is ', error);
+            Swal.fire("Server Error")
+          })
+      })
     </script>
 
 </body>

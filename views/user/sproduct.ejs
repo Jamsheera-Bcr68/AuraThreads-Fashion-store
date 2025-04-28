@@ -110,11 +110,14 @@
                       <button data-productId="<%= singleProduct._id %>" data-max="<%= singleProduct.stock %>"
                         id="increaseQty">+</button>
                     </div>
-                    <button class="add-to-cart" data-id="<%= singleProduct._id %>" id="addToCartBtn" style="width: 30%"
+                    <button class="add-to-cart" data-id="<%= singleProduct._id %>" id="addToCartBtn" style="width: 20%"
                       <%=singleProduct.stock===0 ? 'disabled' : '' %>>
                       <%= singleProduct.stock===0 ? 'Out of Stock' : 'Add to Cart' %>
                     </button>
                     <button  <%=singleProduct.stock===0 ? 'disabled' : '' %> class="buy-now" id="buyNowBtn"><a style="text-decoration: none; color: white;" href="/user/checkout">By Now</a></button>
+                    <button class="btn btn-outline-danger" type="button" onclick="addToWishlist('<%= singleProduct._id %>')">
+                      <span style="font-size: 1.5rem;">♥</span>  Wishlist
+                    </button>
                   </div>
 
                   <!-- Highlights -->
@@ -467,6 +470,26 @@
           }).then(()=>{
             window.location.href='/user/checkout'
           });
+
+          // add to wishlist
+          function addToWishlist(productId){
+            console.log('prouct id is ',productId)
+
+            fetch('/user/wishList/add',{
+              method:"POST",
+              headers:{"Content-Type":"application/json"},
+              body:JSON.stringify({productId})
+            }).then(res=>res.json())
+            .then(data=>{
+              if(data && data.success){
+                Swal.fire(data.message)
+              }else{
+                Swal.fire(data.message)
+              }
+            }).catch(error=>{
+              Swal.fire("Server Error")
+            })
+          }
       </script>
 </body>
 

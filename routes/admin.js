@@ -296,4 +296,13 @@ router.delete('/removeCoupon/:couponId',adminController.removeCoupon)
 
 //applyCoupon
 router.put('/applyCoupon/:couponId',adminController.applyCoupon)
+
+//get offer mangement
+router.get('/offers',adminController.getOffers)
+
+//add offer
+router.post('/addOffer',adminController.addOffer)
+
+//delte Offer
+router.delete('/offer/delete/:offerId',adminController.deleteOffer)
 module.exports = router;

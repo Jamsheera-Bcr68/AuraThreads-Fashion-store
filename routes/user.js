@@ -141,4 +141,28 @@ router.get('/checkout',userController.getCheckout)
  router.delete('/cancel-order/:orderId',userController.deleteOrder)
  //user logout
  router.post('/logout',userController.logout)
+
+ //apply coupon
+ router.post('/applyCoupon/',userController.applyCoupon)
+
+ //user wishlist
+ router.get('/wishList',userController.getWishList)
+
+ //add to wishList
+ router.post('/wishList/add',userController.addToWishList)
+
+ //remove from wishList
+ router.delete('/wishList/delete/:productId',userController.deleteWishlistItem)
+
+ // get wallet
+ router.get('/wallet',userController.getWallet)
+
+ //add money to wallet
+ router.post('/wallet/addMoney',userController.addMoney)
+
+ //cancel single product
+ router.delete('/cancelSingleProduct',userController.cancelSingleProduct)
+
+ //return product
+ router.post('/return-product',userController.returnProduct)
 module.exports = router;

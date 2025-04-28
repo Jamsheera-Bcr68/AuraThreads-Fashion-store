@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Wishlist | Aura Threads</title>
+  <link rel="stylesheet" href="/css/wishList.css">
+</head>
+
+<body>
+
+  <%- include('../partials/userHeader') %>
+
+
+    <div class="container">
+      <h1 class="page-title">My Wishlist (<%= products.length %>)</h1>
+
+      <% if (products.length===0) { %>
+        <!-- Empty wishlist state -->
+        <div class="wishlist-empty">
+          <img src="/api/placeholder/100/100" alt="Empty wishlist">
+          <h2>Your wishlist is empty</h2>
+          <p>Find some beautiful dresses to add to your wishlist</p>
+          <a href="/user/productList" class="btn btn-primary">Start Shopping</a>
+        </div>
+        <% } else { %>
+          <!-- Wishlist items grid -->
+          <div class="wishlist-grid text-center">
+            <% products.forEach(product=> { %>
+              <div class="wishlist-item">
+                <form action="/user/wishlist/remove" method="POST">
+                  <input type="hidden" name="productId" value="<%= product._id %>">
+                  <button class="btn-remove" title="Remove from wishlist">✕</button>
+                </form>
+                <img src="<%= product.images[0] || 'product.productName' %>" alt="<%= product.productName %>"
+                  class="item-image">
+                <div class="item-info">
+                  <h3 class="item-name">
+                    <%= product.productName %>
+                  </h3>
+                  <div class="item-price">
+                    $<%= product.price %>
+                      <% if (product.originalPrice && product.originalPrice> product.price) { %>
+                        <span class="item-original-price">$<%= product.originalPrice %></span>
+                        <% } %>
+                  </div>
+                  <div class="item-meta">
+                    <span>Size: <%= product.sizes || 'S-XL' %></span>
+                    <div class="item-rating">
+                      <%= '★' .repeat(Math.floor(product.rating || 4)) + '☆' .repeat(5 - Math.floor(product.rating ||
+                        4)) %>
+                        <span>(<%= product.reviewCount || 0 %>)</span>
+                    </div>
+                  </div>
+                  <div class="item-actions text-center">
+                    <button 
+                      onclick="addToCart('<%= product._id %>')" 
+                      class="btn addToCart <%= product.stock === 0 ? 'btn-secondary' : 'bg-success text-white' %>" 
+                      <%= product.stock === 0 ? 'disabled="disabled"' : '' %>>
+                      <%= product.stock === 0 ? 'Out of Stock' : 'Add to Cart' %>
+                    </button>
+                    <button class="btn bg-danger btnRemove text-white" onclick="remove('<%= product._id %>')" >Remove</button>
+                  </div>
+                  
+
+                </div>
+              </div>
+              <% }) %>
+          </div>
+          <% } %>
+    </div>
+
+
+    <%- include('../partials/userFooter') %>
+
+      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+      <script>
+        // Example JavaScript to handle remove button functionality
+        document.addEventListener('DOMContentLoaded', function () {
+          const removeButtons = document.querySelectorAll('.btn-remove');
+          const wishlistItems = document.querySelectorAll('.wishlist-item');
+          const wishlistGrid = document.querySelector('.wishlist-grid');
+          const wishlistEmpty = document.querySelector('.wishlist-empty');
+          const pageTitle = document.querySelector('.page-title');
+
+          removeButtons.forEach((button, index) => {
+            button.addEventListener('click', function () {
+              // Remove the item with animation
+              wishlistItems[index].style.opacity = '0';
+              setTimeout(() => {
+                wishlistItems[index].remove();
+
+                // Check if wishlist is empty
+                if (wishlistGrid.children.length === 0) {
+                  wishlistGrid.style.display = 'none';
+                  wishlistEmpty.style.display = 'block';
+                  pageTitle.textContent = 'My Wishlist (0)';
+                } else {
+                  // Update count in title
+                  pageTitle.textContent = `My Wishlist (${wishlistGrid.children.length})`;
+                }
+
+                // Update badge count
+                document.querySelector('.icon .badge').textContent = wishlistGrid.children.length;
+              }, 300);
+              wishlistItems[index].style.transition = 'opacity 0.3s ease';
+              wishlistItems[index].style.opacity = '0';
+            });
+          });
+        });
+        function addToCart(productId) {
+          console.log('add to cart btn cliked', productId);
+          fetch('/user/cart/add', {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ productId })
+          }).then(res => res.json())
+            .then(data => {
+              if (data && data.success) {
+                Swal.fire(data.message)
+              } else {
+                Swal.fire(data.message)
+              }
+            }).catch(error => {
+              Swal.fire('Server error')
+            })
+        }
+
+function remove(productId){
+  console.log('from delete wishlist script');
+  console.log('productId ',productId);
+  
+  fetch(`/user/wishList/delete/${productId}`,{
+    method:"DELETE"
+  }).then(res=>res.json())
+  .then(data=>{
+    if(data && data.success){
+      Swal.fire(data.message)
+    }else{
+      Swal.fire(data.message)
+    }
+  }).catch(error=>{
+    Swal.fire('Server Error')
+  })
+}
+
+      </script>
+</body>
+
+</html>

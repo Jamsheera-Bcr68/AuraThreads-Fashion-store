@@ -18,7 +18,8 @@ const userShema=mongoose.Schema({
     dob:{type:String},
     isActive:{type:Boolean,default:true},
     otp: { type: String }, // OTP for verification
-    otpExpiry: { type: Date }
+    otpExpiry: { type: Date },
+   
    
 })
 module.exports=mongoose.model('User',userShema)

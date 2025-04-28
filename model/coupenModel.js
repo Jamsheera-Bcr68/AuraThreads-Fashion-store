@@ -12,7 +12,8 @@ const coupenSchema = new mongoose.Schema({
   startDate: { type: Date },
   usageLimit: { type: Number },
   updatedAt: { type: Date },
-  used: { type: Number }
+  used: { type: Number },
+  
 })
 
 module.exports = mongoose.model('Coupen', coupenSchema)

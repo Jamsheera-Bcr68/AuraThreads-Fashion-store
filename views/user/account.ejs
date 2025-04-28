@@ -256,11 +256,11 @@
                       <button class="btn-sm bg-success" onclick="showOrderDetails('<%= order._id %>')">
                         View Details
                       </button>
-                      <% if (order && order.status !=='Cancelled' ) { %>
+                      <% if (order && order.status !=='cancelled' ) { %>
                         <button class="btn-sm cancel-btn" onclick="cancelOrder('<%= order._id %>', this)">
                           Cancel Order
                         </button>
-                        <% } else if (order.status==='Cancelled' ) { %>
+                        <% } else if (order.status==='cancelled' ) { %>
                           <button class="btn-sm btn-secondary" disabled>
                             Cancelled
                           </button>
@@ -272,7 +272,7 @@
                     <div style="color: rgb(18, 102, 24);font-weight: bold;">
                       <%= Array.isArray(order.items) ? order.items.length : 1 %> item<%= Array.isArray(order.items) &&
                           order.items.length> 1 ? 's' : '' %> |
-                          Total: ₹ <%= order.totalAmount.toFixed(2) %>
+                          Total: ₹ <%= order.finalAmount.toFixed(2) %>
                     </div>
                     <% if (order.estimatedDelivery) { %>
                       <div style="color: black;font-weight: bold;">
@@ -287,6 +287,7 @@
                     <% } %>
 
                       <!--To here -->
+                      
           </div>
 
           <!-- Forgot Password Modal -->
