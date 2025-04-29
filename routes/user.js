@@ -7,8 +7,8 @@ const user=require('../model/userModel')
 const Product=require('../model/productModel')
 const category=require('../model/categoryModel')
 const Address=require('../model/addressModel')
-
-
+const multer=require('multer')
+const upload=multer({dest:'uploads/'})
 
 //display register page
 router.get("/register", userController.getRegister);
@@ -106,6 +106,12 @@ router.post('/address/add',userController.addAddress)
 
 //user Update
 router.post('/profile/update',userController.updateUser)
+
+//user profile pic adding
+router.post('/addProfileImage',upload.single('profilePic'),userController.addProfileImage)
+
+//removing profile image
+router.post('/removeProfileImage',userController.removeProfileImage)
 
 //user edit address
 router.post('/address/edit/:editAddressId',userController.editAddress)

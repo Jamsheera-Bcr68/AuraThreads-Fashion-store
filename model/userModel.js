@@ -19,7 +19,7 @@ const userShema=mongoose.Schema({
     isActive:{type:Boolean,default:true},
     otp: { type: String }, // OTP for verification
     otpExpiry: { type: Date },
-   
+    profilePicture:{type:String}
    
 })
 module.exports=mongoose.model('User',userShema)

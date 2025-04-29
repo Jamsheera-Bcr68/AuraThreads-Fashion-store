@@ -13,7 +13,8 @@ const Order = require('../model/orderModel');
 const Coupon = require("../model/coupenModel");
 const WishList = require('../model/wishListModel')
 const Wallet = require('../model/walletModel');
-const messages = require("dote/src/messages");
+
+
 
 //get Register
 const getRegister = async (req, res) => {
@@ -553,6 +554,52 @@ const updateUser = async (req, res) => {
 
   }
 }
+
+
+//addProfileImage
+const addProfileImage=async (req,res)=>{
+  console.log('from addProfileImage');
+  try {
+    const file=req.file
+    if (!file) {
+
+      return res.status(400).json({ success: false, message: 'No file uploaded' });
+    }
+    const imageUrl = '/uploads/' + file.filename; 
+   
+    const userId=req.session.user._id
+   const user= await User.findByIdAndUpdate(userId, { profilePicture: imageUrl });
+    await user.save9
+   return res.json({success:true,message:"Profile image added succesfully"})
+  } catch (error) {
+    console.log('error is ',error);
+    res.json({success:false,message:"Error in adding profile picture"})
+  }
+  
+}
+
+//removeProfileImage
+const removeProfileImage=async (req,res)=>{
+  console.log('from removeProfileImage');
+  const userId=req.session.user._id
+  if(!userId){
+    console.log('user not logined');
+    return res.json({success:false,message:"user not logined"})
+  }
+  const user=await User.findOne({_id:userId})
+  if(!user){
+    console.log('user not found');
+    return res.json({success:false,message:"user not found"})
+  }
+  if(user.profilePicture==''){
+    console.log('No profile picture');
+    return res.json({success:false,message:"Already there is no DP"})
+  }
+  user.profilePicture=''
+  await user.save()
+ return res.json({success:true,message:"Profile image removed successfully"})
+}
+
 const getCart = async (req, res) => {
   let cartCount = 0
   console.log('this is from get cart');
@@ -1679,6 +1726,9 @@ module.exports = {
   getWallet,
   addMoney,
   cancelSingleProduct,
-  returnProduct
+  returnProduct,
+ addProfileImage,
+ removeProfileImage
+
 }
 
