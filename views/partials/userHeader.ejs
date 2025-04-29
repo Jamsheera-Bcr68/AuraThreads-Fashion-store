@@ -1,45 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
 
-    <!DOCTYPE html>
-    <html lang="en">
- 
-    <head>
-    <title>Aura Threads</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<head>
+  <title>Aura Threads</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Mukta:300,400,700"> 
-    <link rel="stylesheet" href="/icomoon/style.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Mukta:300,400,700">
+  <link rel="stylesheet" href="/icomoon/style.css">
 
-    <link rel="stylesheet" href="/css/bootstrap.min.css">
-    <link rel="stylesheet" href="/css/magnific-popup.css">
-    <link rel="stylesheet" href="/css/jquery-ui.css">
-    <link rel="stylesheet" href="/css/owl.carousel.min.css">
-    <link rel="stylesheet" href="/css/owl.theme.default.min.css">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/magnific-popup.css">
+  <link rel="stylesheet" href="/css/jquery-ui.css">
+  <link rel="stylesheet" href="/css/owl.carousel.min.css">
+  <link rel="stylesheet" href="/css/owl.theme.default.min.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
-    <link rel="stylesheet" href="/css/aos.css">
+  <link rel="stylesheet" href="/css/aos.css">
 
-    <link rel="stylesheet" href="/css/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
 
-    
-  </head>
-    
-  <body>
+
+</head>
+
+<body>
   <style>
     .site-navbar .site-navbar-top {
-  background: #cbb6ac;
- }
-   .nav-text{
-        font-weight: bold;
+      background: #cbb6ac;
     }
-    .js-logo-clone{
-        font-weight: bold;
-        color: rgb(1, 135, 197);
-        font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+
+    .nav-text {
+      font-weight: bold;
     }
-    header{
+
+    .js-logo-clone {
+      font-weight: bold;
+      color: rgb(1, 135, 197);
+      font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    }
+
+    header {
       padding-top: 0;
     }
   </style>
@@ -51,26 +53,27 @@
             <div class="col-6 col-md-4 order-2 order-md-1 site-search-icon text-left">
               <form action="/product/productList" method="GET" class="site-block-top-search d-flex align-items-center">
                 <span class="icon icon-search2 me-2"></span>
-            
+
                 <% if (categoryId) { %>
-                    <input type="hidden" name="categoryId" value="<%= categoryId %>">
-                <% } %>
-            
-                <% if (priceRange) { %>
-                    <input type="hidden" name="priceRange" value="<%= priceRange %>">
-                <% } %>
-            
-                <% if (sort) { %>
-                    <input type="hidden" name="sort" value="<%= sort %>">
-                <% } %>
-            
-                <input type="text" id="searchInput" name="query" class="form-control border-0 flex-grow-1"
-                    placeholder="Search" value="<%= query || '' %>">
-            
-                <button type="button" onclick="clearSearch()" class="btn btn-light btn-sm ms-2">Clear</button>
-            </form>
-          </div>
-          
+                  <input type="hidden" name="categoryId" value="<%= categoryId %>">
+                  <% } %>
+
+                    <% if (priceRange) { %>
+                      <input type="hidden" name="priceRange" value="<%= priceRange %>">
+                      <% } %>
+
+                        <% if (sort) { %>
+                          <input type="hidden" name="sort" value="<%= sort %>">
+                          <% } %>
+
+                            <input type="text" id="searchInput" name="query" class="form-control border-0 flex-grow-1"
+                              placeholder="Search" value="<%= query || '' %>">
+
+                            <button type="button" onclick="clearSearch()"
+                              class="btn btn-light btn-sm ms-2">Clear</button>
+              </form>
+            </div>
+
             <div class="col-12 mb-3 mb-md-0 col-md-4 order-1 order-md-2 text-center">
               <div class="site-logo">
                 <a href="/user/home" class="js-logo-clone">Aura Threads</a>
@@ -80,31 +83,36 @@
             <div class="col-6 col-md-4 order-3 order-md-3 text-right">
               <div class="site-top-icons">
                 <ul>
+                  <li><button id="login" style="background-color: green;border-radius: 30%;">Login</button></li>
                   <li>
-                    <li>
-                      <a href="/user/account?userId=<%= user ? user._id : '' %>">
-                        <span class="icon icon-person"></span>
-                      </a>
-                    </li>
+                  <li>
+                    <a href="/user/account?userId=<%= user ? user._id : '' %>">
+                      <span class="icon icon-person"></span>
+                    </a>
+                  </li>
+
                   <li><a href="/user/wishList"><span class="icon icon-heart-o"></span></a></li>
                   <li><a href="/user/wallet"><span class="fas fa-wallet"></span></a></li>
                   <li><a href="/user/orders"><i class="fa-solid fa-bag-shopping"></i></a></li>
                   <li>
                     <a href="/user/cart" class="site-cart">
                       <span class="icon icon-shopping_cart"></span>
-                      <% if (cartCount && cartCount > 0) { %>
-                        <span class="count"><%= cartCount %></span>
-                    <% } %>
+                      <% if (cartCount && cartCount> 0) { %>
+                        <span class="count">
+                          <%= cartCount %>
+                        </span>
+                        <% } %>
                     </a>
-                  </li> 
-                  <li class="d-inline-block d-md-none ml-md-0"><a href="#" class="site-menu-toggle js-menu-toggle"><span class="icon-menu"></span></a></li>
+                  </li>
+                  <li class="d-inline-block d-md-none ml-md-0"><a href="#" class="site-menu-toggle js-menu-toggle"><span
+                        class="icon-menu"></span></a></li>
                 </ul>
-              </div> 
+              </div>
             </div>
 
           </div>
         </div>
-      </div> 
+      </div>
       <nav class="site-navigation text-right text-md-center" role="navigation">
         <div class="container">
           <ul class="site-menu js-clone-nav d-none d-md-block">
@@ -141,11 +149,34 @@
       </nav>
     </header>
 
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-      function clearSearch(){
-        document.getElementById('searchInput').value='' // clear search bar
+      function clearSearch() {
+        document.getElementById('searchInput').value = '' // clear search bar
         document.querySelector("form").submit()
       }
+      const loginBtn = document.getElementById('login');
+
+      loginBtn.addEventListener('click', function () {
+        console.log("login button clicked");
+
+        fetch('/user/test',{
+          method:"POST"
+        }).then(res=>res.json())
+        .then(data =>{
+          if(data && data.success){
+            Swal.fire(data.message)
+          }else{
+            Swal.fire(data.message)
+          }
+        }).catch(error=>{
+          Swal.fire('server error')
+          console.log("error ",error);
+          
+        })
+      });
+
     </script>
 </body>
- </html>
+
+</html>

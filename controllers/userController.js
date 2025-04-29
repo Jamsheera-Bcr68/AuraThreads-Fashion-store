@@ -13,6 +13,7 @@ const Order = require('../model/orderModel');
 const Coupon = require("../model/coupenModel");
 const WishList = require('../model/wishListModel')
 const Wallet = require('../model/walletModel');
+const errorHandler=require('../middleweres/errorHandler')
 
 
 
@@ -1690,6 +1691,19 @@ const returnProduct = async (req, res) => {
 
 }
 
+const usertest=(req,res,next)=>{
+ try{
+  console.log("user login route");
+  
+const user=null
+if(!user){
+  throw new Error("User not found");
+}
+return res.json({success:true,message:"Use Logined "})
+ }catch(err){
+  next(err)
+ }
+}
 module.exports = {
   getLogin,
   postLogin,
@@ -1728,7 +1742,8 @@ module.exports = {
   cancelSingleProduct,
   returnProduct,
  addProfileImage,
- removeProfileImage
+ removeProfileImage,
+ usertest
 
 }
 

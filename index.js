@@ -10,6 +10,7 @@ const session=require('express-session')
 const flash=require('connect-flash')
 const cors=require('cors')
 const nocache = require("nocache");
+const errorHandler=require('./middleweres/errorHandler')
 
 
 app.use(express.urlencoded({ extended: true }));
@@ -43,6 +44,7 @@ app.use(cors())
 app.use(passport.initialize());
 app.use(passport.session())
 app.use(nocache());
+
 
 // Apply no-cache headers middleware
 app.use((req, res, next) => {
@@ -108,7 +110,7 @@ app.get("/google/callback",
 // );
 app.use('/product',productRoute)
 app.use('/search',searchRoute)
-
+app.use(errorHandler);
 
 
 

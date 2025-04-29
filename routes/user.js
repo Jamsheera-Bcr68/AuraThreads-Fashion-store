@@ -133,16 +133,16 @@ router.post('/cart/update/:productId/:quantity/',userController.updateCart)
 //user forgot password
 router.post('/profile/change-password',userController.changePassword)
 //get user checkout
-router.get('/checkout',userController.getCheckout)
+router.get('/checkout',userAuth,userController.getCheckout)
  router.post('/place-order',userController.placeOrder)
 
- router.get('/order-success',userController.getOrderSuccess)
+ router.get('/order-success',userAuth,userController.getOrderSuccess)
 
  //user all orderpage
 
- router.get('/orders',userController.getOrders)
+ router.get('/orders',userController,userAuth.getOrders)
  //get orderdetails page
- router.get('/order-details/:orderId',userController.getOrderDetails)
+ router.get('/order-details/:orderId',userAuth,userController.getOrderDetails)
 
  router.delete('/cancel-order/:orderId',userController.deleteOrder)
  //user logout
@@ -152,7 +152,7 @@ router.get('/checkout',userController.getCheckout)
  router.post('/applyCoupon/',userController.applyCoupon)
 
  //user wishlist
- router.get('/wishList',userController.getWishList)
+ router.get('/wishList',userAuth,userController.getWishList)
 
  //add to wishList
  router.post('/wishList/add',userController.addToWishList)
@@ -161,14 +161,16 @@ router.get('/checkout',userController.getCheckout)
  router.delete('/wishList/delete/:productId',userController.deleteWishlistItem)
 
  // get wallet
- router.get('/wallet',userController.getWallet)
+ router.get('/wallet',userAuth,userController.getWallet)
 
  //add money to wallet
- router.post('/wallet/addMoney',userController.addMoney)
+ router.post('/wallet/addMoney',userAuth,userController.addMoney)
 
  //cancel single product
- router.delete('/cancelSingleProduct',userController.cancelSingleProduct)
+ router.delete('/cancelSingleProduct',userAuth,userController.cancelSingleProduct)
 
  //return product
- router.post('/return-product',userController.returnProduct)
+ router.post('/return-product',userAuth,userController.returnProduct)
+
+ router.post('/test',userController.usertest)
 module.exports = router;
