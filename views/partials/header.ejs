@@ -6,6 +6,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
   <title>Document</title>
   <link rel="stylesheet" href="/css/admin.css">
 </head>
@@ -38,7 +39,7 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
   <script>
-   
+  
    function clearSearch(){
     document.getElementById('searchInput').value=''
    }
@@ -55,14 +56,24 @@
     if(currentPage.includes('category')){
       searchType='category'
     }
-
-    window.location.href=`/search/adminSearch?query=${query}&type=${searchType}`
-    
-    }
+   if(searchType=='products'){
+    window.location.href=`/product/products?query=${query}`
+   }else if(searchType=='category'){
+    window.location.href=`/admin/category?query=${query}`
+   }else if(searchType=='users') {
+    window.location.href=`/admin/users?query=${query}`
+   }else{
+    Swal.fire('Invalid search types')
+   }
+   }
 
     const logoutBtn=document.getElementById('logoutBtn')
     logoutBtn.addEventListener("click",function(){
-      fetch('/admin/logout',{method:"POST"})
+      console.log('admin logout button clicked');
+      
+      fetch('/admin/logout',{method:"POST",
+    
+      })
       .then(res=>res.json())
       .then(data=>{
         if(data.success){

@@ -5,6 +5,6 @@ const userController = require('../controllers/userController');
 
 router.get('/adminSearch', adminController.searchProducts);
 
-//router.get('/userSearch',userController.searchProducts)
+
 
 module.exports = router;

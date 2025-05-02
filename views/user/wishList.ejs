@@ -76,6 +76,7 @@
 
       <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
       <script>
+         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         // Example JavaScript to handle remove button functionality
         document.addEventListener('DOMContentLoaded', function () {
           const removeButtons = document.querySelectorAll('.btn-remove');
@@ -113,7 +114,9 @@
           console.log('add to cart btn cliked', productId);
           fetch('/user/cart/add', {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json" ,
+            'CSRF-Token': csrfToken 
+            },
             body: JSON.stringify({ productId })
           }).then(res => res.json())
             .then(data => {
@@ -132,7 +135,8 @@ function remove(productId){
   console.log('productId ',productId);
   
   fetch(`/user/wishList/delete/${productId}`,{
-    method:"DELETE"
+    method:"DELETE",
+    headers:{'CSRF-Token': csrfToken }
   }).then(res=>res.json())
   .then(data=>{
     if(data && data.success){

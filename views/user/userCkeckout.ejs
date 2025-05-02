@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Checkout - Aura Threads</title>
   <link rel="stylesheet" href="/css/checkout.css">
+  <meta name="csrf-token" content="<%= csrfToken %>">  
 </head>
 
 <body>
@@ -252,6 +253,7 @@
   <%- include('../partials/userFooter') %>q `
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+      const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
       document.addEventListener("DOMContentLoaded", function () {
         const options = document.querySelectorAll(".payment-option");
 
@@ -337,7 +339,9 @@
         }
         fetch('/user/place-order', {
           method: "POST",
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json',
+          'CSRF-Token': csrfToken
+           },
           body: JSON.stringify(orderData)
         }).then(res => res.json())
           .then(data => {
@@ -373,6 +377,7 @@
           method: 'POST',
           headers: {
             "Content-Type": "application/json",
+            'CSRF-Token': csrfToken
           },
           body: JSON.stringify({ code })
         }).then((res) => res.json())

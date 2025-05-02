@@ -5,6 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>User Profile</title>
+  <meta name="csrf-token" content="<%= csrfToken %>">  
   <link rel="stylesheet" href="/css/acount.css" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
@@ -32,7 +33,7 @@
               style="cursor: pointer; width:100px; height:100px; object-fit:cover; border-radius:50%;">
           </div>
 
-         
+
           <!-- Bootstrap Modal-->
           <div class="modal fade" id="profileModal" tabindex="-1" aria-labelledby="profileModalLabel"
             aria-hidden="true">
@@ -52,7 +53,7 @@
 
               </div>
             </div>
-          </div> 
+          </div>
 
           <!-- Hidden file input -->
           <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="previewImage(event)">
@@ -449,6 +450,7 @@
           <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
           <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
           <script>
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
             // Initialize the page
             document.addEventListener("DOMContentLoaded", function () {
               // Show the profile details section by default
@@ -493,7 +495,10 @@
               try {
                 const response = await fetch('/user/profile/update', {
                   method: "POST",
-                  headers: { "Content-Type": "application/json" },
+                  headers: {
+                    "Content-Type": "application/json",
+                    'CSRF-Token': csrfToken
+                  },
                   body: JSON.stringify(jsonObject)
                 });
 
@@ -522,7 +527,10 @@
 
               fetch('/user/address/add', {
                 method: "POST",
-                headers: { "content-Type": "application/json" },
+                headers: {
+                  "content-Type": "application/json",
+                  'CSRF-Token': csrfToken
+                },
                 body: JSON.stringify(formObject)
               }).then(response => response.json())
                 .then(data => {
@@ -616,7 +624,10 @@
               try {
                 fetch(`/user/address/edit/${editAddressId}`, {
                   method: "POST",
-                  headers: { "Content-Type": "application/json" },
+                  headers: {
+                    "Content-Type": "application/json",
+                    'CSRF-Token': csrfToken
+                  },
                   body: JSON.stringify(formObject)
                 }).then(response => response.json())
                   .then(data => {
@@ -666,7 +677,7 @@
 
               fetch(`/user/address/delete/${deleteAddressId}`, {
                 method: 'delete',
-
+                headers: { 'CSRF-Token': csrfToken }
               }).then(response => response.json())
                 .then(data => {
                   if (data && data.success) {
@@ -712,7 +723,10 @@
 
               fetch('/user/profile/change-password', {
                 method: "POST",
-                headers: { "content-Type": "application/json" },
+                headers: {
+                  "content-Type": "application/json",
+                  'CSRF-Token': csrfToken
+                },
                 body: JSON.stringify({ currentPassword, newPassword, confirmPassword })
               }).then(response => response.json())
                 .then(data => {
@@ -756,6 +770,7 @@
 
                   fetch(`/user/cancel-order/${orderId}`, {
                     method: "DELETE",
+                    headers: { 'CSRF-Token': csrfToken }
                   })
                     .then(res => {
                       return res.json();
@@ -811,7 +826,10 @@
                 confirmButtonText: "Yes, Logout!"
               }).then((result) => {
                 if (result.isConfirmed) {
-                  fetch('/user/logout', { method: "POST" })
+                  fetch('/user/logout', {
+                    method: "POST",
+                    headers: { 'CSRF-Token': csrfToken }
+                  })
                     .then(res => res.json())
                     .then(data => {
                       if (data && data.success) {
@@ -827,90 +845,93 @@
 
             })
 
-            
-let cropper;
 
-// Existing function to open modal
-function openModal() {
-  var myModal = new bootstrap.Modal(document.getElementById('profileModal'));
-  myModal.show();
-}
+            let cropper;
 
-// Updated triggerFileInput
-function triggerFileInput() {
-  document.getElementById('fileInput').click();
-}
+            // Existing function to open modal
+            function openModal() {
+              var myModal = new bootstrap.Modal(document.getElementById('profileModal'));
+              myModal.show();
+            }
 
-// Preview selected image for cropping
-function previewImage(event) {
-  const file = event.target.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      const img = document.getElementById('imagePreview'); // Make sure this ID exists
-      img.src = e.target.result;
+            // Updated triggerFileInput
+            function triggerFileInput() {
+              document.getElementById('fileInput').click();
+            }
 
-      var cropperModal = new bootstrap.Modal(document.getElementById('cropperModal'));
-      cropperModal.show();
+            // Preview selected image for cropping
+            function previewImage(event) {
+              const file = event.target.files[0];
+              if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                  const img = document.getElementById('imagePreview'); // Make sure this ID exists
+                  img.src = e.target.result;
 
-      img.onload = function() {
-        if (cropper) {
-          cropper.destroy();
-        }
-        cropper = new Cropper(img, {
-          aspectRatio: 1, // Square crop
-          viewMode: 1,
-          autoCropArea: 1,
-        });
-      };
-    };
-    reader.readAsDataURL(file);
-  }
-}
+                  var cropperModal = new bootstrap.Modal(document.getElementById('cropperModal'));
+                  cropperModal.show();
+
+                  img.onload = function () {
+                    if (cropper) {
+                      cropper.destroy();
+                    }
+                    cropper = new Cropper(img, {
+                      aspectRatio: 1, // Square crop
+                      viewMode: 1,
+                      autoCropArea: 1,
+                    });
+                  };
+                };
+                reader.readAsDataURL(file);
+              }
+            }
 
 
-function cropAndUpload() {
-  if (cropper) {
-    cropper.getCroppedCanvas().toBlob(function(blob) {
-      const formData = new FormData();
-      formData.append('profilePic', blob, 'cropped.jpg');
+            function cropAndUpload() {
+              if (cropper) {
+                cropper.getCroppedCanvas().toBlob(function (blob) {
+                  const formData = new FormData();
+                  formData.append('profilePic', blob, 'cropped.jpg');
 
-      fetch('/user/addProfileImage', {
-        method: 'POST',
-        body: formData,
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data && data.success) {
-          Swal.fire(data.message);
-          location.reload();
-        } else {
-          Swal.fire(data.message);
-        }
-      })
-      .catch(error => {
-        Swal.fire("Server Error");
-      });
-    })
-  }
-}
+                  fetch('/user/addProfileImage', {
+                    method: 'POST',
+                    headers:{ 'CSRF-Token': csrfToken},
+                    body: formData,
+                  })
+                    .then(response => response.json())
+                    .then(data => {
+                      if (data && data.success) {
+                        Swal.fire(data.message);
+                        location.reload();
+                      } else {
+                        Swal.fire(data.message);
+                      }
+                    })
+                    .catch(error => {
+                      Swal.fire("Server Error");
+                    });
+                })
+              }
+            }
 
-// Your existing function for removing profile image
-function removeProfilePicture() {
-  fetch('/user/removeProfileImage', { method: 'POST' })
-    .then(response => response.json())
-    .then(data => {
-      if (data && data.success) {
-        Swal.fire(data.message);
-        location.reload();
-      } else {
-        Swal.fire(data.message);
-      }
-    }).catch(error => {
-      Swal.fire("Server error");
-    })
-}
-</script>
+            // Your existing function for removing profile image
+            function removeProfilePicture() {
+              fetch('/user/removeProfileImage', { method: 'POST',
+                headers:{ 'CSRF-Token': csrfToken}
+               })
+                .then(response => response.json())
+                .then(data => {
+                  if (data && data.success) {
+                    Swal.fire(data.message);
+                    location.reload();
+                  } else {
+                    Swal.fire(data.message);
+                  }
+                }).catch(error => {
+                  Swal.fire("Server error");
+                })
+            }
+          </script>
 
 </body>
 

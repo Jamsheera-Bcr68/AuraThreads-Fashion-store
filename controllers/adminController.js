@@ -89,16 +89,7 @@ const searchProducts = async (req, res) => {
     ///
 
     let searchQuery = {}
-
-    if (type == 'products') {
-      searchQuery = {
-        $or: [
-          { productName: { $regex: query, $options: "i" } },
-          { category: { $regex: query, $options: "i" } },
-          { description: { $regex: query, $options: "i" } },
-        ],
-      }
-    } else if (type == "category") {
+ if (type == "category") {
       searchQuery = {
         categoryName: { $regex: query, $options: "i" },
       }

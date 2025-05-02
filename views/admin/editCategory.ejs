@@ -12,6 +12,7 @@
                 <div class="modal-body">
                     <form action="/admin/category/edit" method="Patch">
                         <div class="mb-3">
+                            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                             <label class="form-label">Category Nam</label>
                             <input type="text" class="form-control" name="categoryName" required>
                         </div>

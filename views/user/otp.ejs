@@ -2,9 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="csrf-token" content="<%= csrfToken %>">
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>OTP Verification</title>
   <link rel="stylesheet" href="/css/otp.css">
+  
 </head>
 <body>
   <div class="otp-container">
@@ -29,7 +31,7 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script>
     const inputs = document.querySelectorAll('.otp-field');
-  
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
     // Auto-move & backspace navigation
     inputs.forEach((input, index) => {
       input.addEventListener('input', () => {
@@ -85,7 +87,8 @@
     resendBtn.disabled = true;
     try {
       const res = await fetch('/user/resendOtp', {
-        method: "POST"
+        method: "POST",
+        headers:{ 'CSRF-Token': csrfToken}
       });
       const data = await res.json();
       Swal.fire(data.message);
@@ -118,7 +121,9 @@ const otp = Array.from(otpInputs).map(input => input.value).join('');
   
   fetch('/user/verifyOtp',{
     method:"POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json" ,
+    'CSRF-Token': csrfToken 
+    },
     body:JSON.stringify({otp})
   }).then(res=>res.json())
   .then(data=>{

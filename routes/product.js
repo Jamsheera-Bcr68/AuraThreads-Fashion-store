@@ -17,24 +17,47 @@ const router = express.Router();
 router.get("/products", async (req, res) => {
   
   try {
+    const query=req.query.query || ""
+    console.log('Query is ',query);
+    
    let page=parseInt(req.query.page)|| 1
    let limit=parseInt(req.query.limit) ||5
    let skip=(page-1)*limit
 
+   //search
+   let searchQuery = {isDeleted:false}
+
+   // If query is not empty, apply $regex search
+   if (query.trim()) {
+    searchQuery = {
+      $and: [
+        {
+          $or: [
+            { productName: { $regex: query, $options: "i" } },
+            { category: { $regex: query, $options: "i" } },
+            { description: { $regex: query, $options: "i" } },
+          ],
+        },
+        { isDeleted: false },
+      ],
+    };
+  }
     console.log(`page is ${page} and limt is ${limit}`);
-    const products = await Product.find({ isDeleted: false }).sort({
+    const products = await Product.find(searchQuery).sort({
     createdAt: -1,
     }).skip(skip)
     .limit(limit)
 
-    const totalProducts=await Product.countDocuments({isDeleted:false})
+    const totalProducts = await Product.countDocuments({
+      $and: [searchQuery, { isDeleted: false }],
+    });
     const totalPages=Math.ceil(totalProducts/limit)
 
     res.render("admin/productManagement", {
       title: "Product Management",
       currentPage:page ||1,
       totalPages,
-     
+     query:query||'',
       products,
       successMessage: res.locals.successMessage || "",
       errorMessage: res.locals.errorMessage || "",
@@ -212,6 +235,7 @@ router.post(
 
       const imagePaths = req.files.map((file) =>'/uploads/'+ file.filename);
       console.log('imagepath ',imagePaths);
+      
        // Extract image filenames
       const { productName, categoryId, price, description } = req.body;
       const { productId } = req.params;
@@ -225,10 +249,15 @@ router.post(
         req.flash("errorMessage", "No product found");
         return res.redirect("/product/products");
       }
-
+      let images;
+      if(imagePaths==''){
+        images=productToUpdate.images
+      }else{
+        images=imagePaths
+      }
       const updatedProduct = await Product.findOneAndUpdate(
         { _id: productId },
-        { $set: { productName, categoryId, description, price, images:imagePaths } },
+        { $set: { productName, categoryId, description, price, images} },
         { new: true }
       );
 
@@ -279,210 +308,211 @@ router.delete("/products/delete/:productId", async (req, res) => {
   }
 });
 
-//get single product user
-router.get("/products/:productId", async (req, res) => {
-  const { productId } = req.params;
-  console.log("productId is equal to " + productId);
+// //get single product user
+// router.get("/products/:productId", async (req, res) => {
+//   const { productId } = req.params;
+//   console.log("productId is equal to " + productId);
 
-  try {
-    const singleProduct = await Product.findOne({
-      isDeleted: false,
-      _id: productId,
-    });
+//   try {
+//     const singleProduct = await Product.findOne({
+//       isDeleted: false,
+//       _id: productId,
+//     });
 
-    if (!singleProduct) {
-      console.log("No product found");
-      return res
-        .status(404)
-        .render("user/error", { message: "Product not found" });
-    }
+//     if (!singleProduct) {
+//       console.log("No product found");
+//       return res
+//         .status(404)
+//         .render("user/error", { message: "Product not found" });
+//     }
 
-    singleProduct.images = singleProduct.images.map((image) =>
-      image.replace(/\\/g, "/")
-    );
+//     singleProduct.images = singleProduct.images.map((image) =>
+//       image.replace(/\\/g, "/")
+//     );
   
     
-    //get related products
-     const relatedProducts=await Product.find({isDeleted:false,categoryId:singleProduct.categoryId}).limit(3)
-     relatedProducts.forEach(product=>{
-      product.images=product.images.map(image=>image.replace(/\\/g, '/'))
-    })
-     console.log('related images'+relatedProducts[0].images);
+//     //get related products
+//      const relatedProducts=await Product.find({isDeleted:false,categoryId:singleProduct.categoryId}).limit(3)
+//      relatedProducts.forEach(product=>{
+//       product.images=product.images.map(image=>image.replace(/\\/g, '/'))
+//     })
+//      console.log('related images'+relatedProducts[0].images);
      
      
-    console.log(relatedProducts +' related products');
+//     console.log(relatedProducts +' related products');
 
-    //get cart count
-       let cartCount=0
-       if(req.session.user){
-        const userId=req.session.user._id
-        const cart=await Cart.findOne({userId})
-        if(cart){
-          cartCount=cart.items.length 
-          console.log('cart count is ',cartCount);
-        }else{
-          console.log('cart not fount');
+//     //get cart count
+//        let cartCount=0
+//        if(req.session.user){
+//         const userId=req.session.user._id
+//         const cart=await Cart.findOne({userId})
+//         if(cart){
+//           cartCount=cart.items.length 
+//           console.log('cart count is ',cartCount);
+//         }else{
+//           console.log('cart not fount');
           
-        }
-       }
+//         }
+//        }
         
         
     
-    res.render("user/sproduct", {
-      title: "Product Details Page",
-      singleProduct,
-      relatedProducts,
-      categoryId:'',
-      priceRange:'',
-      cartCount,
-      user:req.session.user||'',
-      sort:'',query:''
-    });
-  } catch (error) {
-    console.error("Error fetching product:", error);
-    res
-      .status(500)
-      .render("user/error", {
-        message: "Something went wrong. Please try again.",
-      });
-  }
-});
+//     res.render("user/sproduct", {
+//       title: "Product Details Page",
+//       singleProduct,
+//       relatedProducts,
+//       categoryId:'',
+//       priceRange:'',
+//       cartCount,
+//       user:req.session.user||'',
+//       sort:'',query:''
+//     });
+//   } catch (error) {
+//     console.error("Error fetching product:", error);
+//     res
+//       .status(500)
+//       .render("user/error", {
+//         message: "Something went wrong. Please try again.",
+//       });
+//   }
+// });
 
 //get product listing page
-router.get('/productList', async (req, res) => {
-  console.log('product listing page');
+// router.get('/productList', async (req, res) => {
+//   console.log('product listing page');
   
   
-  const categoryId = req.query.categoryId || null;
+//   const categoryId = req.query.categoryId || null;
   
-  try {
-    // if(userId){
-    //   const user=await User.findOne({_id:mongoose.Types.ObjectId(userId)})
-    // }
-    const {query}=req.query
-    console.log(`query is ${query}`);
+//   try {
+//     // if(userId){
+//     //   const user=await User.findOne({_id:mongoose.Types.ObjectId(userId)})
+//     // }
+//     const {query}=req.query
+//     console.log(`query is ${query}`);
     
-    const page = parseInt(req.query.page) || 1;
-    const limit = 6;
-    const skip = (page - 1) * limit;
-    const priceRange = req.query.priceRange || '';
-    const sort = req.query.sort || '';
+//     const page = parseInt(req.query.page) || 1;
+//     const limit = 6;
+//     const skip = (page - 1) * limit;
+//     const priceRange = req.query.priceRange || '';
+//     const sort = req.query.sort || '';
     
-    // Category based filter
-    const filter = {isDeleted: false};
-    let selectedCategories = [];
-    let categoryTitle = 'Show All Products'; // Default title
+//     // Category based filter
+//     const filter = {isDeleted: false};
+//     let selectedCategories = [];
+//     let categoryTitle = 'Show All Products'; // Default title
     
-    if (categoryId) {
-      // Handle both single category ID and comma-separated list
-      selectedCategories = Array.isArray(categoryId)
-        ? categoryId
-        : categoryId.includes(',')
-          ? categoryId.split(',')
-          : [categoryId];
+//     if (categoryId) {
+//       // Handle both single category ID and comma-separated list
+//       selectedCategories = Array.isArray(categoryId)
+//         ? categoryId
+//         : categoryId.includes(',')
+//           ? categoryId.split(',')
+//           : [categoryId];
           
-      // Convert string IDs to ObjectId
-      filter.categoryId = {
-        $in: selectedCategories.map(id => new mongoose.Types.ObjectId(id))
-      };
+//       // Convert string IDs to ObjectId
+//       filter.categoryId = {
+//         $in: selectedCategories.map(id => new mongoose.Types.ObjectId(id))
+//       };
       
-      //  display a category name in the title, but only when a single category is selected
-      if (selectedCategories.length === 1) {
-        // Only get the category name if there's exactly one category selected
-        const singleCategory = await category.findOne({ _id: new mongoose.Types.ObjectId(selectedCategories[0]) });
-        if (singleCategory) {
-          categoryTitle = `${singleCategory.categoryName} Clothing`;
-        }
-      } else if (selectedCategories.length > 1) {
-        // Multiple categories selected
-        categoryTitle = 'Multiple Categories';
-      }
-    }
+//       //  display a category name in the title, but only when a single category is selected
+//       if (selectedCategories.length === 1) {
+//         // Only get the category name if there's exactly one category selected
+//         const singleCategory = await category.findOne({ _id: new mongoose.Types.ObjectId(selectedCategories[0]) });
+//         if (singleCategory) {
+//           categoryTitle = `${singleCategory.categoryName} Clothing`;
+//         }
+//       } else if (selectedCategories.length > 1) {
+//         // Multiple categories selected
+//         categoryTitle = 'Multiple Categories';
+//       }
+//     }
     
     
     
-    // Price range based filtering
-    let selectedPriceRange = priceRange || "";
-    if (selectedPriceRange) {
-      let [min, max] = selectedPriceRange.split("-").map(Number);
-      filter.price = { $gte: min, $lte: max };
-    }
-    //searchbased fitering
-    if (query) {
-      filter.$or = [
-        { productName: { $regex: query, $options: "i" } },
-        { description: { $regex: query, $options: "i" } }
-      ];
-    }
+//     // Price range based filtering
+//     let selectedPriceRange = priceRange || "";
+//     if (selectedPriceRange) {
+//       let [min, max] = selectedPriceRange.split("-").map(Number);
+//       filter.price = { $gte: min, $lte: max };
+//     }
+//     //searchbased fitering
+//     if (query) {
+//       filter.$or = [
+//         { productName: { $regex: query, $options: "i" } },
+//         { description: { $regex: query, $options: "i" } }
+//       ];
+//     }
     
-    // Sorting based on sortOption
-    let sortOption = {};
-    if (sort == 'newest') {
-      sortOption.createdAt = -1;
-    } else if (sort == 'lowToHigh') {
-      sortOption.price = 1;
-    } else if (sort == 'highToLow') {
-      sortOption.price = -1;
-    } else if (sort == 'az') {
-      sortOption.productName = 1;
-    } else if (sort == 'za') {
-      sortOption.productName = -1; // Fixed: this was price=-1 in your code
-    }
+//     // Sorting based on sortOption
+//     let sortOption = {};
+//     if (sort == 'newest') {
+//       sortOption.createdAt = -1;
+//     } else if (sort == 'lowToHigh') {
+//       sortOption.price = 1;
+//     } else if (sort == 'highToLow') {
+//       sortOption.price = -1;
+//     } else if (sort == 'az') {
+//       sortOption.productName = 1;
+//     } else if (sort == 'za') {
+//       sortOption.productName = -1; // Fixed: this was price=-1 in your code
+//     }
     
-    const products = await Product.find(filter)
-      .sort(sortOption)
-      .skip(skip)
-      .limit(limit);
+//     const products = await Product.find(filter)
+//       .sort(sortOption)
+//       .skip(skip)
+//       .limit(limit);
       
-    // Fix image paths
-    products.forEach(product => {
-      product.images = product.images.map(image => image.replace(/\\/g, "/"));
-    });
+//     // Fix image paths
+//     products.forEach(product => {
+//       product.images = product.images.map(image => image.replace(/\\/g, "/"));
+//     });
     
-    // Get all categories for the filter options
-    const categories = await category.find({isDeleted: false});
+//     // Get all categories for the filter options
+//     const categories = await category.find({isDeleted: false});
     
-    // Get total count of products for pagination
-    const totalProducts = await Product.countDocuments(filter);
-    const totalPages = Math.ceil(totalProducts / limit);
+//     // Get total count of products for pagination
+//     const totalProducts = await Product.countDocuments(filter);
+//     const totalPages = Math.ceil(totalProducts / limit);
 
-    //get cart count
-       let cartCount=0
-       if(req.session.user){
-        const userId=req.session.user._id
+//     //get cart count
+//        let cartCount=0
+//        if(req.session.user){
+//         const userId=req.session.user._id
 
-        const cart=await Cart.findOne({userId})
-        if(cart){
-          cartCount=cart.items.length 
-          console.log('cart count is ',cartCount);
-        }else{
-          console.log('cart not fount');
+//         const cart=await Cart.findOne({userId})
+//         if(cart){
+//           cartCount=cart.items.length 
+//           console.log('cart count is ',cartCount);
+//         }else{
+//           console.log('cart not fount');
           
-        }
-       }
+//         }
+//        }
        
     
-    res.render('user/productList', {
-      products,
-      categoryId: categoryId || null,
-      categories,
-      sort: sort || null,
-      priceRange: priceRange || null,
-      title: categoryTitle,
-      currentPage: page,
-      totalPages,
-      user:req.session.user||'',
-      selectedCategories,
-      selectedPriceRange,
-      cartCount,
-      query: req.query.query || "",
-      type: req.query.type || "products",
-    });
+//     res.render('user/productList', {
+//       products,
+//       categoryId: categoryId || null,
+//       categories,
+//       sort: sort || null,
+//       priceRange: priceRange || null,
+//       title: categoryTitle,
+//       currentPage: page,
+//       totalPages,
+//       user:req.session.user||'',
+//       selectedCategories,
+//       selectedPriceRange,
+//       cartCount,
+//       query: req.query.query || "",
+//       type: req.query.type || "products",
+//       csrfToken: res.locals.csrfToken 
+//     });
     
-  } catch (error) {
-    console.log('error in fetching products: ' + error);
-    return res.redirect('/user/home');
-  }
-});
+//   } catch (error) {
+//     console.log('error in fetching products: ' + error);
+//     return res.redirect('/user/home');
+//   }
+// });
 
 module.exports = router;

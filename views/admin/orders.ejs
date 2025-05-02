@@ -132,6 +132,7 @@
 
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
             function openOrderDetails(orderId) {
                 console.log('Admin edit rder button clicked,order id is ', orderId);
                 window.location.href = `/admin/orderDetails/${orderId}`
@@ -155,7 +156,8 @@
                 }).then(result => {
                     if (result.isConfirmed) {
                         fetch(`/admin/deleteOrder/${orderId}`, {
-                            method: "DELETE"
+                            method: "DELETE",
+                            headers:{'CSRF-Token': csrfToken}
                         }).then(res => res.json())
                             .then(data => {
                                 if (data && data.success) {

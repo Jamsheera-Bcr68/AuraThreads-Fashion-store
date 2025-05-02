@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Your Orders | Aura Threads</title>
     <link rel="stylesheet" href="/css/userOrders.css">
+    <meta name="csrf-token" content="<%= csrfToken %>">  
 </head>
 <body>
     <div class="site-wrap">
@@ -138,6 +139,7 @@
     </div>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         function displayOrderDetails(orderIdWithQuery){
             console.log('from user display order details scrit');
             window.location.href=`/user/order-details/${orderIdWithQuery}`
@@ -156,12 +158,13 @@
         cancelButtonColor: "#d33",
         confirmButtonText: "Yes, cancel it!"
     }).then((result) => {
-        console.log('🧾 Swal result:', result);
+        console.log(' Swal result:', result);
         if (result.isConfirmed) {
             console.log(' Confirmed. Sending DELETE request...');
 
             fetch(`/user/cancel-order/${orderId}`, {
                 method: "DELETE",
+                headers:{ 'CSRF-Token': csrfToken}
             })
             .then(res => {
                 return res.json();

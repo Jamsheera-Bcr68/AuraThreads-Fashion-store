@@ -1,6 +1,6 @@
 <head>
     <link rel="stylesheet" href="/css/productList.css">
-
+    <meta name="csrf-token" content="<%= csrfToken %>">  
 </head>
 
 <body>
@@ -26,7 +26,7 @@
             <div class="row">
                 <div class="col-lg-3 mb-4">
                     <div class="card p-3">
-                        <form action="/product/productList" method="get">
+                        <form action="/user/productList" method="get">
                             <h5>Filter Collection</h5>
                             <hr>
                             <!-- Hidden Inputs to Preserve categoryId and priceRange -->
@@ -111,7 +111,7 @@
                         <p class="mb-0">Showing <span id="productCount">
                                 <%= products.length %>
                             </span> dresses</p>
-                        <form action="/product/productList" method="get">
+                        <form action="/user/productList" method="get">
                             <div class="d-flex gap-2">
                                 <!-- Hidden Inputs to Preserve categoryId and priceRange -->
                                 <input type="hidden" name="categoryId" value="<%= categoryId %>">
@@ -137,7 +137,7 @@
                                 <div class="col">
                                     <div class="card h-100">
                                         <div class="position-relative">
-                                            <a href="/product/products/<%= product._id %>"><img
+                                            <a href="/user/products/<%= product._id %>"><img
                                                     src="<%= product.images[0] %>" class=" card-img-top"
                                                     alt="<%= product.productName %>"></a>
                                             <% if (product.sale) { %>
@@ -237,7 +237,9 @@
         <%- include('../partials/userFooter') %>
             <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
             <script>
-
+                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                console.log('csrfToken ',csrfToken);
+                
                 const cartButton = document.querySelectorAll('.addToCart')
                 cartButton.forEach(btn => btn.addEventListener('click', function () {
                     const productId = this.getAttribute('data-id')
@@ -245,7 +247,9 @@
 
                     fetch('/user/cart/add', {
                         method: 'post',
-                        headers: { 'content-Type': 'application/json' },
+                        headers: { 'content-Type': 'application/json',
+                        'CSRF-Token': csrfToken 
+                         },
                         body: JSON.stringify({ productId, quantity: Number(1) })
                     }).then(response => response.json())
                         .then(data => {
@@ -298,6 +302,7 @@
                     });
                 });
             
+               
                 const addToWishListBtn=document.querySelectorAll('.addToWishList')
                 addToWishListBtn.forEach(btn=>btn.addEventListener('click',function(){
                     const productId = this.getAttribute('data-id')
@@ -307,7 +312,9 @@
 
                     fetch('/user/wishList/add', {
                         method: 'post',
-                        headers: { 'content-Type': 'application/json' },
+                        headers: { 'Content-Type': 'application/json',
+                        'CSRF-Token': csrfToken 
+                        },
                         body: JSON.stringify({ productId })
                     }).then(response => response.json())
                         .then(data => {

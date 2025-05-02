@@ -8,10 +8,10 @@ const category = require("../model/categoryModel");
 const user = require("../model/userModel");
 const multer = require("multer");
 const mongoose = require("mongoose");
-const sharp=require('sharp')
-const path=require('path');
+const sharp = require('sharp')
+const path = require('path');
 const { route } = require("./product");
-const Order=require('../model/orderModel')
+const Order = require('../model/orderModel')
 
 
 
@@ -24,16 +24,16 @@ router.post("/login", adminController.postLogin);
 //get dashboard
 router.get("/dashboard", async (req, res) => {
   const userCount = await user.countDocuments();
-  const productCount = await product.countDocuments({isDeleted:false});
-  const categoryCount = await category.countDocuments({isDeleted:false});
-  const orderCount=await Order.countDocuments({});
+  const productCount = await product.countDocuments({ isDeleted: false });
+  const categoryCount = await category.countDocuments({ isDeleted: false });
+  const orderCount = await Order.countDocuments({});
   console.log(
     userCount +
-      " userCount , " +
-      productCount +
-      " productCount , " +
-      categoryCount +
-      "category counts"
+    " userCount , " +
+    productCount +
+    " productCount , " +
+    categoryCount +
+    "category counts"
   );
 
   res.render("../views/admin/dashboard", {
@@ -46,23 +46,41 @@ router.get("/dashboard", async (req, res) => {
 });
 
 //get categoryManagement
- router.get("/category", async (req, res) => {
+router.get("/category", async (req, res) => {
   try {
-    const page=parseInt(req.query.page)||1
-    const limit=parseInt(req.query.limit)||5
-    const skip=(page-1)*limit
+    const query=req.query.query || ''
+    const page = parseInt(req.query.page) || 1
+    const limit = parseInt(req.query.limit) || 5
+    const skip = (page - 1) * limit
+ console.log('Query is' ,query);
+ let searchQuery={isDeleted:false}
 
-    const categories = await category.find({isDeleted:false}).sort({createdAt:-1})
-     .skip(skip).limit(limit)
+ if(query.trim()){
+  searchQuery = {
+    $and: [
+      {
+        $or: [
+          { categoryName: { $regex: query, $options: "i" } },
+          { description: { $regex: query, $options: "i" } },
+        ],
+      },
+      { isDeleted: false },
+    ],
+  };
+ }
+ 
+    const categories = await category.find(searchQuery).sort({ createdAt: -1 })
+      .skip(skip).limit(limit)
     console.log(`from category page is ${page} lmit is ${limit}`);
 
-    const totalCategory=await category.countDocuments({iseDeleted:false})
-    const totalPages=Math.ceil(totalCategory/limit)
-    
+    const totalCategory = await category.countDocuments(searchQuery)
+    const totalPages = Math.ceil(totalCategory / limit)
+
     res.render("../views/admin/categoryManagement", {
       categories,
-      currentPage:page,
+      currentPage: page,
       totalPages,
+      query,
       title: "Category Manamgement",
       successMessage: res.locals.successMessage[0] || "",
       errorMessage: res.locals.errorMessage[0] || "",
@@ -93,7 +111,7 @@ router.post("/category/add", upload.array("images", 5), async (req, res) => {
 
   if (!req.files || req.files.length === 0) {
     req.flash("errorMessage", "No images uploaded.");
-    return res.redirect("/admin/category");
+    return res.redirect("/admin/category");;
   }
 
   const { categoryName, description } = req.body;
@@ -102,11 +120,11 @@ router.post("/category/add", upload.array("images", 5), async (req, res) => {
 
   try {
     // Check if category already exists
-    const existingCategory = await category.findOne({ categoryName ,isDeleted:false});
+    const existingCategory = await category.findOne({ categoryName, isDeleted: false });
 
     if (existingCategory) {
       req.flash("errorMessage", "This Category already exists.");
-      return res.redirect("/admin/category");
+      return res.redirect("/admin/category");;
     }
 
     // Resize each uploaded image and save only resized paths
@@ -151,7 +169,7 @@ router.post("/category/edit/:id", async (req, res) => {
 
   try {
     const existCategory = await category.findOneAndUpdate(
-      { _id:id },
+      { _id: id },
       {
         $set: { categoryName, description, isListed },
       },
@@ -159,12 +177,12 @@ router.post("/category/edit/:id", async (req, res) => {
     );
     console.log("category found");
 
-    if(!existCategory){
-      req.flash('errorMessage','Category not found')
+    if (!existCategory) {
+      req.flash('errorMessage', 'Category not found')
       res.redirect('/admin/category')
     }
 
-    req.flash('successMessage','Category Updated Successfully')
+    req.flash('successMessage', 'Category Updated Successfully')
     res.redirect('/admin/category')
     // const categories = await category.find({isDeleted:false});
 
@@ -174,13 +192,14 @@ router.post("/category/edit/:id", async (req, res) => {
     // });
   } catch (error) {
     console.log(error);
-    req.flash('errorMessage','Error While Adding Caterory')
+    req.flash('errorMessage', 'Error While Adding Caterory')
   }
 });
 
 router.delete("/category/delete/:id", async (req, res) => {
   const { id } = req.params;
-
+ console.log('from delete routes');
+ 
   try {
     const softDeleteCategory = await category.findByIdAndUpdate(
       id,
@@ -188,121 +207,125 @@ router.delete("/category/delete/:id", async (req, res) => {
       { new: true }
     );
     if (!softDeleteCategory) {
-      const categories = await category.find({ isDeleted: false });
-      res.render("../views/admin/categoryManagement", {
-        categories,
-        title: "Category Manamgement",
-        errorMessage: "Category not found",
-      });
+      console.log('Category not found');
+      
+     return res.json({success:false,message:"Category not found"})
     } else {
-      const categories = await category.find({ isDeleted: false });
-
-      res.set("Cache-Control", "no-store");
-      console.log("category deleted succesfully" + categories);
-      res.render("../views/admin/categoryManagement", {
-        categories: [],
-        title: "Category Management",
-        errorMessage: null,
-      });
-    }
-    console.log("soft deleted category " + softDeleteCategory);
-  } catch (error) {
+      console.log('Category Deleted successfully');
+      console.log("soft deleted category " + softDeleteCategory);
+     return res.json({success:true,message:"Category Deleted successfully"})
+    
+  } }catch (error) {
     console.log("error on deleting category", error);
+    return res.json({success:false,message:"Error in delting category"})
   }
-});
+})
 
 //get usermangement
-router.get('/users',async (req,res)=>{
- try {
-  const page=parseInt(req.query.page) ||1
-  const limit=parseInt(req.query.limit) ||5
-  const skip=(page-1)*limit
+router.get('/users', async (req, res) => {
+  try {
+    const query=req.query.query ||''
+    const page = parseInt(req.query.page) || 1
+    const limit = parseInt(req.query.limit) || 5
+    const skip = (page - 1) * limit
 
-  const users=await user.find().sort({createdAt:-1}).skip(skip).limit(limit)
+    console.log('query',query);
+    
+    let searchQuery={}
+    if(query.trim()){
+      searchQuery = {
+        $or: [
+          { name: { $regex: query, $options: "i" } },
+          { email: { $regex: query, $options: "i" } },
+        ],
+      }
+    }
+    const users = await user.find(searchQuery).sort({ createdAt: -1 }).skip(skip).limit(limit)
 
-  const totalUsers=await user.countDocuments()
-  const totalPages=Math.ceil(totalUsers/limit)
+    const totalUsers = await user.countDocuments()
+    const totalPages = Math.ceil(totalUsers / limit)
 
-  console.log(`from userpage.page is ${page} and limit is ${limit}`);
-  
-  
-  res.render('../views/admin/userManagement',
-    {  users,
-      currentPage:page,
-      totalPages,
-      title:"User Management",
-      successMessage: res.locals.successMessage||'',
-      errorMessage:  res.locals.errorMessage||''
-    })
- } catch (error) {
-  req.flash('errorMessage','Error in fetching User')
-  res.render('../views/admin/dashboard',{title:'Admin Dashboard'})
- }
+    console.log(`from userpage.page is ${page} and limit is ${limit}`);
+
+
+    res.render('../views/admin/userManagement',
+      {
+        users,
+        currentPage: page,
+        totalPages,
+        title: "User Management",
+        successMessage: res.locals.successMessage || '',
+        errorMessage: res.locals.errorMessage || ''
+      })
+  } catch (error) {
+    req.flash('errorMessage', 'Error in fetching User')
+    res.render('../views/admin/dashboard', { title: 'Admin Dashboard' })
+  }
 })
 
 //block and unblock user 
 
-router.patch('/block-user/:userId',async (req,res)=>{
+router.patch('/block-user/:userId', async (req, res) => {
   console.log('from block user');
-  const {userId}=req.params
-  const {isActive}=req.body
- 
-  try {
-    
-  const blockUser=await user.findOneAndUpdate(
-    {_id:userId},
-    {isActive},
-    {new:true})
+  const { userId } = req.params
+  const { isActive } = req.body
 
-   
-    
-    if(!blockUser){
-      
-      req.flash('errorMessage','user not found')
+  try {
+
+    const blockUser = await user.findOneAndUpdate(
+      { _id: userId },
+      { isActive },
+      { new: true })
+
+
+
+    if (!blockUser) {
+
+      req.flash('errorMessage', 'user not found')
       res.redirect('/users')
     }
-    req.flash('succesMessage','user not found')
+    req.flash('succesMessage', 'user not found')
     res.redirect('/users')
   } catch (error) {
     console.log('error in blocking user');
-    req.flash('errorMessage','error in blocking user')
+    req.flash('errorMessage', 'error in blocking user')
     res.redirect('/users')
-    
+
   }
-  
+
 })
 
-router.get('/orders',adminController.getOrder)
-router.get('/orderDetails/:orderId',adminController.getOrderDetails)
-router.get('/updateOrder/:orderId',adminController.getUpdateOrder)
-router.post('/updateOrder',adminController.postUpdateOrder)
-router.delete('/deleteOrder/:orderId',adminController.deleteOrder)
-router.post('/logout',adminController.postLogout)
+router.get('/orders', adminController.getOrder)
+router.get('/orderDetails/:orderId', adminController.getOrderDetails)
+router.get('/updateOrder/:orderId', adminController.getUpdateOrder)
+router.post('/updateOrder', adminController.postUpdateOrder)
+router.delete('/deleteOrder/:orderId', adminController.deleteOrder)
+router.post('/logout', adminController.postLogout)
 
 //admin coupenMangement
-router.get('/coupens',adminController.getCoupenPage)
+router.get('/coupens', adminController.getCoupenPage)
 
 //admin add coupen 
-router.post('/addCoupon',adminController.addCoupen)
+router.post('/addCoupon', adminController.addCoupen)
 
 //admin edit coupen
-router.put('/editCoupon/:couponId',adminController.editCoupen)
+router.put('/editCoupon/:couponId', adminController.editCoupen)
 
 //get coupen data
-router.get('/getCouponData/:coupenId',adminController.getCouponData)
+router.get('/getCouponData/:coupenId', adminController.getCouponData)
 
 //remove coupon
-router.delete('/removeCoupon/:couponId',adminController.removeCoupon)
+router.delete('/removeCoupon/:couponId', adminController.removeCoupon)
 
 //applyCoupon
-router.put('/applyCoupon/:couponId',adminController.applyCoupon)
+router.put('/applyCoupon/:couponId', adminController.applyCoupon)
 
 //get offer mangement
-router.get('/offers',adminController.getOffers)
+router.get('/offers', adminController.getOffers)
 
 //add offer
-router.post('/addOffer',adminController.addOffer)
+router.post('/addOffer', adminController.addOffer)
 
 //delte Offer
-router.delete('/offer/delete/:offerId',adminController.deleteOffer)
+router.delete('/offer/delete/:offerId', adminController.deleteOffer)
 module.exports = router;

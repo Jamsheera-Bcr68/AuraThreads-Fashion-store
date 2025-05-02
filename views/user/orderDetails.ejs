@@ -2,6 +2,7 @@
 <html lang="en">
 
 <head>
+    <meta name="csrf-token" content="<%= csrfToken %>">
     <meta charset="UTF-8">
     <title>Order Details</title>
     <link rel="stylesheet" href="/css/orderDetails.css">
@@ -120,7 +121,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         window.onload = function () {
             const urlParams = new URLSearchParams(window.location.search);
             const source = urlParams.get('source');
@@ -153,7 +154,9 @@
                 if (result.isConfirmed) {
                     fetch('/user/cancelSingleProduct', {
                         method: "DELETE",
-                        headers: { "Content-Type": "application/json" },
+                        headers: { "Content-Type": "application/json",
+                            'CSRF-Token': csrfToken
+                         },
                         body: JSON.stringify({ productId, orderId })
                     }).then(res => res.json())
                         .then(data => {
@@ -217,7 +220,8 @@
                     const response = await fetch('/user/return-product', {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json'
+                            'Content-Type': 'application/json',
+                            'CSRF-Token': csrfToken
                         },
                         body: JSON.stringify({
                             productId: productId,

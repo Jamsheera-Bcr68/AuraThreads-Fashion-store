@@ -67,16 +67,6 @@ const postRegister = async (req, res) => {
       await transporter.sendMail(mailOptions);
       console.log('otp send to email');
       return res.json({ success: true, message: 'check your mail for OTP' })
-      // Store user data temporarily with OTP (but not verified yet)
-      // const newUser = new User({
-      //   email,
-      //  hashedPassword,
-      //   phone,
-      //   isVerified: false,
-      // })
-
-      // await newUser.save();
-      // res.redirect('/user/home')
 
     }
   } catch (error) {
@@ -355,10 +345,210 @@ const getHome = async (req, res) => {
 
 };
 
+const getSingleProduct=async (req,res)=>{
+  console.log('from single product page');
+   const { productId } = req.params;
+    console.log("productId is equal to " + productId);
+  
+    try {
+      const singleProduct = await Product.findOne({
+        isDeleted: false,
+        _id: productId,
+      });
+  
+      if (!singleProduct) {
+        console.log("No product found");
+        return res
+          .status(404)
+          .render("user/error", { message: "Product not found" });
+      }
+  
+      singleProduct.images = singleProduct.images.map((image) =>
+        image.replace(/\\/g, "/")
+      );
+    
+      
+      //get related products
+       const relatedProducts=await Product.find({isDeleted:false,categoryId:singleProduct.categoryId}).limit(3)
+       relatedProducts.forEach(product=>{
+        product.images=product.images.map(image=>image.replace(/\\/g, '/'))
+      })
+       console.log('related images'+relatedProducts[0].images);
+       
+       
+      console.log(relatedProducts +' related products');
+  
+      //get cart count
+         let cartCount=0
+         if(req.session.user){
+          const userId=req.session.user._id
+          const cart=await Cart.findOne({userId})
+          if(cart){
+            cartCount=cart.items.length 
+            console.log('cart count is ',cartCount);
+          }else{
+            console.log('cart not fount');
+            
+          }
+         }
+          
+          
+      
+      res.render("user/sproduct", {
+        title: "Product Details Page",
+        singleProduct,
+        relatedProducts,
+        categoryId:'',
+        priceRange:'',
+        cartCount,
+        user:req.session.user||'',
+        sort:'',query:''
+      });
+    } catch (error) {
+      console.error("Error fetching product:", error);
+      res
+        .status(500)
+        .render("user/error", {
+          message: "Something went wrong. Please try again.",
+        });
+    }
+}
+
+const getProductList=async(req,res)=>{
+  console.log('from user product list');
+  const categoryId = req.query.categoryId || null;
+  console.log('categoryId',categoryId);
+  try {
+      // if(userId){
+      //   const user=await User.findOne({_id:mongoose.Types.ObjectId(userId)})
+      // }
+      const {query}=req.query
+      console.log(`query is ${query}`);
+      
+      const page = parseInt(req.query.page) || 1;
+      const limit = 6;
+      const skip = (page - 1) * limit;
+      const priceRange = req.query.priceRange || '';
+      const sort = req.query.sort || '';
+      
+      // Category based filter
+      const filter = {isDeleted: false};
+      let selectedCategories = [];
+      let categoryTitle = 'Show All Products'; // Default title
+      
+      if (categoryId) {
+        // Handle both single category ID and comma-separated list
+        selectedCategories = Array.isArray(categoryId)
+          ? categoryId
+          : categoryId.includes(',')
+            ? categoryId.split(',')
+            : [categoryId];
+            
+        // Convert string IDs to ObjectId
+        filter.categoryId = {
+          $in: selectedCategories.map(id => new mongoose.Types.ObjectId(id))
+        };
+        
+        //  display a category name in the title, but only when a single category is selected
+        if (selectedCategories.length === 1) {
+          // Only get the category name if there's exactly one category selected
+          const singleCategory = await category.findOne({ _id: new mongoose.Types.ObjectId(selectedCategories[0]) });
+          if (singleCategory) {
+            categoryTitle = `${singleCategory.categoryName} Clothing`;
+          }
+        } else if (selectedCategories.length > 1) {
+          // Multiple categories selected
+          categoryTitle = 'Multiple Categories';
+        }
+      }
+      
+      
+      
+      // Price range based filtering
+      let selectedPriceRange = priceRange || "";
+      if (selectedPriceRange) {
+        let [min, max] = selectedPriceRange.split("-").map(Number);
+        filter.price = { $gte: min, $lte: max };
+      }
+      //searchbased fitering
+      if (query) {
+        filter.$or = [
+          { productName: { $regex: query, $options: "i" } },
+          { description: { $regex: query, $options: "i" } }
+        ];
+      }
+      
+      // Sorting based on sortOption
+      let sortOption = {};
+      if (sort == 'newest') {
+        sortOption.createdAt = -1;
+      } else if (sort == 'lowToHigh') {
+        sortOption.price = 1;
+      } else if (sort == 'highToLow') {
+        sortOption.price = -1;
+      } else if (sort == 'az') {
+        sortOption.productName = 1;
+      } else if (sort == 'za') {
+        sortOption.productName = -1; // Fixed: this was price=-1 in your code
+      }
+      
+      const products = await Product.find(filter)
+        .sort(sortOption)
+        .skip(skip)
+        .limit(limit);
+        
+      // Fix image paths
+      products.forEach(product => {
+        product.images = product.images.map(image => image.replace(/\\/g, "/"));
+      });
+      
+      // Get all categories for the filter options
+      const categories = await category.find({isDeleted: false});
+      
+      // Get total count of products for pagination
+      const totalProducts = await Product.countDocuments(filter);
+      const totalPages = Math.ceil(totalProducts / limit);
+  
+      //get cart count
+         let cartCount=0
+         if(req.session.user){
+          const userId=req.session.user._id
+  
+          const cart=await Cart.findOne({userId})
+          if(cart){
+            cartCount=cart.items.length 
+            console.log('cart count is ',cartCount);
+          }else{
+            console.log('cart not fount');
+            
+          }
+         }
+         
+      
+      res.render('user/productList', {
+        products,
+        categoryId: categoryId || null,
+        categories,
+        sort: sort || null,
+        priceRange: priceRange || null,
+        title: categoryTitle,
+        currentPage: page,
+        totalPages,
+        user:req.session.user||'',
+        selectedCategories,
+        selectedPriceRange,
+        cartCount,
+        query: req.query.query || "",
+        type: req.query.type || "products",
+        csrfToken: res.locals.csrfToken 
+      });
+      
+    } catch (error) {
+      console.log('error in fetching products: ' + error);
+      return res.redirect('/user/home');
+    }
+}
 const otpStore = {}; //  OTP store temporarly
-
-
-
 
 
 const getAccount = async (req, res) => {
@@ -671,9 +861,15 @@ const addToCart = async (req, res) => {
   try {
     const user = req.session.user;
     const userId = user._id;
+    if(!userId){
+      return res.json({success:false,message:"User not registered"})
+    }
     const { productId } = req.body;
     console.log('product id is ', productId);
-
+     
+    if(!productId){
+      return res.json({success:false,message:"Product id is not found"})
+    }
     const quantity = req.body.quantity || 1;
     const subTotal = req.body.subTotal
 
@@ -1453,35 +1649,7 @@ const deleteWishlistItem = async (req, res) => {
 // get wallet
 const getWallet = async (req, res) => {
   console.log('from user wallet');
-  //   const wallet=  {
-  //     balance: 250.75,
-  //     rewardPoints: 1250,
-  //     memberTier: 'Silver',
-  //     tierClass: 'silver',
-
-  //     recentTransactions: [
-  //        ],
-  //     allTransactions: [
-  //         { date: 'Apr 15, 2025', transactionType: 'Purchase', description: 'Summer Floral Dress', amount: '-$125.00', type: 'debit' },
-  //         { date: 'Apr 10, 2025', transactionType: 'Credit Added', description: 'Gift Card Redemption', amount: '+$50.00', type: 'credit' },
-  //         { date: 'Mar 28, 2025', transactionType: 'Purchase', description: 'Evening Gown', amount: '-$175.75', type: 'debit' },
-  //         { date: 'Mar 15, 2025', transactionType: 'Credit Added', description: 'Return Refund', amount: '+$200.00', type: 'credit' }
-  //     ],
-  //     progressPercent: 40,
-  //     pointsToNextTier: 1750,
-  //     benefits: [
-  //         'Free shipping on all orders',
-  //         'Early access to seasonal collections',
-  //         '10% birthday discount'
-  //     ],
-  //     redemptionOptions: [
-  //         { title: '$10 Store Credit', points: 500 },
-  //         { title: '$25 Store Credit', points: 1000 },
-  //         { title: 'Free Accessory', points: 750 },
-  //         { title: 'Free Express Shipping', points: 300 }
-  //     ]
-  // }
-
+ 
   try {
     const userId = req.session.user._id
     if (!userId) {
@@ -1498,9 +1666,10 @@ const getWallet = async (req, res) => {
     }
     const debitLength = wallet.transactions.filter(transaction => transaction.type == 'debit').length
     const creditLength = wallet.transactions.filter(transaction => transaction.type == 'credit').length
+
     const recentTransactions = wallet.transactions
-      .sort((a, b) => new Date(b.date) - new Date(a.date)) // sort newest first
-      .slice(0, 3);
+         .sort((a, b) => new Date(b.date) - new Date(a.date)) // sort newest first
+         .slice(0, 3);
     const cartCount = cart.items.length || 0
     res.render('user/wallet', {
       categoryId: null,
@@ -1743,7 +1912,8 @@ module.exports = {
   returnProduct,
  addProfileImage,
  removeProfileImage,
- usertest
-
+ usertest,
+ getProductList,
+ getSingleProduct
 }
 

@@ -9,7 +9,18 @@ const category=require('../model/categoryModel')
 const Address=require('../model/addressModel')
 const multer=require('multer')
 const upload=multer({dest:'uploads/'})
+const csrfProtection=require('../middleweres/csrf')
 
+router.use(csrfProtection)
+
+router.use((req, res, next) => {
+  try {
+    res.locals.csrfToken = req.csrfToken();
+  } catch (err) {
+    res.locals.csrfToken = null;
+  }
+  next();
+});
 //display register page
 router.get("/register", userController.getRegister);
 
@@ -31,9 +42,13 @@ router.get("/auth/google",
   })
 );
 
-
+//get product listing page
+router.get('/productList',userController.getProductList)
 //get home page
 router.get("/home", userController.getHome);
+
+
+router.get('/products/:productId',userController.getSingleProduct)
 
 //google authenticaion
 router.post('/google/callback',userController.postRegister)
@@ -140,7 +155,7 @@ router.get('/checkout',userAuth,userController.getCheckout)
 
  //user all orderpage
 
- router.get('/orders',userController,userAuth.getOrders)
+ router.get('/orders',userAuth,userController.getOrders)
  //get orderdetails page
  router.get('/order-details/:orderId',userAuth,userController.getOrderDetails)
 

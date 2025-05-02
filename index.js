@@ -12,10 +12,17 @@ const cors=require('cors')
 const nocache = require("nocache");
 const errorHandler=require('./middleweres/errorHandler')
 
+const cookieParser=require('cookie-parser')
+const morgan=require('morgan')
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json())
 dbConnect();
+app.use(cookieParser())
+app.use(morgan('dev'));
+
+
+
 
 //app.set('view options', { compileDebug: true, debug: true });
 
@@ -57,11 +64,9 @@ app.use((req, res, next) => {
 //using flash for temporarly storing messages when redirecting success,warning,failure situations
 app.use(flash());
 app.use((req, res, next) => {
-  res.locals.errorMessage = req.flash('errorMessage'); // Store messages in locals
+  res.locals.errorMessage = req.flash('errorMessage');
   res.locals.successMessage = req.flash('successMessage');
- 
-  
-  next();
+   next();
 });
 
 
@@ -74,7 +79,7 @@ const searchRoute=require('./routes/search')
 
 
 app.use('/admin',adminRoute)
-app.use('/user',userRoute)
+app.use('/user', userRoute);
 
 app.get("/google/callback",
   passport.authenticate("google", { failureRedirect: "/login" }),(req, res) => {
