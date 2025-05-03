@@ -1,419 +1,474 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Offer Management</title>
-   <link rel="stylesheet" href="/css/offers.css">
-   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/offers.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
+
 <body>
     <%- include('../partials/header.ejs') %>
-    <div class="d-flex" id="wrapper">
-        
-        <div class="container">
-            <!-- Sidebar -->
-            <%- include('../partials/sidebar') %>
-        
-            <!-- Main Content -->
-            <div class="main-content">
-                <!-- Header -->
-                <div class="page-title">
-                    <h1>Offer Management Dashboard</h1>
-                </div>
-        
-                <!-- Stats Section -->
-                <div class="stats">
-                    <div class="stat-card">
-                        <h3>Total Offers</h3>
-                        <p><%= stats.totalOffers %></p>
+        <div class="d-flex" id="wrapper">
+
+            <div class="container">
+                <!-- Sidebar -->
+                <%- include('../partials/sidebar') %>
+
+                    <!-- Main Content -->
+                    <div class="main-content">
+                        <!-- Header -->
+                        <div class="page-title">
+                            <h1>Offer Management Dashboard</h1>
+                        </div>
+
+                        <!-- Stats Section -->
+                        <div class="stats">
+                            <div class="stat-card">
+                                <h3>Total Offers</h3>
+                                <p>
+                                    <%= stats.totalOffers %>
+                                </p>
+                            </div>
+                            <div class="stat-card">
+                                <h3>Active Offers</h3>
+                                <p>
+                                    <%= stats.activeOffers %>
+                                </p>
+                            </div>
+                            <div class="stat-card">
+                                <h3>Pending Approval</h3>
+                                <p>
+                                    <%= stats.pendingOffers %>
+                                </p>
+                            </div>
+                            <div class="stat-card">
+                                <h3>Expired Offers</h3>
+                                <p>
+                                    <%= stats.expiredOffers %>
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Offers Section -->
+                        <div class="offers-section">
+                            <div class="section-header">
+                                <h2 class="section-title">All Offers</h2>
+                                <button class="btn btn-primary" id="addOfferBtn"><i class="fas fa-plus"></i> Add New
+                                    Offer</button>
+                            </div>
+
+                            <div class="table-wrapper">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>No.</th>
+                                            <th>ID</th>
+                                            <th>Offer Name</th>
+                                            <th>Offer On</th>
+                                            <th>Discount</th>
+                                            <th>Start Date</th>
+                                            <th>End Date</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% offers.forEach(function(offer,index) { %>
+                                            <tr>
+                                                <td>
+                                                    <%= index+1 %>
+                                                </td>
+                                                <td>OFF<%= offer.id.slice(-4) %>
+                                                </td>
+                                                <td>
+                                                    <%= offer.offerName %>
+                                                </td>
+                                                <td><%= offer.applicableTo %></td>
+                                                <td>
+                                                    <%= offer.discountValue %>
+                                                        <%= offer.discountType=='percentage' ? '%' :'₹' %>
+                                                </td>
+                                                <td>
+                                                    <%= offer.startDate.toISOString().substring(0, 10) %>
+                                                </td>
+                                                <td>
+                                                    <%= offer.endDate.toISOString().substring(0, 10) %> %>
+                                                </td>
+                                                <td>
+                                                    <span class="status status-<%= offer.status.toLowerCase() %>">
+                                                        <%= offer.status %>
+                                                    </span>
+                                                </td>
+                                                <td class="action-cell">
+                                                    <button data-id="<%= offer._id %>"
+                                                        class="btn btn-warning action-btn edit-btn"><i
+                                                            class="fas fa-edit"></i></button>
+                                                    <button data-id="<%= offer._id %>"
+                                                        class="btn btn-danger action-btn delete-btn"
+                                                        <%=offer.status==='inactive' ? 'disabled' : '' %>>
+                                                        <i class="fas fa-trash-alt"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            <% }) %>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
-                    <div class="stat-card">
-                        <h3>Active Offers</h3>
-                        <p><%= stats.activeOffers %></p>
-                    </div>
-                    <div class="stat-card">
-                        <h3>Pending Approval</h3>
-                        <p><%= stats.pendingOffers %></p>
-                    </div>
-                    <div class="stat-card">
-                        <h3>Expired Offers</h3>
-                        <p><%= stats.expiredOffers %></p>
-                    </div>
-                </div>
+            </div>
+           
+
+        </div>
+         <!--Pagination-->
+         <nav>
+            <ul class="pagination justify-content-center">
+              <!-- Previous Button -->
+              <% if (currentPage > 1) { %>
+                <li class="page-item">
+                  <a class="page-link" href="?page=<%= currentPage - 1 %>&limit=5">Previous</a>
+                </li>
+                <% } else { %>
+                  <li class="page-item disabled">
+                    <a class="page-link" href="#" tabindex="-1">Previous</a>
+                  </li>
+                  <% } %>
         
-                <!-- Offers Section -->
-                <div class="offers-section">
-                    <div class="section-header">
-                        <h2 class="section-title">All Offers</h2>
-                        <button class="btn btn-primary" id="addOfferBtn"><i class="fas fa-plus"></i> Add New Offer</button>
-                    </div>
+                    <!-- Page Numbers -->
+                    <% for (let i=1; i <=totalPages; i++) { %>
+                      <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+                        <a class="page-link" href="?page=<%= i %>&limit=5">
+                          <%= i %>
+                        </a>
+                      </li>
+                      <% } %>
         
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>No.</th>
-                                    <th>ID</th>
-                                    <th>Offer Name</th>
-                                    <th>Discount</th>
-                                    <th>Start Date</th>
-                                    <th>End Date</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <% offers.forEach(function(offer,index) { %>
-                                    <tr>
-                                        <td><%= index+1 %></td>
-                                        <td>OFF<%= offer.id.slice(-4) %></td>
-                                        <td><%= offer.offerName %></td>
-                                        <td><%= offer.discountValue %> <%= offer.discountType=='percentage'? '%':'₹' %> </td>
-                                        <td><%= offer.startDate.toISOString().substring(0, 10) %></td>
-                                        <td><%= offer.endDate.toISOString().substring(0, 10) %> %></td>
-                                        <td>
-                                            <span class="status status-<%= offer.status.toLowerCase() %>"><%= offer.status %></span>
-                                        </td>
-                                        <td class="action-cell">
-                                            <button data-id="<%= offer._id %>" class="btn btn-warning action-btn edit-btn"><i class="fas fa-edit"></i></button>
-                                            <button data-id="<%= offer._id %>" class="btn btn-danger action-btn delete-btn"><i class="fas fa-trash-alt"></i></button>
-                                        </td>
-                                    </tr>
-                                <% }) %>
-                            </tbody>
-                        </table>
+                        <!-- Next Button -->
+                        <% if (currentPage < totalPages) { %>
+                          <li class="page-item">
+                            <a class="page-link" href="?page=<%= currentPage + 1 %>&limit=5">Next</a>
+                          </li>
+                          <% } else { %>
+                            <li class="page-item disabled">
+                              <a class="page-link" href="#">Next</a>
+                            </li>
+                            <% } %>
+            </ul>
+          </nav>
+        <%- include('../partials/footer.ejs') %>
+
+            <!-- Add/Edit Offer Modal -->
+            <div class="modal" id="offerModal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 id="modalTitle">Add New Offer</h2>
+                        <button class="close">&times;</button>
+                    </div>
+
+                    <div class="modal-body">
+                        <form id="offerForm" method="POST" action="/admin/offers">
+                            <!-- Offer Name -->
+                            <div class="form-group">
+                                <label for="offerName">Offer Name</label>
+                                <input type="text" name="offerName" id="offerName" required>
+                            </div>
+
+                            <!-- Offer Description -->
+                            <div class="form-group">
+                                <label for="offerDesc">Description</label>
+                                <textarea name="offerDesc" id="offerDesc"></textarea>
+                            </div>
+
+
+                            <!-- Discount Type -->
+                            <div class="form-group">
+                                <label for="discountType">Discount Type</label>
+                                <select name="discountType" id="discountType" required>
+                                    <option value="percentage">Percentage (%)</option>
+                                    <option value="fixed">Fixed Amount</option>
+                                </select>
+                            </div>
+
+                            <!-- Discount Value -->
+                            <div class="form-group">
+                                <label for="discountValue">Discount Value</label>
+                                <input type="number" name="discountValue" id="discountValue" required>
+                            </div>
+
+                            <!-- Start Date -->
+                            <div class="form-group">
+                                <label for="startDate">Start Date</label>
+                                <input type="date" name="startDate" id="startDate" required>
+                            </div>
+
+                            <!-- End Date -->
+                            <div class="form-group">
+                                <label for="endDate">End Date</label>
+                                <input type="date" name="endDate" id="endDate" required>
+                            </div>
+
+                            <!-- Status -->
+                            <div class="form-group">
+                                <label for="status">Status</label>
+                                <select name="status" id="status" required>
+                                    <option value="active">Active</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="inactive">Inactive</option>
+                                </select>
+                            </div>
+
+                            <!-- Offer On (Product or Category) -->
+                            <div class="form-group">
+                                <label for="offerOn">Offer On</label>
+                                <select name="offerOn" id="offerOn" required>
+                                    <option value="">-- Select --</option>
+                                    <option value="product">Product</option>
+                                    <option value="category">Category</option>
+                                </select>
+                            </div>
+
+                            <!-- Select Product -->
+                            <div class="form-group" id="productSelect" style="display: none;">
+                                <label for="productId">Select Product</label>
+                                <select name="productId" id="productId">
+                                    <option value="">-- Select Product --</option>
+                                    <% products.forEach(function(product) { %>
+                                        <option value="<%= product._id %>">
+                                            <%= product.productName %>
+                                        </option>
+                                        <% }); %>
+                                </select>
+                            </div>
+
+                            <!-- Select Category -->
+                            <div class="form-group" id="categorySelect" style="display: none;">
+                                <label for="categoryId">Select Category</label>
+                                <select name="categoryId" id="categoryId">
+                                    <option value="">-- Select Category --</option>
+                                    <% categories.forEach(function(category) { %>
+                                        <option value="<%= category._id %>">
+                                            <%= category.categoryName %>
+                                        </option>
+                                        <% }); %>
+                                </select>
+                            </div>
+
+                        </form>
+                    </div>
+                    <input type="hidden" id="offerId" />
+                    <div class="modal-footer">
+                        <button class="btn btn-danger" id="cancelBtn" type="button">Cancel</button>
+                        <button class="btn btn-success" id="saveOfferBtn" type="submit" form="offerForm">Save
+                            Offer</button>
                     </div>
                 </div>
             </div>
-        </div>
-        
-    </div>
-    <%- include('../partials/footer.ejs') %>
-    
-<!-- Add/Edit Offer Modal -->
-<div class="modal" id="offerModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2 id="modalTitle">Add New Offer</h2>
-            <button class="close">&times;</button>
-        </div>
 
-        <div class="modal-body">
-            <form id="offerForm" method="POST" action="/admin/offers">
-                <!-- Offer Name -->
-                <div class="form-group">
-                    <label for="offerName">Offer Name</label>
-                    <input type="text" name="offerName" id="offerName" required>
+            <!-- Delete Confirmation Modal -->
+            <div class="modal" id="deleteModal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>Confirm Delete</h2>
+                        <button class="close">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Are you sure you want to delete this offer? This action cannot be undone.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-warning" id="cancelDeleteBtn">Cancel</button>
+                        <button class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+                    </div>
                 </div>
+            </div>
 
-                <!-- Offer Description -->
-                <div class="form-group">
-                    <label for="offerDesc">Description</label>
-                    <textarea name="offerDesc" id="offerDesc"></textarea>
-                </div>
+            <script>
+                // DOM Elements
+                const addOfferBtn = document.getElementById('addOfferBtn');
+                const offerModal = document.getElementById('offerModal');
+                const deleteModal = document.getElementById('deleteModal');
+                const modalTitle = document.getElementById('modalTitle');
+                const closeButtons = document.querySelectorAll('.close');
+                const cancelBtn = document.getElementById('cancelBtn');
+                const saveOfferBtn = document.getElementById('saveOfferBtn');
+                const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+                const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+                const editBtns = document.querySelectorAll('.edit-btn');
+                const deleteBtns = document.querySelectorAll('.delete-btn');
+                const offerForm = document.getElementById('offerForm');
 
-                <!-- Discount Type -->
-                <div class="form-group">
-                    <label for="discountType">Discount Type</label>
-                    <select name="discountType" id="discountType" required>
-                        <option value="percentage">Percentage (%)</option>
-                        <option value="fixed">Fixed Amount</option>
-                    </select>
-                </div>
+                // Open add offer modal
+                addOfferBtn.addEventListener('click', () => {
+                    modalTitle.textContent = 'Add New Offer';
+                    offerForm.reset();
+                    offerForm.removeAttribute('data-edit-id');
+                    document.getElementById("offerId").value = '';
+                    offerModal.classList.add('active');
+                });
 
-                <!-- Discount Value -->
-                <div class="form-group">
-                    <label for="discountValue">Discount Value</label>
-                    <input type="number" name="discountValue" id="discountValue" required>
-                </div>
+                // Close modals
+                closeButtons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        offerModal.classList.remove('active');
+                        deleteModal.classList.remove('active');
+                    });
+                });
 
-                <!-- Start Date -->
-                <div class="form-group">
-                    <label for="startDate">Start Date</label>
-                    <input type="date" name="startDate" id="startDate" required>
-                </div>
+                // Cancel button in offer modal
+                cancelBtn.addEventListener('click', () => {
+                    offerModal.classList.remove('active');
+                });
 
-                <!-- End Date -->
-                <div class="form-group">
-                    <label for="endDate">End Date</label>
-                    <input type="date" name="endDate" id="endDate" required>
-                </div>
+                // Save offer (handled on form submission)
+                offerForm.addEventListener('submit', function (e) {
+                    e.preventDefault();
 
-                <!-- Status -->
-                <div class="form-group">
-                    <label for="status">Status</label>
-                    <select name="status" id="status" required>
-                        <option value="active">Active</option>
-                        <option value="pending">Pending</option>
-                        <option value="inactive">Inactive</option>
-                    </select>
-                </div>
+                    const offerId = document.getElementById("offerId").value;
 
-                <!-- Offer On (Product or Category) -->
-                <div class="form-group">
-                    <label for="offerOn">Offer On</label>
-                    <select name="offerOn" id="offerOn" required>
-                        <option value="">-- Select --</option>
-                        <option value="product">Product</option>
-                        <option value="category">Category</option>
-                    </select>
-                </div>
+                    const offerName = document.getElementById('offerName').value.trim();
+                    const offerDescription = document.getElementById('offerDesc').value.trim();
+                    const discountType = document.getElementById('discountType').value;
+                    const discountValue = document.getElementById('discountValue').value;
+                    const startDate = document.getElementById('startDate').value;
+                    const endDate = document.getElementById('endDate').value;
+                    const status = document.getElementById('status').value;
+                    const offerOn = document.getElementById('offerOn').value;
+                    const productId = document.getElementById('productId').value;
+                    const categoryId = document.getElementById('categoryId').value;
 
-                <!-- Select Product -->
-                <div class="form-group" id="productSelect" style="display: none;">
-                    <label for="productId">Select Product</label>
-                    <select name="productId" id="productId">
-                        <option value="">-- Select Product --</option>
-                        <% products.forEach(function(product) { %>
-                            <option value="<%= product._id %>"><%= product.productName %></option>
-                        <% }); %>
-                    </select>
-                </div>
+                    if (!offerName || !offerDescription || !discountType || !discountValue || !startDate || !endDate || !status || !offerOn || (!productId && !categoryId)) {
+                        Swal.fire("All fields are required");
+                        return;
+                    }
 
-                <!-- Select Category -->
-                <div class="form-group" id="categorySelect" style="display: none;">
-                    <label for="categoryId">Select Category</label>
-                    <select name="categoryId" id="categoryId">
-                        <option value="">-- Select Category --</option>
-                        <% categories.forEach(function(category) { %>
-                            <option value="<%= category._id %>"><%= category.categoryName %></option>
-                        <% }); %>
-                    </select>
-                </div>
+                    const formObject = {
+                        offerName,
+                        offerDiscription: offerDescription,
+                        discountType,
+                        discountValue,
+                        startDate,
+                        endDate,
+                        status,
+                        offerOn,
+                        productId,
+                        categoryId
+                    };
 
-            </form>
-        </div>
+                    const url = offerId ? `/admin/editOffer/${offerId}` : `/admin/addOffer`;
+                    const method = offerId ? 'PUT' : 'POST';
 
-        <div class="modal-footer">
-            <button class="btn btn-danger" id="cancelBtn" type="button">Cancel</button>
-            <button class="btn btn-success" id="saveOfferBtn" type="submit" form="offerForm">Save Offer</button>
-        </div>
-    </div>
-</div>
+                    fetch(url, {
+                        method,
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(formObject)
+                    }).then(res => res.json())
+                        .then(data => {
+                            Swal.fire(data.message);
+                            if (data.success) {
+                                offerModal.classList.remove('active');
+                            }
+                        }).catch(() => {
+                            Swal.fire("Server error");
+                        });
+                });
 
-  <!-- Delete Confirmation Modal -->
-  <div class="modal" id="deleteModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>Confirm Delete</h2>
-            <button class="close">&times;</button>
-        </div>
-        <div class="modal-body">
-            <p>Are you sure you want to delete this offer? This action cannot be undone.</p>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-warning" id="cancelDeleteBtn">Cancel</button>
-            <button class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
-        </div>
-    </div>
-  </div>
-  
-<script>
-    // DOM Elements
-    const addOfferBtn = document.getElementById('addOfferBtn');
-    const offerModal = document.getElementById('offerModal');
-    const deleteModal = document.getElementById('deleteModal');
-    const modalTitle = document.getElementById('modalTitle');
-    const closeButtons = document.querySelectorAll('.close');
-    const cancelBtn = document.getElementById('cancelBtn');
-    const saveOfferBtn = document.getElementById('saveOfferBtn');
-    const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
-    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
-    const editBtns = document.querySelectorAll('.edit-btn');
-    const deleteBtns = document.querySelectorAll('.delete-btn');
-    
-    // Open add offer modal
-    addOfferBtn.addEventListener('click', () => {
-        modalTitle.textContent = 'Add New Offer';
-        document.getElementById('offerForm').reset();
-        offerModal.classList.add('active');
-    });
-    
-    // Close modals
-    closeButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            offerModal.classList.remove('active');
-            deleteModal.classList.remove('active');
-        });
-    });
-    
-    // Cancel button in offer modal
-    cancelBtn.addEventListener('click', () => {
-        offerModal.classList.remove('active');
-    });
-    // Save offer
-    //const offerForm=document.getElementById('offerForm')
-     offerForm.addEventListener('submit',function(e){
-        e.preventDefault()
-        console.log('offer form submitted');
-        
-        const formData=new FormData(this)
-        const formObject=Object.fromEntries(formData)
-        console.log('formObject ',formObject);
-        
-        fetch('/admin/addOffer',{method:"POST",
-            headers:{"Content-Type":"application/json",
-                'CSRF-Token': csrfToken
-            },
-            body:JSON.stringify(formObject)
-        }).then(res=>res.json())
-        .then(data=>{
-            if(data && data.success){
-                Swal.fire(data.message)
-                offerModal.classList.remove('active');
-            }else{
-                Swal.fire(data.message)
-            }
-        }).catch(error=>{
-            Swal.fire('server error')
-        })
-    })
-    
-    saveOfferBtn.addEventListener('click', () => {
-       const offerName=document.getElementById('offerName').value
-       const offerDiscription=document.getElementById('offerDesc').value
-       const discountType=document.getElementById('discountType').value
-       const discountValue=document.getElementById('discountValue').value
-       const startDate=document.getElementById('startDate').value
-       const endDate=document.getElementById('endDate').value
-       const status=document.getElementById('status')
-       const offerOn=document.getElementById('offerOn')
-       const productId=document.getElementById('productId')
-       const categoryId=document.getElementById('categoryId')
-       if(offerName=='' || offerDiscription==''||discountType==''||discountValue==''||startDate==''||endDate==''||status==''||offerOn==''||productId==''&&categoryId==''){
-        Swal.fire("All fields are required")
-       }else{
-        const formObject={}
-        formObject.offerName=offerName
-        formObject.offerDiscription=offerDiscription
-        formObject.discountType=discountType
-        formObject.discountValue=discountValue
-        formObject.startDate=startDate
-        formObject.endDate=endDate
-        formObject.status=status
-        formObject.offerOn=offerOn
-        formObject.productId=productId
-        formObject.categoryId=categoryId
-       }
-       console.log('formObject ',formObject);
-       fetch('/admin/addOffer',{
-        method:'POST',
-        headers:{"Content-Type":"application/json",
-            'CSRF-Token': csrfToken
-        },
-        body:JSON.stringify(formObject)
-       }).then(res=>res.json())
-       .then(data=>{
-        if(data && data.success){
-            Swal.fire(data.message)
-            offerModal.classList.remove('active');
-        }else{
-            Swal.fire(data.message)
-            offerModal.classList.remove('active');
-        }
-       }).catch(error=>{
-        Swal.fire(error.message)
-       })
-       
-    });
-    
-    // Edit offer
-    editBtns.forEach(button => {
-        button.addEventListener('click', () => {
-            console.log('edit button clicked');
-            offerModal.classList.add('active');
-            modalTitle.textContent = 'Edit Offer';
-            
-            // Populate form with offer data (this would normally come from your backend)
-            // This is just for demonstration
-            const row = button.closest('tr');
-            const offerName = row.cells[1].textContent;
-            const discount = row.cells[2].textContent;
-            const startDate = row.cells[3].textContent;
-            const endDate = row.cells[4].textContent;
-            const status = row.cells[5].querySelector('.status').textContent.toLowerCase();
-            
-            document.getElementById('offerName').value = offerName;
-            document.getElementById('discountValue').value = discount.replace('%', '');
-            // Format dates (this is simplified)
-            document.getElementById('startDate').value = formatDateForInput(startDate);
-            document.getElementById('endDate').value = formatDateForInput(endDate);
-            document.getElementById('status').value = status === 'active' ? 'active' : status === 'pending' ? 'pending' : 'inactive';
-            
-            offerModal.classList.add('active');
-        });
-    });
-    
-    // Delete offer
-    let deleteOfferId;
-    deleteBtns.forEach(button => {
-        button.addEventListener('click', () => {
-            deleteModal.classList.add('active');
-            deleteOfferId=button.getAttribute('data-id')
-            console.log('delete id ',deleteOfferId);
-            
-            // Store reference to the row to be deleted
-            const row = button.closest('tr');
-            
-            confirmDeleteBtn.onclick = () => {
-               fetch(`/admin/offer/delete/${deleteOfferId}`,{
-                method:"DELETE",
-                headers:{'CSRF-Token': csrfToken}
-               }).then(res=>res.json())
-               .then(data=>{
-                if(data.success){
-                    Swal.fire(data.message)
-                    row.remove();
+                // Edit offer
+                editBtns.forEach(button => {
+                    button.addEventListener('click', () => {
+                        offerModal.classList.add('active');
+                        modalTitle.textContent = 'Edit Offer';
+                        const offerId = button.dataset.id;
+                        offerForm.setAttribute('data-edit-id', offerId);
+                        document.getElementById("offerId").value = offerId;
+                        console.log('edit button clicked');
+                        console.log('offerId',offerId);
+                        
+                        
+
+                        fetch(`/admin/getSingleOffer/${offerId}`, { method: "GET" })
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data && data.success) {
+                                    const thisOffer = data.offer;
+                                    document.getElementById('offerName').value = thisOffer.offerName;
+                                    document.getElementById('offerDesc').value = thisOffer.description;
+                                    document.getElementById('discountType').value = thisOffer.discountType;
+                                    document.getElementById('discountValue').value = thisOffer.discountValue;
+                                    document.getElementById('startDate').value = thisOffer.startDate?.split('T')[0];
+                                    document.getElementById('endDate').value = thisOffer.endDate?.split('T')[0];
+                                    document.getElementById('offerOn').value = thisOffer.applicableTo;
+                                    document.getElementById('status').value = thisOffer.status;
+                                } else {
+                                    Swal.fire(data.message);
+                                }
+                            }).catch(() => {
+                                Swal.fire("Server error");
+                            });
+                    });
+                });
+
+                // Delete offer
+                let deleteOfferId;
+                deleteBtns.forEach(button => {
+                    button.addEventListener('click', () => {
+                        deleteModal.classList.add('active');
+                        deleteOfferId = button.getAttribute('data-id');
+                        const row = button.closest('tr');
+
+                        confirmDeleteBtn.onclick = () => {
+                            fetch(`/admin/offer/delete/${deleteOfferId}`, { method: "DELETE" })
+                                .then(res => res.json())
+                                .then(data => {
+                                    Swal.fire(data.message);
+                                    if (data.success) {
+                                        row.remove();
+                                        deleteModal.classList.remove('active');
+                                    }
+                                }).catch(() => {
+                                    Swal.fire("Server Error");
+                                });
+                        };
+                    });
+                });
+
+                // Cancel delete
+                cancelDeleteBtn.addEventListener('click', () => {
                     deleteModal.classList.remove('active');
-                }else{
-                    Swal.fire(data.message)
-                    deleteModal.classList.remove('active');
+                });
+
+                // Helper to format date for input
+                function formatDateForInput(dateStr) {
+                    const parts = dateStr.split('/');
+                    return `${parts[2]}-${parts[1]}-${parts[0]}`;
                 }
-               }).catch(error=>{
-                Swal.fire("Server Error")
-               })
-               
-                
-               
-            };
-        });
-    });
-    
-    // Cancel delete
-    cancelDeleteBtn.addEventListener('click', () => {
-        deleteModal.classList.remove('active');
-    });
-    
-    // Helper function to format date for input field
-    function formatDateForInput(dateStr) {
-        // Simple implementation - in real app would need more robust conversion
-        const parts = dateStr.split('/');
-        return `${parts[2]}-${parts[1]}-${parts[0]}`;
-    }
-    document.addEventListener('DOMContentLoaded', function() {
-    const offerOn = document.getElementById('offerOn');
-    const productSelect = document.getElementById('productSelect');
-    const categorySelect = document.getElementById('categorySelect');
 
-    // Initially hide both
-    productSelect.style.display = 'none';
-    categorySelect.style.display = 'none';
+                // Show/hide product/category selects
+                document.addEventListener('DOMContentLoaded', function () {
+                    const offerOn = document.getElementById('offerOn');
+                    const productSelect = document.getElementById('productSelect');
+                    const categorySelect = document.getElementById('categorySelect');
 
-    offerOn.addEventListener('change', function() {
-        if (this.value === 'product') {
-            productSelect.style.display = 'block';
-            categorySelect.style.display = 'none';
-        } else if (this.value === 'category') {
-            categorySelect.style.display = 'block';
-            productSelect.style.display = 'none';
-        } else {
-            productSelect.style.display = 'none';
-            categorySelect.style.display = 'none';
-        }
-    });
-});
-  </script>
+                    productSelect.style.display = 'none';
+                    categorySelect.style.display = 'none';
+
+                    offerOn.addEventListener('change', function () {
+                        if (this.value === 'product') {
+                            productSelect.style.display = 'block';
+                            categorySelect.style.display = 'none';
+                        } else if (this.value === 'category') {
+                            categorySelect.style.display = 'block';
+                            productSelect.style.display = 'none';
+                        } else {
+                            productSelect.style.display = 'none';
+                            categorySelect.style.display = 'none';
+                        }
+                    });
+                });
+            </script>
+
 </body>
+
 </html>

@@ -117,7 +117,7 @@
                 <div class="product-quantity" style="margin-top: 5px; font-size: 14px;">Quantity: <strong>
                     <%= item.quantity %> ,
                   </strong> Price: ₹ <strong style="color: #1b6a2a; font-weight: bold; margin-top: 5px;">
-                    ₹ <%= item.price %>
+                     <%= item.price %>
                   </strong></div>
                 <div class="product-price" style="color: #d81b60; font-weight: bold; margin-top: 5px;">₹ <%=
                     item.subTotal %>
@@ -143,11 +143,14 @@
           <span>Tax</span><span style="color: #1b6a2a;">₹ <%= taxAmount %></span>
         </div>
         <div class="price-row" style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-          <span>Discount</span><span id="discountAmount" style="color: #1b6a2a;">₹ <%= discountAmount %></span>
+          <span>Discount via coupon</span><span id="discountAmount" style="color: #1b6a2a;">₹ <%= couponDiscountAmount %></span>
+        </div>
+        <div class="price-row" style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+          <span>Discount via offer</span><span id="offerDiscountAmount" style="color: #1b6a2a;">₹ <%= offerDiscountAmount %></span>
         </div>
         <div class="total-row"
           style="display: flex; justify-content: space-between; font-weight: bold; border-top: 1px solid #eee; padding-top: 10px; margin-top: 10px;">
-          <span>Total</span><span id="finalAmount" style="color: #1b6a2a;">₹ <%= (totalAmount-discountAmount).toFixed(2)
+          <span>Total</span><span id="finalAmount" style="color: #1b6a2a;">₹ <%= (totalAmount-offerDiscountAmount-couponDiscountAmount).toFixed(2)
               %></span>
         </div>
       </div>
@@ -176,11 +179,11 @@
         </div>
 
 
-        <div class="form-section">
+        <div class="form-section" id="paymentSection">
           <h3 style="font-weight: bold; color: green;">Payment Method</h3>
 
           <div class="payment-options">
-            <div class="payment-option active">Credit Card</div>
+            <div class="payment-option ">Credit Card</div>
             <div class="payment-option">UPI</div>
             <div class="payment-option">COD</div>
           </div>
@@ -255,6 +258,20 @@
     <script>
       const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
       document.addEventListener("DOMContentLoaded", function () {
+        const useWalletCheckbox = document.getElementById('useWallet');
+    const paymentSection = document.getElementById('paymentSection');
+
+    function togglePaymentSection() {
+      if (useWalletCheckbox.checked) {
+        paymentSection.style.display = 'none';
+      } else {
+        paymentSection.style.display = 'block';
+      }
+    }
+
+    togglePaymentSection();
+
+    useWalletCheckbox.addEventListener('change', togglePaymentSection);
         const options = document.querySelectorAll(".payment-option");
 
         const cardFields = document.querySelectorAll("#cardnumber, #expiry, #cvv, #cardname");

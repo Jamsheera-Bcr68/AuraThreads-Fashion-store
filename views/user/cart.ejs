@@ -52,6 +52,7 @@
                       <th class="product-thumbnail">Image</th>
                       <th class="product-name">Product</th>
                       <th class="product-price">Price</th>
+                      <th class="product-discount">Offer</th>
                       <th class="product-quantity">Quantity</th>
                       <th class="product-total">Total</th>
                       <th class="product-remove">Remove</th>
@@ -69,7 +70,16 @@
                               <%= item.productId.productName %>
                             </h2>
                           </td>
-                          <td>₹ <%= item.productId.price.toFixed(2) %>
+                          <td style="font-weight: bold;">₹ <%= item.productId.price.toFixed(2) %>
+                          </td>
+                          <td>
+                            <% if(item.discountAmount) { %>
+                              <span style="font-weight: bold;color: green;">
+                                <%= item.discountType === 'amount' ? `₹${item.discountAmount.toFixed(2)} off` : `${(item.discountAmount * 100 / item.productId.price).toFixed(0)}% off` %>
+                              </span>
+                            <% } else { %>
+                              <span style="font-weight: bold;color: red;">No Offer</span>
+                            <% } %>
                           </td>
                           <td>
                             <div class="input-group mb-3" style="max-width: 120px;">
@@ -89,7 +99,7 @@
                                   </div>
                                 </div>
                           </td>
-                          <td>₹ <%= (item.productId.price * item.quantity).toFixed(2) %>
+                          <td style="font-weight: bold;">₹ <%= (item.discountPrice * item.quantity).toFixed(2) %>
                           </td>
                           <td>
                             <button  data-id="<%= item.productId._id %>"  class="btn text-white btn-danger js-remove-item"  >X Remove</button>
@@ -143,6 +153,15 @@
                     </div>
                   </div>
                   
+                  <div class="row mb-3">
+                    <div class="col-md-6">
+                      <span class="text-black">Dcount via Offer</span>
+                    </div>
+                    <div class="col-md-6 text-right">
+                      <strong class="text-black">₹ <%= cart.items.reduce((sum, item)=> sum + ((item.productId.price-item.discountPrice) *
+                          item.quantity), 0).toFixed(2) %></strong>
+                    </div>
+                  </div>
                   <div class="row mb-3">
                     <div class="col-md-6">
                       <span class="text-black">Net Total</span>

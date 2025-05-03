@@ -502,20 +502,37 @@ const applyCoupon = async (req, res) => {
 
 //get offers
 const getOffers = async (req, res) => {
+  let date=new Date()
+  const totalOffers=await Offer.countDocuments()
+  const pendingOffers=await Offer.countDocuments({status:'pending'})
+  const activeOffers=await Offer.countDocuments({status:'active'})
+  const expiredOffers=await Offer.countDocuments({endDate:{$lt:date}})
   const stats = {
-    totalOffers: 24,
-    activeOffers: 16,
-    pendingOffers: 5,
-    expiredOffers: 3,
+    totalOffers,
+    activeOffers,
+    pendingOffers,
+    expiredOffers
   };
   try {
+    const page = parseInt(req.query.page) || 1
+    const limit = parseInt(req.query.limit) || 5
+    const skip = (page - 1) * limit
+
+    const totalOffers=await Offer.countDocuments()
+    const totalPages=Math.ceil(totalOffers/limit)
+
     const products = await Product.find({ isDeleted: false })
     const categories = await Category.find({ isDeleted: false })
-    const offers=await Offer.find({})
+    const offers=await Offer.find().sort({startDate:-1}).skip(skip).limit(limit)
 
   console.log('from admin offer');
   res.render('admin/offerManagement', {
     title: "Offer Management",
+    currentPage:page ||1,
+    limit,
+    skip,
+    totalPages,
+    totalOffers,
     stats,
     offers, products, categories
   })
@@ -568,7 +585,7 @@ const deleteOffer=async (req,res)=>{
       return res.json({success:false,message:"Offer is not found"})
     }
 
-    offer.status='pending'
+    offer.status='inactive'
     await offer.save()
     return res.json({success:true,message:"Offer deleted successfully"})
   } catch (error) {
@@ -577,6 +594,65 @@ const deleteOffer=async (req,res)=>{
   }
 }
 
+const getSingleOffer=async (req,res)=>{
+  console.log('from admin getSingleOffer');
+  try {
+    const offerId =req.params.offerId
+   
+    console.log('offerId ',offerId);
+    
+    if(!offerId){
+      console.log("offer Id not found");
+      return res.json({success:false,message:"offerId not found"})
+    }
+    const offer=await Offer.findOne({_id:offerId})
+    if(!offer){
+      console.log("offer not found");
+      return res.json({success:false,message:"offer not found"})
+    }
+    return res.json({success:true,offer,message:"offer found"})
+  } catch (error) {
+    console.log('errr in finding getSingleOffer');
+    return res.json({success:false,message:"Error in finding offer"})
+  }
+}
+
+const editOffer=async (req,res)=>{
+  console.log('from editOffer');
+  try {
+    let offerId=req.params.offerId
+    console.log('offerId',offerId);
+    
+    if(!offerId){
+      console.log('Offerid not found');
+      return res.json({success:false,success:"Offer id is not found"})
+    }
+    const offer=await Offer.findOne({_id:offerId})
+    if(!offer){
+      console.log('Offer not found');
+      return res.json({success:false,success:"Offer  is not found"})
+    }
+    const {offerName,offerDesc,discountType,discountValue,startDate,endDate,status,productId,categoryId,offerOn}=req.body
+
+    offer.offerName=offerName
+    offer.description=offerDesc,
+    offer.discountType=discountType == 'percentage' ? 'percentage' : 'amount',
+    offer.discountValue=discountValue,
+    offer.startDate=startDate,
+    offer.endDate=endDate,
+    offer.status=status,
+    offer.productId=productId || null,
+    offer.categoryId=categoryId || null,
+    offer.applicableTo=offerOn,
+     offer.updatedAt=new Date()
+   
+     await offer.save()
+     return res.json({success:true,message:"offer Edited Successfully"})
+  } catch (error) {
+    console.log('error ',error);
+    return res.json({success:false,message:"Server error"})
+  }
+}
 module.exports = {
   getLogin,
   postLogin,
@@ -599,5 +675,7 @@ module.exports = {
   applyCoupon,
   getOffers,
   addOffer,
-  deleteOffer
+  deleteOffer,
+  getSingleOffer,
+  editOffer
 };

@@ -14,7 +14,7 @@ const Coupon = require("../model/coupenModel");
 const WishList = require('../model/wishListModel')
 const Wallet = require('../model/walletModel');
 const errorHandler=require('../middleweres/errorHandler')
-
+const Offer=require('../model/offerModel')
 
 
 //get Register
@@ -290,9 +290,9 @@ const postLogin = async (req, res) => {
 
 const getHome = async (req, res) => {
   const categories = await category.find({ isDeleted: false, categoryName: { $in: ['Mens', 'Womens', 'Kids'] } }).limit(3)
-  console.log(categories + 'categories');
+ // console.log(categories + 'categories');
 
-  console.log('category images', categories[0].images);
+  //console.log('category images', categories[0].images);
 
   categories.forEach(item => item.images.forEach(image => image.replace(/\\/g, '/')))
   // console.log('category images after updata',categories[0].images);
@@ -314,10 +314,10 @@ const getHome = async (req, res) => {
 
 
   const kidsCategory = await category.findOne({ isDeleted: false, categoryName: 'Kids' }, { _id: 1 })
-  console.log('kids category id is' + kidsCategory.id);
+ // console.log('kids category id is' + kidsCategory.id);
   const kidsProducts = await Product.find({ isDeleted: false, categoryId: kidsCategory.id }).limit(3)
-  console.log('kids products are ' + kidsProducts);
-  console.log('kids images are ', kidsProducts[0].images);
+  //console.log('kids products are ' + kidsProducts);
+ // console.log('kids images are ', kidsProducts[0].images);
 
   console.log('user found', req.session.user);
   let cartCount = 0
@@ -354,7 +354,7 @@ const getSingleProduct=async (req,res)=>{
       const singleProduct = await Product.findOne({
         isDeleted: false,
         _id: productId,
-      });
+      }).lean()
   
       if (!singleProduct) {
         console.log("No product found");
@@ -392,14 +392,47 @@ const getSingleProduct=async (req,res)=>{
           }
          }
           
+          //fetching offer
+          const offers=await Offer.find({status:'active'})
+
+          const productOffer=offers.find(offer=>offer.applicableTo=='product' &&offer.productId?.toString()==singleProduct._id.toString())
+         const categoryOffer=offers.find(offer=>offer.applicableTo=='category' && offer.categoryId?.toString()==singleProduct.categoryId?.toString())
+         
+         let finalOffer=null
+         let discountAmount=0
+         
+
+         if(productOffer && categoryOffer){
+          console.log('both available fronm single product page');
           
-      
+          
+          const productdiscountAmount=productOffer.discountType=='amount'?productOffer.discountValue:(productOffer.discountValue*singleProduct.price)/100
+          const categoryDiscountAmount=categoryOffer.discountType=='amount'? categoryOffer.discountValue:(categoryOffer.discountValue*singleProduct.price)/100
+         
+          discountAmount=productdiscountAmount>categoryDiscountAmount?productdiscountAmount:categoryDiscountAmount
+          finalOffer=productdiscountAmount>categoryDiscountAmount?productOffer:categoryOffer
+         
+        }else{
+          console.log('one offer applicable fronm single product page');
+          finalOffer=productOffer||categoryOffer
+          discountAmount=finalOffer.discountType=='amount'? finalOffer.discountValue:(finalOffer.discountValue*singleProduct.price)/100
+         }
+
+         if(finalOffer){
+          singleProduct.discountPrice=Math.round(singleProduct.price-discountAmount)
+          singleProduct.discountType=finalOffer.discountType
+          singleProduct.discount=finalOffer.discountValue
+          singleProduct.discountAmount=discountAmount
+         }else{
+          singleProduct.discountPrice=singleProduct.price
+         }
       res.render("user/sproduct", {
         title: "Product Details Page",
         singleProduct,
         relatedProducts,
         categoryId:'',
         priceRange:'',
+        finalOffer,
         cartCount,
         user:req.session.user||'',
         sort:'',query:''
@@ -419,9 +452,7 @@ const getProductList=async(req,res)=>{
   const categoryId = req.query.categoryId || null;
   console.log('categoryId',categoryId);
   try {
-      // if(userId){
-      //   const user=await User.findOne({_id:mongoose.Types.ObjectId(userId)})
-      // }
+      
       const {query}=req.query
       console.log(`query is ${query}`);
       
@@ -495,7 +526,9 @@ const getProductList=async(req,res)=>{
       const products = await Product.find(filter)
         .sort(sortOption)
         .skip(skip)
-        .limit(limit);
+        .limit(limit)
+        .lean()
+        
         
       // Fix image paths
       products.forEach(product => {
@@ -523,10 +556,58 @@ const getProductList=async(req,res)=>{
             
           }
          }
-         
+        // fetching offers
+        const offers = await Offer.find({ status: 'active' });
+
+products.forEach(product => {
+  const productOffer = offers.find(offer =>
+    offer.applicableTo === 'product' && offer.productId?.toString() === product._id.toString()
+  );
+  const categoryOffer = offers.find(offer =>
+    offer.applicableTo === 'category' && offer.categoryId?.toString() === product.categoryId?.toString()
+  );
+
+  let finalOffer = null;
+  let discountAmount = 0;
+
+  if (productOffer && categoryOffer) {
+    const productDiscountAmount = productOffer.discountType === 'amount'
+      ? productOffer.discountValue
+      : (product.price * productOffer.discountValue) / 100;
+
+    const categoryDiscountAmount = categoryOffer.discountType === 'amount'
+      ? categoryOffer.discountValue
+      : (product.price * categoryOffer.discountValue) / 100;
+
+    finalOffer = productDiscountAmount > categoryDiscountAmount ? productOffer : categoryOffer;
+    discountAmount = Math.max(productDiscountAmount, categoryDiscountAmount);
+  } else if (productOffer || categoryOffer) {
+    finalOffer = productOffer || categoryOffer;
+
+    // Checking finalOffer before using its properties
+    if (finalOffer) {
+      discountAmount = finalOffer.discountType === 'amount'
+        ? finalOffer.discountValue
+        : (product.price * finalOffer.discountValue) / 100;
+    }
+  }
+
+  if (finalOffer) {
+    product.discountPrice = Math.round(product.price - discountAmount);
+    product.discountAmount = discountAmount;
+    product.finalDiscount = finalOffer.discountValue;
+    product.discountType = finalOffer.discountType;
+  } else {
+    product.discountPrice = product.price;
+  }
+});
+
+        
+        
       
       res.render('user/productList', {
         products,
+        
         categoryId: categoryId || null,
         categories,
         sort: sort || null,
@@ -540,7 +621,8 @@ const getProductList=async(req,res)=>{
         cartCount,
         query: req.query.query || "",
         type: req.query.type || "products",
-        csrfToken: res.locals.csrfToken 
+        csrfToken: res.locals.csrfToken ,
+        offers
       });
       
     } catch (error) {
@@ -808,7 +890,7 @@ const getCart = async (req, res) => {
       .populate({
         path: 'items.productId',
         model: 'Product',
-        select: 'productName price images stock'
+        select: 'productName price images stock categoryId'
       })
     if (!cart) {
       console.log('No existing cart');
@@ -824,7 +906,7 @@ const getCart = async (req, res) => {
 
     }
 
-    console.log("Cart Items:", JSON.stringify(cart.items, null, 2));
+    //console.log("Cart Items:", JSON.stringify(cart.items, null, 2));
     cart.items.forEach(item => {
       if (item.productId.images && item.productId.images.length > 0) {
         item.productId.images = item.productId.images.map(image => image.replace(/\\/g, '/'));
@@ -833,8 +915,58 @@ const getCart = async (req, res) => {
     cartCount = cart.items.length
     title = cart.items.length > 0 ? `Displaying your ${cartCount} cart itmes` : 'Your cart is empty'
 
+    let cartTotal=cart.items.reduce((sum,item)=>sum+(item.productId.price*item.quantity),0)
+    console.log('cart total',cartTotal);
+    
+    //fetching offers
+    const offers=await Offer.find({status:'active'}) 
+   cart.items.forEach(item=>{
+    const productOffer=offers.find(offer=>offer.applicableTo=='product'&&offer.productId?.toString()==item.productId._id?.toString())
+     const categoryOffer=offers.find(offer=>offer.applicableTo=='category'&& offer.categoryId?.toString()==item.productId.categoryId.toString())
+      
+     let finalOffer=null
+     let discountAmount=0
+    if(!categoryOffer && !productOffer){}
+    else if(productOffer&&categoryOffer){
+      const productDiscountAmount=productOffer.discountType=='amount'?productOffer.discountValue:(productOffer.discountValue*item.productId.price)/100
+      const categoryDiscountAmount=categoryOffer.discountType=='amount'?categoryOffer.discountValue:(categoryOffer.discountValue*item.productId.price)/100
 
+      discountAmount=productDiscountAmount>categoryDiscountAmount?productDiscountAmount:categoryDiscountAmount
+      finalOffer=productDiscountAmount>categoryDiscountAmount?productOffer:categoryOffer
+      }else if(categoryOffer||productOffer){
+        finalOffer=categoryOffer||productOffer
+        discountAmount=finalOffer.discountType=='amount'?finalOffer.discountValue:(finalOffer.discountValue*item.productId.price)/100
 
+      }
+
+      if(finalOffer){
+        item.discountAmount=discountAmount
+        item.discountPrice=Math.round(item.productId.price-discountAmount)
+        item.discountType=finalOffer.discountType
+
+      }else{
+        item.discountAmount=0
+        item.discountPrice=item.productId.price
+        item.discountTyp=''
+      }
+   })
+   const netAmount=cart.items.reduce((total,item)=>total+(item.discountPrice*item.quantity),0)
+   const totalDiscount=cart.items.reduce((total,item)=>total+(item.discountAmount*item.quantity),0)
+
+   req.session.offer = cart.items.map(item => ({
+    productId: item.productId._id,
+    discountAmount: item.discountAmount || 0,
+    discountPrice: item.discountPrice || item.productId.price,
+    discountType: item.discountType || null
+  }));
+  req.session.cartTotal=cartTotal
+  req.session.netAmount=netAmount
+  req.session.totalDiscount=totalDiscount
+  console.log('req.session.offer ',req.session.offer);
+  console.log('totalDiscount from get cart',totalDiscount);
+  
+    
+    
     return res.render('../views/user/cart', {
       errorMessage: null,
       categoryId: null,
@@ -1088,7 +1220,7 @@ const getCheckout = async (req, res) => {
   }
 
   const wallet = await Wallet.findOne({ userId })
-  console.log('wallet ', wallet);
+ // console.log('wallet ', wallet);
 
   if (!wallet) {
     return res.json({ success: false, message: "wallet not found" })
@@ -1102,6 +1234,8 @@ const getCheckout = async (req, res) => {
 
   }
 
+ // console.log('req.session',req.session);
+  
 
   const shippingCharge = 0.00
   const taxAmount = 0.00
@@ -1128,6 +1262,8 @@ const getCheckout = async (req, res) => {
   if (!addresses) {
     return res.json({ success: false, message: "You dont have any saved address" })
   }
+const offerDiscountAmount=req.session.totalDiscount
+console.log('offerDiscountAmount',offerDiscountAmount);
 
   return res.render('user/userCkeckout', {
     categoryId: null,
@@ -1140,7 +1276,8 @@ const getCheckout = async (req, res) => {
     cartItems,
     shippingCharge,
     taxAmount,
-    discountAmount: req.session.discountAmount || 0,
+    couponDiscountAmount: req.session.discountAmount || 0,
+    offerDiscountAmount:req.session.totalDiscount ||0,
     totalAmount,
     wallet
   })
@@ -1224,12 +1361,18 @@ const placeOrder = async (req, res) => {
     const createdAt = new Date();
     const deliveryDate = new Date(createdAt.getTime() + 5 * 24 * 60 * 60 * 1000); // Add 5 days
 
-    const discountAmount = req.session.discountAmount || 0
-    const finalAmount = totalAmount - discountAmount
-    console.log('final amount discount amount ', finalAmount, discountAmount);
+    const coupenDiscountAmount = req.session.discountAmount || 0
+    console.log('coupenDiscountAmount',coupenDiscountAmount);
+    
+    const offerDiscountAmount =req.session.totalDiscount || 0
+    console.log('offerDiscountAmount ',offerDiscountAmount);
+    
+    const finalAmount = totalAmount - coupenDiscountAmount-offerDiscountAmount
+    console.log('final amount discount amount ', finalAmount);
     const isCouponApplied = req.session.code ? true : false
     const couponCode = req.session.code || ''
 
+    const isOfferApplied=req.session.offer?true:false
     // check for wallet 
     const wallet = await Wallet.findOne({ userId })
     if (useWallet == true) {
@@ -1241,13 +1384,16 @@ const placeOrder = async (req, res) => {
         console.log('insufficient balance');
         return res.json({ success: false, message: "Insufficient balance" })
       }
+      paymentMethod='wallet'
     }
     //creating new order document
     const order = new Order({
       userId: req.session.user._id,
       address,
-      discountAmount,
+      coupenDiscountAmount,
+      offerDiscountAmount,
       isCouponApplied,
+      isOfferApplied,
       couponCode,
       finalAmount,
       paymentMethod,
@@ -1294,7 +1440,10 @@ const placeOrder = async (req, res) => {
     req.session.finalAmount = 0
     req.session.code = ''
     req.session.appliedCoupon = null
-
+    req.session.offer=null
+    req.session.cartTotal=0
+    req.session.netAmount=0
+    req.session.totalDiscount=0
 
 
     return res.json({
@@ -1495,7 +1644,7 @@ const applyCoupon = async (req, res) => {
       console.log('Coupon Expired');
       return res.json({ success: false, message: "Coupon Expired" })
     }
-    if (req.session.totalAmount < coupon.minPurchase) {
+    if (req.session.netAmount < coupon.minPurchase) {
       console.log("Not reach mini purchase");
       return res.json({ success: false, message: `You Should Purchse for minimum ${coupon.minPurchase} to get this coupon` })
     } if (coupon.usageLimit < 1) {
@@ -1524,7 +1673,7 @@ const applyCoupon = async (req, res) => {
       discountAmount = req.session.totalAmount * (coupon.discountValue / 100)
     }
 
-    const finalAmount = req.session.totalAmount - coupon.discountValue
+    const finalAmount = req.session.netAmount - coupon.discountValue
     console.log('finalAmount ', finalAmount);
 
 
@@ -1540,7 +1689,7 @@ const applyCoupon = async (req, res) => {
     req.session.code = code
     console.log('req.session.code', req.session.code);
 
-    return res.json({ success: true, message: "Coupon Applied Successfully", finalAmount, discountAmount })
+    return res.json({ success: true, message: "Coupon Applied Successfully", finalAmount, discountAmount ,code})
   } catch (error) {
     console.log('error ', error);
     return res.json({ success: false, message: "Error in fetching coupen" })

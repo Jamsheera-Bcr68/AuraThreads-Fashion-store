@@ -36,7 +36,8 @@
                         <%= order.paymentMethod %>
                     </p>
                     <p><strong>Total Amount:</strong>₹ <%= order.totalAmount.toFixed(2) %>
-                            <p><strong>Discount:</strong>₹ <%= order.discountAmount.toFixed(2) %>
+                            <p><strong>Discount Thruogh Coupon:</strong>₹ <%= order.coupenDiscountAmount.toFixed(2) %>
+                                <p><strong>Discount Thruogh Offer:</strong>₹ <%= order.offerDiscountAmount.toFixed(2) %>
                                     <p><strong>Net Total :</strong>₹ <%= order.finalAmount.toFixed(2) %>
                                     </p>
         </div>

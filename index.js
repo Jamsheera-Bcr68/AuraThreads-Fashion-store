@@ -19,7 +19,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json())
 dbConnect();
 app.use(cookieParser())
-app.use(morgan('dev'));
+//app.use(morgan('dev'));
 
 
 

@@ -131,70 +131,74 @@
 
 
                     </div>
-                    <% products %>
-                        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-                            <% products.forEach(function(product) { %>
-                                <div class="col">
-                                    <div class="card h-100">
-                                        <div class="position-relative">
-                                            <a href="/user/products/<%= product._id %>"><img
-                                                    src="<%= product.images[0] %>" class=" card-img-top"
-                                                    alt="<%= product.productName %>"></a>
-                                            <% if (product.sale) { %>
-                                                <span class="badge bg-danger">SALE</span>
+                    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                        <% products.forEach(function(product) { %>
+                            <div class="col">
+                                <div class="card h-100">
+                                    <div class="position-relative">
+                                        <a href="/user/products/<%= product._id %>">
+                                            <img src="<%= product.images[0] %>" class="card-img-top" alt="<%= product.productName %>">
+                                        </a>
+                                        <% if (product.finalDiscount) { %>
+                                            <span class="badge bg-warning text-dark position-absolute top-0 start-0 m-2">
+                                                <% if (product.discountType === 'percentage') { %>
+                                                    <%= product.finalDiscount %>% OFF
+                                                <% } else { %>
+                                                    ₹<%= product.finalDiscount %> OFF
                                                 <% } %>
-                                                    <div class="wishlist-icon">
-                                                        <i class="far fa-heart"></i>
-                                                    </div>
+                                            </span>
+                                        <% } %>
+                    
+                                        <% if (product.sale) { %>
+                                            <span class="badge bg-danger">SALE</span>
+                                        <% } %>
+                    
+                                        <div class="wishlist-icon">
+                                            <i class="far fa-heart"></i>
                                         </div>
-                                        <div class="card-body">
-
-                                            <h5 class="card-title">
-                                                <%= product.productName %>
-                                            </h5>
-                                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                                <div>
-                                                    <% if (product.salePrice) { %>
-                                                        <span class="text-decoration-line-through text-muted">₹ <%=
-                                                                product.price.toFixed(2) %></span>
-                                                        <span class="text-danger fw-bold ms-2">₹ <%=
-                                                                product.salePrice.toFixed(2) %></span>
-                                                        <% } else { %>
-                                                            <span class="fw-bold">₹ <%= product.price.toFixed(2) %>
-                                                            </span>
-                                                            <% } %>
-                                                </div>
-                                                <div class="d-flex align-items-center">
-                                                    <div class="rating-box ratings" id="product-rating">
-                                                        <span class="rating-number">5</span>
-                                                        <span class="rating-star">★</span>
-                                                    </div>
-
-                                                    <!--<small class="text-muted ms-1">(<%= product.reviews %>)</small>-->
-                                                </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <h5 class="card-title">
+                                            <%= product.productName %>
+                                        </h5>
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <div>
+                                                <% if (product.discountPrice && product.discountPrice < product.price) { %>
+                                                    <span class="text-decoration-line-through text-muted">₹ <%= product.price.toFixed(2) %></span>
+                                                    <span class="text-danger fw-bold ms-2">₹ <%= product.discountPrice.toFixed(2) %></span>
+                                                <% } else { %>
+                                                    <span class="fw-bold">₹ <%= product.price.toFixed(2) %> </span>
+                                                <% } %>
                                             </div>
-                                            <p class="card-text small text-muted">
-                                                <%= product.description.substring(0, 60) %>...
-                                            </p>
-                                            <div class="mt-2 mb-3">
-                                                <small class="text-muted">Available sizes: S,M,L,XL</small>
-
+                                            <div class="d-flex align-items-center">
+                                                <div class="rating-box ratings" id="product-rating">
+                                                    <span class="rating-number">5</span>
+                                                    <span class="rating-star">★</span>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="card-footer bg-transparent border-top-0">
-                                            <div class="d-grid">
-                                                <button data-id="<%= product._id %>"
-                                                    class="btn addToCart bg-success text-white" <%=product.stock===0
-                                                    ? 'disabled' : '' %>>
-                                                    <%= product.stock===0 ? 'Out of Stock' : 'Add to Cart' %>
-                                                </button>
-                                                <button class="btn addToWishList bg-success text-white" style="margin-top: .5em;" data-id="<%= product._id %>">Add to WishList</button>
-                                            </div>
+                                        <p class="card-text small text-muted">
+                                            <%= product.description.substring(0, 60) %>...
+                                        </p>
+                                        <div class="mt-2 mb-3">
+                                            <small class="text-muted">Available sizes: S,M,L,XL</small>
+                                        </div>
+                                    </div>
+                                    <div class="card-footer bg-transparent border-top-0">
+                                        <div class="d-grid">
+                                            <button data-id="<%= product._id %>"
+                                                class="btn addToCart bg-success text-white" <%=product.stock===0 ? 'disabled' : '' %>>
+                                                <%= product.stock===0 ? 'Out of Stock' : 'Add to Cart' %>
+                                            </button>
+                                            <button class="btn addToWishList bg-success text-white" style="margin-top: .5em;" data-id="<%= product._id %>">Add to WishList</button>
                                         </div>
                                     </div>
                                 </div>
-                                <% }); %>
-                        </div>
+                            </div>
+                        <% }); %>
+                    </div>
+                    
+                       </div>
 
                         <nav class="mt-5">
                             <ul class="pagination justify-content-center">

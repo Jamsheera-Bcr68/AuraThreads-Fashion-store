@@ -328,4 +328,10 @@ router.post('/addOffer', adminController.addOffer)
 
 //delte Offer
 router.delete('/offer/delete/:offerId', adminController.deleteOffer)
+
+//edit offer
+router.get('/getSingleOffer/:offerId',adminController.getSingleOffer)
+
+//edit offer
+router.put('/editOffer/:offerId',adminController.editOffer)
 module.exports = router;

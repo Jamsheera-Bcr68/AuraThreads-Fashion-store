@@ -65,18 +65,20 @@
 
                   <!-- Price -->
                   <div class="price-container">
-                    <span class="price">₹ <%= singleProduct.price %></span>
-                    <span class="original-price">₹ 500.00</span>
-                    <span class="discount-badge">Save 8%</span>
+                    <span class="price">₹ <%= singleProduct.discountPrice %></span>
+                    
+                      <span class="original-price text-muted text-decoration-line-through">₹ <%= singleProduct.price %></span>
+                   
+                    <span class="discount-badge">Save <%= singleProduct.discount %>  <%= singleProduct.discountType === 'amount'  ? '₹' : '%' %></span>
                   </div>
 
                   <!-- Coupon -->
-                  <div class="coupon">
+                  <!-- <div class="coupon">
                     <p>
                       Apply coupon <span class="coupon-code">TECH15</span> at checkout
                       for an extra 15% off
                     </p>
-                  </div>
+                  </div> -->
 
                   <div class="stock <%= singleProduct.stock > 0 ? 'in-stock' : 'out-of-stock'%>">
                     <%= singleProduct.stock> 0 ? 'In Stock - Ships within 24 hours' :

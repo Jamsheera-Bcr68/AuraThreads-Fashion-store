@@ -163,6 +163,7 @@
                             <span class="close">&times;</span>
                         </div>
                         <form id="couponForm">
+                           
                             <div class="form-group">
                                 <label for="code">Coupon Code</label>
                                 <input name="coupenCode" type="text" id="code" placeholder="Enter coupon code" required>
@@ -229,7 +230,7 @@
         </div>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
-            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            
             // Modal functionality
             const modal = document.getElementById("couponModal");
             const addCouponBtn = document.getElementById("addCouponBtn");
@@ -291,7 +292,7 @@
                 fetch(url, {
                     method,
                     headers: { "Content-Type": "application/json",
-                    'CSRF-Token': csrfToken
+                    
                      },
                     body: JSON.stringify(formData)
                 }).then(res => res.json())
@@ -380,7 +381,7 @@
                 }).then((result) => {
                     if (result.isConfirmed) {
                         fetch(`/admin/removeCoupon/${coupenId}`, { method: "DELETE",
-                            headers:{ 'CSRF-Token': csrfToken}
+                            
                          })
                             .then(res => res.json())
                             .then(data => {
@@ -417,7 +418,7 @@
                 }).then((result) => {
                     if (result.isConfirmed) {
                         fetch(`/admin/applyCoupon/${couponId}`, { method: "PUT",
-                            headers:{ 'CSRF-Token': csrfToken}
+                           
                          })
                             .then(res => res.json())
                             .then(data => {
