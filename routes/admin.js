@@ -334,4 +334,19 @@ router.get('/getSingleOffer/:offerId',adminController.getSingleOffer)
 
 //edit offer
 router.put('/editOffer/:offerId',adminController.editOffer)
+
+//add refferal offer
+router.post('/addrefferalOffer',adminController.addrefferalOffer)
+
+//get referal offer
+router.get('/referalOffers',adminController.referalOffers)
+
+//delete referal offer
+router.delete('/refferalOffer/delete/:offerId',adminController.deleteReferalOffers)
+
+//get single refferal
+router.get('/getSinglerefferal/:offerId',adminController.getSinglerefferal)
+
+//edit referal offer
+router.post('/editReferralForm/:offerId',adminController.editReffferalOffer)
 module.exports = router;

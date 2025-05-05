@@ -56,11 +56,17 @@
                         <!-- Offers Section -->
                         <div class="offers-section">
                             <div class="section-header">
-                                <h2 class="section-title">All Offers</h2>
+                                <h2 class="section-title"></h2>
                                 <button class="btn btn-primary" id="addOfferBtn"><i class="fas fa-plus"></i> Add New
                                     Offer</button>
                             </div>
-
+                            <div class="section-header">
+                                <h2 class="section-title"><a href="">All Offers</a></h2>
+                                <h2><a href="/admin/referalOffers">Referral</a></h2>
+                                <button class="btn btn-primary" id="referralOfferbtn" data-bs-toggle="modal"
+                                    data-bs-target="#referralModal"><i class="fas fa-plus"></i>Add Referral
+                                    Offer</button>
+                            </div>
                             <div class="table-wrapper">
                                 <table>
                                     <thead>
@@ -87,7 +93,9 @@
                                                 <td>
                                                     <%= offer.offerName %>
                                                 </td>
-                                                <td><%= offer.applicableTo %></td>
+                                                <td>
+                                                    <%= offer.applicableTo %>
+                                                </td>
                                                 <td>
                                                     <%= offer.discountValue %>
                                                         <%= offer.discountType=='percentage' ? '%' :'₹' %>
@@ -121,44 +129,44 @@
                         </div>
                     </div>
             </div>
-           
+
 
         </div>
-         <!--Pagination-->
-         <nav>
+        <!--Pagination-->
+        <nav>
             <ul class="pagination justify-content-center">
-              <!-- Previous Button -->
-              <% if (currentPage > 1) { %>
-                <li class="page-item">
-                  <a class="page-link" href="?page=<%= currentPage - 1 %>&limit=5">Previous</a>
-                </li>
-                <% } else { %>
-                  <li class="page-item disabled">
-                    <a class="page-link" href="#" tabindex="-1">Previous</a>
-                  </li>
-                  <% } %>
-        
-                    <!-- Page Numbers -->
-                    <% for (let i=1; i <=totalPages; i++) { %>
-                      <li class="page-item <%= currentPage === i ? 'active' : '' %>">
-                        <a class="page-link" href="?page=<%= i %>&limit=5">
-                          <%= i %>
-                        </a>
-                      </li>
-                      <% } %>
-        
-                        <!-- Next Button -->
-                        <% if (currentPage < totalPages) { %>
-                          <li class="page-item">
-                            <a class="page-link" href="?page=<%= currentPage + 1 %>&limit=5">Next</a>
-                          </li>
-                          <% } else { %>
-                            <li class="page-item disabled">
-                              <a class="page-link" href="#">Next</a>
-                            </li>
-                            <% } %>
+                <!-- Previous Button -->
+                <% if (currentPage> 1) { %>
+                    <li class="page-item">
+                        <a class="page-link" href="?page=<%= currentPage - 1 %>&limit=5">Previous</a>
+                    </li>
+                    <% } else { %>
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#" tabindex="-1">Previous</a>
+                        </li>
+                        <% } %>
+
+                            <!-- Page Numbers -->
+                            <% for (let i=1; i <=totalPages; i++) { %>
+                                <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+                                    <a class="page-link" href="?page=<%= i %>&limit=5">
+                                        <%= i %>
+                                    </a>
+                                </li>
+                                <% } %>
+
+                                    <!-- Next Button -->
+                                    <% if (currentPage < totalPages) { %>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page=<%= currentPage + 1 %>&limit=5">Next</a>
+                                        </li>
+                                        <% } else { %>
+                                            <li class="page-item disabled">
+                                                <a class="page-link" href="#">Next</a>
+                                            </li>
+                                            <% } %>
             </ul>
-          </nav>
+        </nav>
         <%- include('../partials/footer.ejs') %>
 
             <!-- Add/Edit Offer Modal -->
@@ -284,6 +292,59 @@
                     </div>
                 </div>
             </div>
+            <!--add refferal offer modal-->
+            <!-- Referral Offer Modal -->
+            <div class="modal fade" id="referralModal" tabindex="-1" aria-labelledby="referralModalLabel"
+                aria-hidden="true">
+                <div class="modal-dialog">
+                    <form id="refferalForm" action="/admin/referral-offer" method="POST">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="referralModalLabel">Add Referral Offer</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label for="bonusAmount" class="form-label">Referral Bonus (₹)</label>
+                                    <input type="number" class="form-control" name="bonusAmount" id="bonusAmount"
+                                        required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="minOrderAmount" class="form-label">Minimum Order Amount to Qualify
+                                        (₹)</label>
+                                    <input type="number" class="form-control" name="minOrderAmount" id="minOrderAmount"
+                                        required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="rewardType" class="form-label">Reward Type</label>
+                                    <select class="form-select" name="rewardType" id="rewardType" required>
+                                        <option value="wallet">Wallet Credit</option>
+                                        <option value="discount">Discount Coupon</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="status" class="form-label">Referral Status</label>
+                                    <select class="form-select" name="status" id="status" required>
+                                        <option value="enabled">Enabled</option>
+                                        <option value="disabled">Disabled</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="submit" class="btn btn-success">Save</button>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
             <script>
                 // DOM Elements
@@ -384,9 +445,9 @@
                         offerForm.setAttribute('data-edit-id', offerId);
                         document.getElementById("offerId").value = offerId;
                         console.log('edit button clicked');
-                        console.log('offerId',offerId);
-                        
-                        
+                        console.log('offerId', offerId);
+
+
 
                         fetch(`/admin/getSingleOffer/${offerId}`, { method: "GET" })
                             .then(res => res.json())
@@ -467,6 +528,38 @@
                         }
                     });
                 });
+
+                const referralOfferbtn = document.getElementById('referralOfferbtn')
+                referralOfferbtn.addEventListener('click', function () {
+                    console.log('referralOfferbtn clicked');
+                    const addModal = new bootstrap.Modal(document.getElementById('referralModal'));
+                    addModal.show()
+                })
+
+                const refferalForm = document.getElementById('refferalForm')
+                refferalForm.addEventListener('submit', function (e) {
+                    e.preventDefault()
+                    console.log('refferalForm submited');
+                    const formData = new FormData(this)
+                    const formObject = Object.fromEntries(formData)
+                    console.log('formObject ', formObject);
+
+                    fetch('/admin/addrefferalOffer', {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(formObject)
+                    }).then(res => res.json())
+                        .then(data => {
+                            if (data && data.success) {
+                                Swal.fire(data.message)
+                                addModal.hide();
+                            } else {
+                                Swal.message
+                            }
+                        }).catch(error => {
+                            Swal.fire("Server Error")
+                        })
+                })
             </script>
 
 </body>

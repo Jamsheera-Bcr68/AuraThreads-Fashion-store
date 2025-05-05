@@ -7,8 +7,9 @@ const router = require("../routes/product");
 const Order = require('../model/orderModel')
 const Coupen = require('../model/coupenModel')
 const Offer = require('../model/offerModel');
-
-const Category = require('../model/categoryModel')
+const RefferalOffer=require('../model/referralOfferModel')
+const Category = require('../model/categoryModel');
+const { default: mongoose } = require("mongoose");
 
 console.log("Admin Controller Loaded!");
 // get login
@@ -514,6 +515,7 @@ const getOffers = async (req, res) => {
     expiredOffers
   };
   try {
+    
     const page = parseInt(req.query.page) || 1
     const limit = parseInt(req.query.limit) || 5
     const skip = (page - 1) * limit
@@ -526,6 +528,8 @@ const getOffers = async (req, res) => {
     const offers=await Offer.find().sort({startDate:-1}).skip(skip).limit(limit)
 
   console.log('from admin offer');
+ const refferalOffers=await RefferalOffer.find().sort({startDate:-1})
+   
   res.render('admin/offerManagement', {
     title: "Offer Management",
     currentPage:page ||1,
@@ -534,6 +538,7 @@ const getOffers = async (req, res) => {
     totalPages,
     totalOffers,
     stats,
+    refferalOffers,
     offers, products, categories
   })
   } catch (error) {
@@ -653,6 +658,138 @@ const editOffer=async (req,res)=>{
     return res.json({success:false,message:"Server error"})
   }
 }
+
+const addrefferalOffer=async (req,res,next)=> {
+  console.log('from addrefferalOffer');
+  try {
+    const bonusAmount=req.body.bonusAmount
+    const minOrderAmount=req.body.minOrderAmount
+    const rewardType=req.body.rewardType
+    const status=req.body.status=='enabled'?'active':'inactive'
+    if(status==''||rewardType=='' || minOrderAmount=='' || bonusAmount==''){
+      console.log("all field are required");
+      throw new Error('All fields are required')
+    }
+
+    const offer=new RefferalOffer({
+      bonusAmount,
+      rewardType,
+      minOrderAmount,
+      status,
+      isActive:status=='enabled'?true:false,
+      createAt:new Date()
+    })
+    await offer.save()
+    return res.json({success:true,message:"Refferal offer created successfully"})
+  } catch (error) {
+    console.log('error is ',error);
+    next(error)
+  }
+}
+
+const referalOffers=async (req,res)=>{
+  console.log('referalOffers');
+  let date=new Date()
+  const totalOffers=await Offer.countDocuments()
+  const pendingOffers=await Offer.countDocuments({status:'pending'})
+  const activeOffers=await Offer.countDocuments({status:'active'})
+  const expiredOffers=await Offer.countDocuments({endDate:{$lt:date}})
+  const stats = {
+    totalOffers,
+    activeOffers,
+    pendingOffers,
+    expiredOffers
+  };
+  try {
+    const offers=await RefferalOffer.find().sort({createdAt:-1})
+
+    res.render('admin/referalOffer',{
+      offers,
+      stats,
+      title:"Offer Management"
+    })
+  } catch (error) {
+    console.log('error is',error);
+    res.json({success:false,message:"error in fetching orders"})
+  }
+}
+
+const deleteReferalOffers=async(req,res,next)=>{
+console.log('deleteReferalOffers');
+try {
+  const offerId=req.params.offerId
+  if(!offerId){
+    console.log('offer id is not found');
+    throw new Error("Offer id is not found")
+  }
+
+  const offer=await RefferalOffer.findOne({_id:offerId})
+  if(!offer){
+    console.log('offer  not found');
+    throw new Error("Offer not found")
+  }
+  offer.status='inactive'
+  await offer.save()
+return res.json({success:false,message:"Offer deleted successfully"})
+} catch (error) {
+  console.log('error',error);
+  next(error)
+}
+}
+
+const getSinglerefferal=async (req,res,next)=>{
+try {
+  console.log('getSinglerefferal');
+  
+  const offerId=req.params.offerId
+  console.log('offer id ',offerId);
+  
+  if(!offerId){
+    throw new Error("Offer id is not found")
+  }
+  const offer=await RefferalOffer.findOne({_id:offerId})
+  console.log('offer ',offer);
+  
+  if(!offer){
+    throw new Error("Offer is not found")
+  }
+ return res.json({success:true,message:"Offer founduccessfully",offer})
+} catch (error) {
+  console.log('error is ',error);
+  
+  next(error)
+}
+}
+
+const editReffferalOffer=async(req,res,next)=>{
+  console.log('editReffferalOffer');
+  try {
+    const {bonusAmount,minOrderAmount,rewardType,status}=req.body
+    const offerId=req.params.offerId
+    console.log('offerId,bonusAmount,minOrderAmount,rewardType,status',offerId,bonusAmount,minOrderAmount,rewardType,status);
+    if(!offerId){
+      console.log('offer id is not fount');
+      throw new Error("Offer Id is not found")
+    }
+    const offer=await RefferalOffer.findOne({_id:offerId})
+      if(!offer){
+        console.log("Offer not fount");
+        throw new Error("Offer not found")
+      }
+    offer.bonusAmount=bonusAmount
+    offer.minOrderAmount=minOrderAmount
+    offer.rewardType=rewardType
+    offer.status=status=='enabled'?'active':"inactive"
+    offer.isActive=status=='enabled'?true:false
+    await offer.save()
+
+    return res.json({success:true,message:"Offer edited successfully"})
+  } catch (error) {
+    console.log('error is ',error);
+    
+    next(error)
+  }
+}
 module.exports = {
   getLogin,
   postLogin,
@@ -677,5 +814,10 @@ module.exports = {
   addOffer,
   deleteOffer,
   getSingleOffer,
-  editOffer
+  editOffer,
+  addrefferalOffer,
+  referalOffers,
+  deleteReferalOffers,
+  getSinglerefferal,
+  editReffferalOffer
 };
