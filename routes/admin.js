@@ -349,4 +349,13 @@ router.get('/getSinglerefferal/:offerId',adminController.getSinglerefferal)
 
 //edit referal offer
 router.post('/editReferralForm/:offerId',adminController.editReffferalOffer)
+
+// get approval page
+router.get('/pendings',adminController.getPendings)
+
+//admin return approval
+router.post('/returns/approve',adminController.approveReturn)
+
+//admin reject return
+router.post('/returns/reject',adminController.rejectReturn)
 module.exports = router;

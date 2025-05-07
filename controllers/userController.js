@@ -13,8 +13,8 @@ const Order = require('../model/orderModel');
 const Coupon = require("../model/coupenModel");
 const WishList = require('../model/wishListModel')
 const Wallet = require('../model/walletModel');
-const errorHandler=require('../middleweres/errorHandler')
-const Offer=require('../model/offerModel')
+const errorHandler = require('../middleweres/errorHandler')
+const Offer = require('../model/offerModel')
 
 
 //get Register
@@ -33,9 +33,14 @@ const postRegister = async (req, res) => {
   console.log('this ia google regiser');
 
   try {
-    let { email, password, phone } = req.body;
-    console.log(`emil is${email} password is ${password} and phone is ${phone}`);
+    let { email, password, phone,referredBy } = req.body;
+    
+    console.log(`emil is${email} password is ${password} and phone is ${phone} userReferalCode ${referredBy}`);
 
+    const referalExist=await User.findOne({refferalCode:referredBy})
+    if(!referalExist){
+      return res.json({success:false,message:"Refferal code not exist"})
+    }
     let hashedPassword = await bcrypt.hash(password, 10);
     console.log('hashed pwd' + hashedPassword);
 
@@ -45,16 +50,14 @@ const postRegister = async (req, res) => {
     if (userExist) {
       console.log("User already exists");
       return res.json({ success: false, message: "User alredy exist" })
-      // return res.render("user/userLogin", {
-      //   errorMessage: "User Already registered",
-      // });
+      
     } else {
       // Generate OTP
       console.log('User not existing');
 
       const otp = generateOTP()
       req.session.otp = otp //store otp in session
-      req.session.userData = { email, password, phone }; // Store user data temporarily
+      req.session.userData = { email, password, phone ,referredBy}; // Store user data temporarily
 
       //send otp through email
       const mailOptions = {
@@ -161,6 +164,9 @@ const sendOTP = async (req, res) => {
     res.status(500).json({ message: "Failed to resend OTP" });
   }
 };
+const generateReferralCode = () => {
+  return Math.random().toString(36).substring(2, 8).toUpperCase(); // e.g., "FJ9K2A"
+}
 
 
 //otp verification
@@ -178,27 +184,75 @@ const varifyOtp = async (req, res) => {
       return res.json({ success: false, message: "OTP expired. Please register again." });
     }
 
-    console.log('typ of session otp is ', typeof (req.session.otp));
+    console.log('type of session otp is ', typeof (req.session.otp));
 
     console.log('otp is ', otp);
     if (otp !== req.session.otp) {
+      console.log('Invalid otp');
+      
       return res.json({ success: false, message: "Invalid OTP" });
     }
-
+    console.log('otp validated succesfully');
+    //generate refferalCode
+   
     // OTP is correct → Hash password & save user
     const isVerified = true
+    console.log('isVerified = true');
+    
     const { name, email, password, phone } = req.session.userData;
     const hashedPassword = await bcrypt.hash(password, 10);
+    const {referredBy}=req.session.userData ||''
+    console.log('reffered by ',referredBy);
+    
+    let code
+    do {
+      code = generateReferralCode()
+    } while (await User.findOne({ refferalCode: code }))
 
-    const newUser = new User({ phone, name, email, hashedPassword, isVerified });
+    const newUser = new User({ phone, name, email, hashedPassword, isVerified, refferalCode: code,referredBy });
     await newUser.save();
-
+      console.log('new user saved successfuly');
+ 
     // creating wallt
     const wallet = new Wallet({ userId: newUser._id });
-    await wallet.save();
+    if(referredBy){
+      console.log('This is  a referred user');
+      
+      wallet.balance=50
+      await wallet.save();
+      console.log('user got referalcode benefit');
+
+      let referrer=await User.findOne({refferalCode:referredBy})
+      console.log('referrer ',referrer);
+      
+    if(!referrer){
+      console.log('refferedUser not found');
+      return res.json({success:false,message:"referredUser not found"})
+    }
+    let referrerId=referrer._id
+    const referrerWallet=await Wallet.findOne({userId:referrerId})
+    if(!referrerWallet){
+      console.log('refferedUser wallet not found');
+      return res.json({success:false,message:"refferedUser not found"})
+    }
+    console.log(referrerWallet.balance,'before');
+    
+    referrerWallet.balance=referrerWallet.balance+100
+   await referrerWallet.save()
+    console.log(referrerWallet.balance,'after')
+   console.log('refered user go referalcode benefit');
+    }else{
+      console.log('this is a nonreferreduser');
+      
+    }
+   
     // Clear session
     req.session.otp = null;
     req.session.userData = null;
+
+    // referal discount for both
+    console.log('registration succesfull');
+    
 
     return res.json({ success: true, message: "Registration successful" });
   } catch (error) {
@@ -290,7 +344,7 @@ const postLogin = async (req, res) => {
 
 const getHome = async (req, res) => {
   const categories = await category.find({ isDeleted: false, categoryName: { $in: ['Mens', 'Womens', 'Kids'] } }).limit(3)
- // console.log(categories + 'categories');
+  // console.log(categories + 'categories');
 
   //console.log('category images', categories[0].images);
 
@@ -314,10 +368,10 @@ const getHome = async (req, res) => {
 
 
   const kidsCategory = await category.findOne({ isDeleted: false, categoryName: 'Kids' }, { _id: 1 })
- // console.log('kids category id is' + kidsCategory.id);
+  // console.log('kids category id is' + kidsCategory.id);
   const kidsProducts = await Product.find({ isDeleted: false, categoryId: kidsCategory.id }).limit(3)
   //console.log('kids products are ' + kidsProducts);
- // console.log('kids images are ', kidsProducts[0].images);
+  // console.log('kids images are ', kidsProducts[0].images);
 
   console.log('user found', req.session.user);
   let cartCount = 0
@@ -345,290 +399,290 @@ const getHome = async (req, res) => {
 
 };
 
-const getSingleProduct=async (req,res)=>{
+const getSingleProduct = async (req, res) => {
   console.log('from single product page');
-   const { productId } = req.params;
-    console.log("productId is equal to " + productId);
-  
-    try {
-      const singleProduct = await Product.findOne({
-        isDeleted: false,
-        _id: productId,
-      }).lean()
-  
-      if (!singleProduct) {
-        console.log("No product found");
-        return res
-          .status(404)
-          .render("user/error", { message: "Product not found" });
-      }
-  
-      singleProduct.images = singleProduct.images.map((image) =>
-        image.replace(/\\/g, "/")
-      );
-    
-      
-      //get related products
-       const relatedProducts=await Product.find({isDeleted:false,categoryId:singleProduct.categoryId}).limit(3)
-       relatedProducts.forEach(product=>{
-        product.images=product.images.map(image=>image.replace(/\\/g, '/'))
-      })
-       console.log('related images'+relatedProducts[0].images);
-       
-       
-      console.log(relatedProducts +' related products');
-  
-      //get cart count
-         let cartCount=0
-         if(req.session.user){
-          const userId=req.session.user._id
-          const cart=await Cart.findOne({userId})
-          if(cart){
-            cartCount=cart.items.length 
-            console.log('cart count is ',cartCount);
-          }else{
-            console.log('cart not fount');
-            
-          }
-         }
-          
-          //fetching offer
-          const offers=await Offer.find({status:'active'})
+  const { productId } = req.params;
+  console.log("productId is equal to " + productId);
 
-          const productOffer=offers.find(offer=>offer.applicableTo=='product' &&offer.productId?.toString()==singleProduct._id.toString())
-         const categoryOffer=offers.find(offer=>offer.applicableTo=='category' && offer.categoryId?.toString()==singleProduct.categoryId?.toString())
-         
-         let finalOffer=null
-         let discountAmount=0
-         
+  try {
+    const singleProduct = await Product.findOne({
+      isDeleted: false,
+      _id: productId,
+    }).lean()
 
-         if(productOffer && categoryOffer){
-          console.log('both available fronm single product page');
-          
-          
-          const productdiscountAmount=productOffer.discountType=='amount'?productOffer.discountValue:(productOffer.discountValue*singleProduct.price)/100
-          const categoryDiscountAmount=categoryOffer.discountType=='amount'? categoryOffer.discountValue:(categoryOffer.discountValue*singleProduct.price)/100
-         
-          discountAmount=productdiscountAmount>categoryDiscountAmount?productdiscountAmount:categoryDiscountAmount
-          finalOffer=productdiscountAmount>categoryDiscountAmount?productOffer:categoryOffer
-         
-        }else{
-          console.log('one offer applicable fronm single product page');
-          finalOffer=productOffer||categoryOffer
-          discountAmount=finalOffer.discountType=='amount'? finalOffer.discountValue:(finalOffer.discountValue*singleProduct.price)/100
-         }
-
-         if(finalOffer){
-          singleProduct.discountPrice=Math.round(singleProduct.price-discountAmount)
-          singleProduct.discountType=finalOffer.discountType
-          singleProduct.discount=finalOffer.discountValue
-          singleProduct.discountAmount=discountAmount
-         }else{
-          singleProduct.discountPrice=singleProduct.price
-         }
-      res.render("user/sproduct", {
-        title: "Product Details Page",
-        singleProduct,
-        relatedProducts,
-        categoryId:'',
-        priceRange:'',
-        finalOffer,
-        cartCount,
-        user:req.session.user||'',
-        sort:'',query:''
-      });
-    } catch (error) {
-      console.error("Error fetching product:", error);
-      res
-        .status(500)
-        .render("user/error", {
-          message: "Something went wrong. Please try again.",
-        });
+    if (!singleProduct) {
+      console.log("No product found");
+      return res
+        .status(404)
+        .render("user/error", { message: "Product not found" });
     }
+
+    singleProduct.images = singleProduct.images.map((image) =>
+      image.replace(/\\/g, "/")
+    );
+
+
+    //get related products
+    const relatedProducts = await Product.find({ isDeleted: false, categoryId: singleProduct.categoryId }).limit(3)
+    relatedProducts.forEach(product => {
+      product.images = product.images.map(image => image.replace(/\\/g, '/'))
+    })
+    console.log('related images' + relatedProducts[0].images);
+
+
+    console.log(relatedProducts + ' related products');
+
+    //get cart count
+    let cartCount = 0
+    if (req.session.user) {
+      const userId = req.session.user._id
+      const cart = await Cart.findOne({ userId })
+      if (cart) {
+        cartCount = cart.items.length
+        console.log('cart count is ', cartCount);
+      } else {
+        console.log('cart not fount');
+
+      }
+    }
+
+    //fetching offer
+    const offers = await Offer.find({ status: 'active' })
+
+    const productOffer = offers.find(offer => offer.applicableTo == 'product' && offer.productId?.toString() == singleProduct._id.toString())
+    const categoryOffer = offers.find(offer => offer.applicableTo == 'category' && offer.categoryId?.toString() == singleProduct.categoryId?.toString())
+
+    let finalOffer = null
+    let discountAmount = 0
+
+
+    if (productOffer && categoryOffer) {
+      console.log('both available fronm single product page');
+
+
+      const productdiscountAmount = productOffer.discountType == 'amount' ? productOffer.discountValue : (productOffer.discountValue * singleProduct.price) / 100
+      const categoryDiscountAmount = categoryOffer.discountType == 'amount' ? categoryOffer.discountValue : (categoryOffer.discountValue * singleProduct.price) / 100
+
+      discountAmount = productdiscountAmount > categoryDiscountAmount ? productdiscountAmount : categoryDiscountAmount
+      finalOffer = productdiscountAmount > categoryDiscountAmount ? productOffer : categoryOffer
+
+    } else {
+      console.log('one offer applicable fronm single product page');
+      finalOffer = productOffer || categoryOffer
+      discountAmount = finalOffer.discountType == 'amount' ? finalOffer.discountValue : (finalOffer.discountValue * singleProduct.price) / 100
+    }
+
+    if (finalOffer) {
+      singleProduct.discountPrice = Math.round(singleProduct.price - discountAmount)
+      singleProduct.discountType = finalOffer.discountType
+      singleProduct.discount = finalOffer.discountValue
+      singleProduct.discountAmount = discountAmount
+    } else {
+      singleProduct.discountPrice = singleProduct.price
+    }
+    res.render("user/sproduct", {
+      title: "Product Details Page",
+      singleProduct,
+      relatedProducts,
+      categoryId: '',
+      priceRange: '',
+      finalOffer,
+      cartCount,
+      user: req.session.user || '',
+      sort: '', query: ''
+    });
+  } catch (error) {
+    console.error("Error fetching product:", error);
+    res
+      .status(500)
+      .render("user/error", {
+        message: "Something went wrong. Please try again.",
+      });
+  }
 }
 
-const getProductList=async(req,res)=>{
+const getProductList = async (req, res) => {
   console.log('from user product list');
   const categoryId = req.query.categoryId || null;
-  console.log('categoryId',categoryId);
+  console.log('categoryId', categoryId);
   try {
-      
-      const {query}=req.query
-      console.log(`query is ${query}`);
-      
-      const page = parseInt(req.query.page) || 1;
-      const limit = 6;
-      const skip = (page - 1) * limit;
-      const priceRange = req.query.priceRange || '';
-      const sort = req.query.sort || '';
-      
-      // Category based filter
-      const filter = {isDeleted: false};
-      let selectedCategories = [];
-      let categoryTitle = 'Show All Products'; // Default title
-      
-      if (categoryId) {
-        // Handle both single category ID and comma-separated list
-        selectedCategories = Array.isArray(categoryId)
-          ? categoryId
-          : categoryId.includes(',')
-            ? categoryId.split(',')
-            : [categoryId];
-            
-        // Convert string IDs to ObjectId
-        filter.categoryId = {
-          $in: selectedCategories.map(id => new mongoose.Types.ObjectId(id))
-        };
-        
-        //  display a category name in the title, but only when a single category is selected
-        if (selectedCategories.length === 1) {
-          // Only get the category name if there's exactly one category selected
-          const singleCategory = await category.findOne({ _id: new mongoose.Types.ObjectId(selectedCategories[0]) });
-          if (singleCategory) {
-            categoryTitle = `${singleCategory.categoryName} Clothing`;
-          }
-        } else if (selectedCategories.length > 1) {
-          // Multiple categories selected
-          categoryTitle = 'Multiple Categories';
+
+    const { query } = req.query
+    console.log(`query is ${query}`);
+
+    const page = parseInt(req.query.page) || 1;
+    const limit = 6;
+    const skip = (page - 1) * limit;
+    const priceRange = req.query.priceRange || '';
+    const sort = req.query.sort || '';
+
+    // Category based filter
+    const filter = { isDeleted: false };
+    let selectedCategories = [];
+    let categoryTitle = 'Show All Products'; // Default title
+
+    if (categoryId) {
+      // Handle both single category ID and comma-separated list
+      selectedCategories = Array.isArray(categoryId)
+        ? categoryId
+        : categoryId.includes(',')
+          ? categoryId.split(',')
+          : [categoryId];
+
+      // Convert string IDs to ObjectId
+      filter.categoryId = {
+        $in: selectedCategories.map(id => new mongoose.Types.ObjectId(id))
+      };
+
+      //  display a category name in the title, but only when a single category is selected
+      if (selectedCategories.length === 1) {
+        // Only get the category name if there's exactly one category selected
+        const singleCategory = await category.findOne({ _id: new mongoose.Types.ObjectId(selectedCategories[0]) });
+        if (singleCategory) {
+          categoryTitle = `${singleCategory.categoryName} Clothing`;
+        }
+      } else if (selectedCategories.length > 1) {
+        // Multiple categories selected
+        categoryTitle = 'Multiple Categories';
+      }
+    }
+
+
+
+    // Price range based filtering
+    let selectedPriceRange = priceRange || "";
+    if (selectedPriceRange) {
+      let [min, max] = selectedPriceRange.split("-").map(Number);
+      filter.price = { $gte: min, $lte: max };
+    }
+    //searchbased fitering
+    if (query) {
+      filter.$or = [
+        { productName: { $regex: query, $options: "i" } },
+        { description: { $regex: query, $options: "i" } }
+      ];
+    }
+
+    // Sorting based on sortOption
+    let sortOption = {};
+    if (sort == 'newest') {
+      sortOption.createdAt = -1;
+    } else if (sort == 'lowToHigh') {
+      sortOption.price = 1;
+    } else if (sort == 'highToLow') {
+      sortOption.price = -1;
+    } else if (sort == 'az') {
+      sortOption.productName = 1;
+    } else if (sort == 'za') {
+      sortOption.productName = -1; // Fixed: this was price=-1 in your code
+    }
+
+    const products = await Product.find(filter)
+      .sort(sortOption)
+      .skip(skip)
+      .limit(limit)
+      .lean()
+
+
+    // Fix image paths
+    products.forEach(product => {
+      product.images = product.images.map(image => image.replace(/\\/g, "/"));
+    });
+
+    // Get all categories for the filter options
+    const categories = await category.find({ isDeleted: false });
+
+    // Get total count of products for pagination
+    const totalProducts = await Product.countDocuments(filter);
+    const totalPages = Math.ceil(totalProducts / limit);
+
+    //get cart count
+    let cartCount = 0
+    if (req.session.user) {
+      const userId = req.session.user._id
+
+      const cart = await Cart.findOne({ userId })
+      if (cart) {
+        cartCount = cart.items.length
+        console.log('cart count is ', cartCount);
+      } else {
+        console.log('cart not fount');
+
+      }
+    }
+    // fetching offers
+    const offers = await Offer.find({ status: 'active' });
+
+    products.forEach(product => {
+      const productOffer = offers.find(offer =>
+        offer.applicableTo === 'product' && offer.productId?.toString() === product._id.toString()
+      );
+      const categoryOffer = offers.find(offer =>
+        offer.applicableTo === 'category' && offer.categoryId?.toString() === product.categoryId?.toString()
+      );
+
+      let finalOffer = null;
+      let discountAmount = 0;
+
+      if (productOffer && categoryOffer) {
+        const productDiscountAmount = productOffer.discountType === 'amount'
+          ? productOffer.discountValue
+          : (product.price * productOffer.discountValue) / 100;
+
+        const categoryDiscountAmount = categoryOffer.discountType === 'amount'
+          ? categoryOffer.discountValue
+          : (product.price * categoryOffer.discountValue) / 100;
+
+        finalOffer = productDiscountAmount > categoryDiscountAmount ? productOffer : categoryOffer;
+        discountAmount = Math.max(productDiscountAmount, categoryDiscountAmount);
+      } else if (productOffer || categoryOffer) {
+        finalOffer = productOffer || categoryOffer;
+
+        // Checking finalOffer before using its properties
+        if (finalOffer) {
+          discountAmount = finalOffer.discountType === 'amount'
+            ? finalOffer.discountValue
+            : (product.price * finalOffer.discountValue) / 100;
         }
       }
-      
-      
-      
-      // Price range based filtering
-      let selectedPriceRange = priceRange || "";
-      if (selectedPriceRange) {
-        let [min, max] = selectedPriceRange.split("-").map(Number);
-        filter.price = { $gte: min, $lte: max };
+
+      if (finalOffer) {
+        product.discountPrice = Math.round(product.price - discountAmount);
+        product.discountAmount = discountAmount;
+        product.finalDiscount = finalOffer.discountValue;
+        product.discountType = finalOffer.discountType;
+      } else {
+        product.discountPrice = product.price;
       }
-      //searchbased fitering
-      if (query) {
-        filter.$or = [
-          { productName: { $regex: query, $options: "i" } },
-          { description: { $regex: query, $options: "i" } }
-        ];
-      }
-      
-      // Sorting based on sortOption
-      let sortOption = {};
-      if (sort == 'newest') {
-        sortOption.createdAt = -1;
-      } else if (sort == 'lowToHigh') {
-        sortOption.price = 1;
-      } else if (sort == 'highToLow') {
-        sortOption.price = -1;
-      } else if (sort == 'az') {
-        sortOption.productName = 1;
-      } else if (sort == 'za') {
-        sortOption.productName = -1; // Fixed: this was price=-1 in your code
-      }
-      
-      const products = await Product.find(filter)
-        .sort(sortOption)
-        .skip(skip)
-        .limit(limit)
-        .lean()
-        
-        
-      // Fix image paths
-      products.forEach(product => {
-        product.images = product.images.map(image => image.replace(/\\/g, "/"));
-      });
-      
-      // Get all categories for the filter options
-      const categories = await category.find({isDeleted: false});
-      
-      // Get total count of products for pagination
-      const totalProducts = await Product.countDocuments(filter);
-      const totalPages = Math.ceil(totalProducts / limit);
-  
-      //get cart count
-         let cartCount=0
-         if(req.session.user){
-          const userId=req.session.user._id
-  
-          const cart=await Cart.findOne({userId})
-          if(cart){
-            cartCount=cart.items.length 
-            console.log('cart count is ',cartCount);
-          }else{
-            console.log('cart not fount');
-            
-          }
-         }
-        // fetching offers
-        const offers = await Offer.find({ status: 'active' });
+    });
 
-products.forEach(product => {
-  const productOffer = offers.find(offer =>
-    offer.applicableTo === 'product' && offer.productId?.toString() === product._id.toString()
-  );
-  const categoryOffer = offers.find(offer =>
-    offer.applicableTo === 'category' && offer.categoryId?.toString() === product.categoryId?.toString()
-  );
 
-  let finalOffer = null;
-  let discountAmount = 0;
 
-  if (productOffer && categoryOffer) {
-    const productDiscountAmount = productOffer.discountType === 'amount'
-      ? productOffer.discountValue
-      : (product.price * productOffer.discountValue) / 100;
 
-    const categoryDiscountAmount = categoryOffer.discountType === 'amount'
-      ? categoryOffer.discountValue
-      : (product.price * categoryOffer.discountValue) / 100;
+    res.render('user/productList', {
+      products,
 
-    finalOffer = productDiscountAmount > categoryDiscountAmount ? productOffer : categoryOffer;
-    discountAmount = Math.max(productDiscountAmount, categoryDiscountAmount);
-  } else if (productOffer || categoryOffer) {
-    finalOffer = productOffer || categoryOffer;
+      categoryId: categoryId || null,
+      categories,
+      sort: sort || null,
+      priceRange: priceRange || null,
+      title: categoryTitle,
+      currentPage: page,
+      totalPages,
+      user: req.session.user || '',
+      selectedCategories,
+      selectedPriceRange,
+      cartCount,
+      query: req.query.query || "",
+      type: req.query.type || "products",
+      csrfToken: res.locals.csrfToken,
+      offers
+    });
 
-    // Checking finalOffer before using its properties
-    if (finalOffer) {
-      discountAmount = finalOffer.discountType === 'amount'
-        ? finalOffer.discountValue
-        : (product.price * finalOffer.discountValue) / 100;
-    }
+  } catch (error) {
+    console.log('error in fetching products: ' + error);
+    return res.redirect('/user/home');
   }
-
-  if (finalOffer) {
-    product.discountPrice = Math.round(product.price - discountAmount);
-    product.discountAmount = discountAmount;
-    product.finalDiscount = finalOffer.discountValue;
-    product.discountType = finalOffer.discountType;
-  } else {
-    product.discountPrice = product.price;
-  }
-});
-
-        
-        
-      
-      res.render('user/productList', {
-        products,
-        
-        categoryId: categoryId || null,
-        categories,
-        sort: sort || null,
-        priceRange: priceRange || null,
-        title: categoryTitle,
-        currentPage: page,
-        totalPages,
-        user:req.session.user||'',
-        selectedCategories,
-        selectedPriceRange,
-        cartCount,
-        query: req.query.query || "",
-        type: req.query.type || "products",
-        csrfToken: res.locals.csrfToken ,
-        offers
-      });
-      
-    } catch (error) {
-      console.log('error in fetching products: ' + error);
-      return res.redirect('/user/home');
-    }
 }
 const otpStore = {}; //  OTP store temporarly
 
@@ -830,47 +884,47 @@ const updateUser = async (req, res) => {
 
 
 //addProfileImage
-const addProfileImage=async (req,res)=>{
+const addProfileImage = async (req, res) => {
   console.log('from addProfileImage');
   try {
-    const file=req.file
+    const file = req.file
     if (!file) {
 
       return res.status(400).json({ success: false, message: 'No file uploaded' });
     }
-    const imageUrl = '/uploads/' + file.filename; 
-   
-    const userId=req.session.user._id
-   const user= await User.findByIdAndUpdate(userId, { profilePicture: imageUrl });
+    const imageUrl = '/uploads/' + file.filename;
+
+    const userId = req.session.user._id
+    const user = await User.findByIdAndUpdate(userId, { profilePicture: imageUrl });
     await user.save9
-   return res.json({success:true,message:"Profile image added succesfully"})
+    return res.json({ success: true, message: "Profile image added succesfully" })
   } catch (error) {
-    console.log('error is ',error);
-    res.json({success:false,message:"Error in adding profile picture"})
+    console.log('error is ', error);
+    res.json({ success: false, message: "Error in adding profile picture" })
   }
-  
+
 }
 
 //removeProfileImage
-const removeProfileImage=async (req,res)=>{
+const removeProfileImage = async (req, res) => {
   console.log('from removeProfileImage');
-  const userId=req.session.user._id
-  if(!userId){
+  const userId = req.session.user._id
+  if (!userId) {
     console.log('user not logined');
-    return res.json({success:false,message:"user not logined"})
+    return res.json({ success: false, message: "user not logined" })
   }
-  const user=await User.findOne({_id:userId})
-  if(!user){
+  const user = await User.findOne({ _id: userId })
+  if (!user) {
     console.log('user not found');
-    return res.json({success:false,message:"user not found"})
+    return res.json({ success: false, message: "user not found" })
   }
-  if(user.profilePicture==''){
+  if (user.profilePicture == '') {
     console.log('No profile picture');
-    return res.json({success:false,message:"Already there is no DP"})
+    return res.json({ success: false, message: "Already there is no DP" })
   }
-  user.profilePicture=''
+  user.profilePicture = ''
   await user.save()
- return res.json({success:true,message:"Profile image removed successfully"})
+  return res.json({ success: true, message: "Profile image removed successfully" })
 }
 
 const getCart = async (req, res) => {
@@ -915,58 +969,58 @@ const getCart = async (req, res) => {
     cartCount = cart.items.length
     title = cart.items.length > 0 ? `Displaying your ${cartCount} cart itmes` : 'Your cart is empty'
 
-    let cartTotal=cart.items.reduce((sum,item)=>sum+(item.productId.price*item.quantity),0)
-    console.log('cart total',cartTotal);
-    
+    let cartTotal = cart.items.reduce((sum, item) => sum + (item.productId.price * item.quantity), 0)
+    console.log('cart total', cartTotal);
+
     //fetching offers
-    const offers=await Offer.find({status:'active'}) 
-   cart.items.forEach(item=>{
-    const productOffer=offers.find(offer=>offer.applicableTo=='product'&&offer.productId?.toString()==item.productId._id?.toString())
-     const categoryOffer=offers.find(offer=>offer.applicableTo=='category'&& offer.categoryId?.toString()==item.productId.categoryId.toString())
-      
-     let finalOffer=null
-     let discountAmount=0
-    if(!categoryOffer && !productOffer){}
-    else if(productOffer&&categoryOffer){
-      const productDiscountAmount=productOffer.discountType=='amount'?productOffer.discountValue:(productOffer.discountValue*item.productId.price)/100
-      const categoryDiscountAmount=categoryOffer.discountType=='amount'?categoryOffer.discountValue:(categoryOffer.discountValue*item.productId.price)/100
+    const offers = await Offer.find({ status: 'active' })
+    cart.items.forEach(item => {
+      const productOffer = offers.find(offer => offer.applicableTo == 'product' && offer.productId?.toString() == item.productId._id?.toString())
+      const categoryOffer = offers.find(offer => offer.applicableTo == 'category' && offer.categoryId?.toString() == item.productId.categoryId.toString())
 
-      discountAmount=productDiscountAmount>categoryDiscountAmount?productDiscountAmount:categoryDiscountAmount
-      finalOffer=productDiscountAmount>categoryDiscountAmount?productOffer:categoryOffer
-      }else if(categoryOffer||productOffer){
-        finalOffer=categoryOffer||productOffer
-        discountAmount=finalOffer.discountType=='amount'?finalOffer.discountValue:(finalOffer.discountValue*item.productId.price)/100
+      let finalOffer = null
+      let discountAmount = 0
+      if (!categoryOffer && !productOffer) { }
+      else if (productOffer && categoryOffer) {
+        const productDiscountAmount = productOffer.discountType == 'amount' ? productOffer.discountValue : (productOffer.discountValue * item.productId.price) / 100
+        const categoryDiscountAmount = categoryOffer.discountType == 'amount' ? categoryOffer.discountValue : (categoryOffer.discountValue * item.productId.price) / 100
+
+        discountAmount = productDiscountAmount > categoryDiscountAmount ? productDiscountAmount : categoryDiscountAmount
+        finalOffer = productDiscountAmount > categoryDiscountAmount ? productOffer : categoryOffer
+      } else if (categoryOffer || productOffer) {
+        finalOffer = categoryOffer || productOffer
+        discountAmount = finalOffer.discountType == 'amount' ? finalOffer.discountValue : (finalOffer.discountValue * item.productId.price) / 100
 
       }
 
-      if(finalOffer){
-        item.discountAmount=discountAmount
-        item.discountPrice=Math.round(item.productId.price-discountAmount)
-        item.discountType=finalOffer.discountType
+      if (finalOffer) {
+        item.discountAmount = discountAmount
+        item.discountPrice = Math.round(item.productId.price - discountAmount)
+        item.discountType = finalOffer.discountType
 
-      }else{
-        item.discountAmount=0
-        item.discountPrice=item.productId.price
-        item.discountTyp=''
+      } else {
+        item.discountAmount = 0
+        item.discountPrice = item.productId.price
+        item.discountTyp = ''
       }
-   })
-   const netAmount=cart.items.reduce((total,item)=>total+(item.discountPrice*item.quantity),0)
-   const totalDiscount=cart.items.reduce((total,item)=>total+(item.discountAmount*item.quantity),0)
+    })
+    const netAmount = cart.items.reduce((total, item) => total + (item.discountPrice * item.quantity), 0)
+    const totalDiscount = cart.items.reduce((total, item) => total + (item.discountAmount * item.quantity), 0)
 
-   req.session.offer = cart.items.map(item => ({
-    productId: item.productId._id,
-    discountAmount: item.discountAmount || 0,
-    discountPrice: item.discountPrice || item.productId.price,
-    discountType: item.discountType || null
-  }));
-  req.session.cartTotal=cartTotal
-  req.session.netAmount=netAmount
-  req.session.totalDiscount=totalDiscount
-  console.log('req.session.offer ',req.session.offer);
-  console.log('totalDiscount from get cart',totalDiscount);
-  
-    
-    
+    req.session.offer = cart.items.map(item => ({
+      productId: item.productId._id,
+      discountAmount: item.discountAmount || 0,
+      discountPrice: item.discountPrice || item.productId.price,
+      discountType: item.discountType || null
+    }));
+    req.session.cartTotal = cartTotal
+    req.session.netAmount = netAmount
+    req.session.totalDiscount = totalDiscount
+    console.log('req.session.offer ', req.session.offer);
+    console.log('totalDiscount from get cart', totalDiscount);
+
+
+
     return res.render('../views/user/cart', {
       errorMessage: null,
       categoryId: null,
@@ -993,14 +1047,14 @@ const addToCart = async (req, res) => {
   try {
     const user = req.session.user;
     const userId = user._id;
-    if(!userId){
-      return res.json({success:false,message:"User not registered"})
+    if (!userId) {
+      return res.json({ success: false, message: "User not registered" })
     }
     const { productId } = req.body;
     console.log('product id is ', productId);
-     
-    if(!productId){
-      return res.json({success:false,message:"Product id is not found"})
+
+    if (!productId) {
+      return res.json({ success: false, message: "Product id is not found" })
     }
     const quantity = req.body.quantity || 1;
     const subTotal = req.body.subTotal
@@ -1220,7 +1274,7 @@ const getCheckout = async (req, res) => {
   }
 
   const wallet = await Wallet.findOne({ userId })
- // console.log('wallet ', wallet);
+  // console.log('wallet ', wallet);
 
   if (!wallet) {
     return res.json({ success: false, message: "wallet not found" })
@@ -1234,8 +1288,8 @@ const getCheckout = async (req, res) => {
 
   }
 
- // console.log('req.session',req.session);
-  
+  // console.log('req.session',req.session);
+
 
   const shippingCharge = 0.00
   const taxAmount = 0.00
@@ -1262,8 +1316,8 @@ const getCheckout = async (req, res) => {
   if (!addresses) {
     return res.json({ success: false, message: "You dont have any saved address" })
   }
-const offerDiscountAmount=req.session.totalDiscount
-console.log('offerDiscountAmount',offerDiscountAmount);
+  const offerDiscountAmount = req.session.totalDiscount
+  console.log('offerDiscountAmount', offerDiscountAmount);
 
   return res.render('user/userCkeckout', {
     categoryId: null,
@@ -1277,7 +1331,7 @@ console.log('offerDiscountAmount',offerDiscountAmount);
     shippingCharge,
     taxAmount,
     couponDiscountAmount: req.session.discountAmount || 0,
-    offerDiscountAmount:req.session.totalDiscount ||0,
+    offerDiscountAmount: req.session.totalDiscount || 0,
     totalAmount,
     wallet
   })
@@ -1287,7 +1341,7 @@ const placeOrder = async (req, res) => {
   console.log('from place order');
 
   try {
-    const { paymentMethod, paymentDetails, totalAmount } = req.body
+    let { paymentMethod, paymentDetails, totalAmount } = req.body
     let addressId = req.body.addressId?.trim();
     //validatiing essential fields
     const useWallet = req.body.useWallet
@@ -1362,17 +1416,17 @@ const placeOrder = async (req, res) => {
     const deliveryDate = new Date(createdAt.getTime() + 5 * 24 * 60 * 60 * 1000); // Add 5 days
 
     const coupenDiscountAmount = req.session.discountAmount || 0
-    console.log('coupenDiscountAmount',coupenDiscountAmount);
-    
-    const offerDiscountAmount =req.session.totalDiscount || 0
-    console.log('offerDiscountAmount ',offerDiscountAmount);
-    
-    const finalAmount = totalAmount - coupenDiscountAmount-offerDiscountAmount
+    console.log('coupenDiscountAmount', coupenDiscountAmount);
+
+    const offerDiscountAmount = req.session.totalDiscount || 0
+    console.log('offerDiscountAmount ', offerDiscountAmount);
+
+    const finalAmount = totalAmount - coupenDiscountAmount - offerDiscountAmount
     console.log('final amount discount amount ', finalAmount);
     const isCouponApplied = req.session.code ? true : false
     const couponCode = req.session.code || ''
 
-    const isOfferApplied=req.session.offer?true:false
+    const isOfferApplied = req.session.offer ? true : false
     // check for wallet 
     const wallet = await Wallet.findOne({ userId })
     if (useWallet == true) {
@@ -1384,7 +1438,7 @@ const placeOrder = async (req, res) => {
         console.log('insufficient balance');
         return res.json({ success: false, message: "Insufficient balance" })
       }
-      paymentMethod='wallet'
+      paymentMethod = 'wallet'
     }
     //creating new order document
     const order = new Order({
@@ -1440,10 +1494,10 @@ const placeOrder = async (req, res) => {
     req.session.finalAmount = 0
     req.session.code = ''
     req.session.appliedCoupon = null
-    req.session.offer=null
-    req.session.cartTotal=0
-    req.session.netAmount=0
-    req.session.totalDiscount=0
+    req.session.offer = null
+    req.session.cartTotal = 0
+    req.session.netAmount = 0
+    req.session.totalDiscount = 0
 
 
     return res.json({
@@ -1689,7 +1743,7 @@ const applyCoupon = async (req, res) => {
     req.session.code = code
     console.log('req.session.code', req.session.code);
 
-    return res.json({ success: true, message: "Coupon Applied Successfully", finalAmount, discountAmount ,code})
+    return res.json({ success: true, message: "Coupon Applied Successfully", finalAmount, discountAmount, code })
   } catch (error) {
     console.log('error ', error);
     return res.json({ success: false, message: "Error in fetching coupen" })
@@ -1711,16 +1765,64 @@ const getWishList = async (req, res) => {
 
     const cart = await Cart.findOne({ userId })
     const cartCount = cart.items.length || 0
+
+
+    const offers = await Offer.find({ status: 'active' });
+    const products=wishList.items
+    products.forEach(product => {
+      const productOffer = offers.find(offer =>
+        offer.applicableTo === 'product' && offer.productId?.toString() === product._id.toString()
+      );
+      const categoryOffer = offers.find(offer =>
+        offer.applicableTo === 'category' && offer.categoryId?.toString() === product.categoryId?.toString()
+      );
+
+      let finalOffer = null;
+      let discountAmount = 0;
+
+      if (productOffer && categoryOffer) {
+        const productDiscountAmount = productOffer.discountType === 'amount'
+          ? productOffer.discountValue
+          : (product.price * productOffer.discountValue) / 100;
+
+        const categoryDiscountAmount = categoryOffer.discountType === 'amount'
+          ? categoryOffer.discountValue
+          : (product.price * categoryOffer.discountValue) / 100;
+
+        finalOffer = productDiscountAmount > categoryDiscountAmount ? productOffer : categoryOffer;
+        discountAmount = Math.max(productDiscountAmount, categoryDiscountAmount);
+      } else if (productOffer || categoryOffer) {
+        finalOffer = productOffer || categoryOffer;
+
+        // Checking finalOffer before using its properties
+        if (finalOffer) {
+          discountAmount = finalOffer.discountType === 'amount'
+            ? finalOffer.discountValue
+            : (product.price * finalOffer.discountValue) / 100;
+        }
+      }
+
+      if (finalOffer) {
+        product.discountPrice = Math.round(product.price - discountAmount);
+        product.discountAmount = discountAmount;
+        product.finalDiscount = finalOffer.discountValue;
+        product.discountType = finalOffer.discountType;
+      } else {
+        product.discountPrice = product.price;
+      }
+    });
+
     res.render('user/wishList', {
       wishList,
       products: wishList.items,
       categoryId: null,
       priceRange: null,
-      cartCount,
+      cartCount:cartCount||0,
       sort: '',
       query: '',
       title: 'your WishList',
-      user: req.session.user
+      user: req.session.user,
+      
     })
   } catch (error) {
     console.log('error is ', error);
@@ -1798,7 +1900,7 @@ const deleteWishlistItem = async (req, res) => {
 // get wallet
 const getWallet = async (req, res) => {
   console.log('from user wallet');
- 
+
   try {
     const userId = req.session.user._id
     if (!userId) {
@@ -1817,8 +1919,8 @@ const getWallet = async (req, res) => {
     const creditLength = wallet.transactions.filter(transaction => transaction.type == 'credit').length
 
     const recentTransactions = wallet.transactions
-         .sort((a, b) => new Date(b.date) - new Date(a.date)) // sort newest first
-         .slice(0, 3);
+      .sort((a, b) => new Date(b.date) - new Date(a.date)) // sort newest first
+      .slice(0, 3);
     const cartCount = cart.items.length || 0
     res.render('user/wallet', {
       categoryId: null,
@@ -1993,11 +2095,12 @@ const returnProduct = async (req, res) => {
     order.returnRequests.push({
       productId: productId,
       reason: reason,
+      status:'pending',
       date: new Date()
     })
 
 
-    productInOrder.status='return-requested'
+    productInOrder.status = 'return-requested'
     await order.save();
 
     console.log('Return request saved successfully');
@@ -2009,18 +2112,18 @@ const returnProduct = async (req, res) => {
 
 }
 
-const usertest=(req,res,next)=>{
- try{
-  console.log("user login route");
-  
-const user=null
-if(!user){
-  throw new Error("User not found");
-}
-return res.json({success:true,message:"Use Logined "})
- }catch(err){
-  next(err)
- }
+const usertest = (req, res, next) => {
+  try {
+    console.log("user login route");
+
+    const user = null
+    if (!user) {
+      throw new Error("User not found");
+    }
+    return res.json({ success: true, message: "Use Logined " })
+  } catch (err) {
+    next(err)
+  }
 }
 module.exports = {
   getLogin,
@@ -2059,10 +2162,9 @@ module.exports = {
   addMoney,
   cancelSingleProduct,
   returnProduct,
- addProfileImage,
- removeProfileImage,
- usertest,
- getProductList,
- getSingleProduct
+  addProfileImage,
+  removeProfileImage,
+  usertest,
+  getProductList,
+  getSingleProduct
 }
-

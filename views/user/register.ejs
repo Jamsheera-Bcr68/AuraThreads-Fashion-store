@@ -94,6 +94,10 @@
                 <input type="text" name="phone" class="form-control" id="phone" placeholder="Enter Phone Number" />
               </div>
               
+              <div class="mb-3">
+                <label for="referalCode" class="form-label">Use Referal code and get rs.20 to wallet </label>
+                <input type="text" name="referredBy" class="form-control" id="referalCode" placeholder="Enter Referal Code" />
+              </div>
               <button type="submit" class="btn btn-primary w-100 mb-3">
                 Signup
               </button>
@@ -129,6 +133,7 @@
       const phone = document.getElementById("phone").value.trim();
       var confirm_password = document.getElementById("confirm-password").value.trim();
       var password = document.getElementById("password").value.trim();
+      var referredBy=document.getElementById('referalCode').value.trim()
       var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // Regex for email format
 
       if (email === "" || password === "") {
@@ -159,7 +164,7 @@
             "Content-Type": "application/json",
             'CSRF-Token': csrfToken 
           },
-          body: JSON.stringify({ email, phone, password, confirm_password })
+          body: JSON.stringify({ email, phone, password, confirm_password,referredBy })
         })
           .then(res => res.json())
           .then(data => {

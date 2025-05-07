@@ -10,6 +10,7 @@ const Offer = require('../model/offerModel');
 const RefferalOffer=require('../model/referralOfferModel')
 const Category = require('../model/categoryModel');
 const { default: mongoose } = require("mongoose");
+const Wallet=require('../model/walletModel')
 
 console.log("Admin Controller Loaded!");
 // get login
@@ -790,6 +791,175 @@ const editReffferalOffer=async(req,res,next)=>{
     next(error)
   }
 }
+
+const getPendings=async (req,res,next)=>{
+  try {
+    // let returnRequests = [
+    //   {
+    //     orderId: 'ORD12345',
+    //     productId: 'PROD987',
+    //     userEmail: 'jamsheera@example.com',
+    //     productName: 'Dress - Blue Floral',
+    //     reason: 'Size too small',
+    //     status: 'pending',
+    //     requestedAt: new Date('2025-05-05')
+    //   },
+    //   {
+    //     orderId: 'ORD12346',
+    //     productId: 'PROD988',
+    //     userEmail: 'user2@example.com',
+    //     productName: 'T-Shirt - Red',
+    //     reason: 'Wrong color received',
+    //     status: 'approved',
+    //     requestedAt: new Date('2025-05-04')
+    //   },
+    //   {
+    //     orderId: 'ORD12347',
+    //     productId: 'PROD989',
+    //     userEmail: 'user3@example.com',
+    //     productName: 'Jeans - Slim Fit',
+    //     reason: 'Damaged item',
+    //     status: 'rejected',
+    //     requestedAt: new Date('2025-05-03')
+    //   }
+    // ];
+    const orders = await Order.find({ returnRequests: { $exists: true, $ne: [] } });
+    console.log('orders ',orders);
+
+    //fetching return requests
+    const returnRequests=[]
+    const products=await Product.find()
+    const users=await User.find()
+    orders.forEach(order=>{order.returnRequests.forEach(request=>{
+      const product=products.find(product=>product._id.toString()==request.productId?.toString())
+      const user=users.find(user=>user._id.toString()==order.userId?.toString())
+      returnRequests.push({
+        userId:order.userId,
+        productId:request.productId,
+        reason:request.reason,
+        requestedDate:request.date,
+        orderId:order._id,
+        status:request.status,
+        productName:product?.productName ||'',
+        userEmail:user.email
+      })
+    })})
+  
+    console.log('requestedItems ',returnRequests);
+    
+  
+    res.render('admin/aprovalPage',{
+      title:"Admin Approvals Management",
+      returnRequests
+    })
+  } catch (error) {
+    console.log(error);
+    next(error)
+  }
+}
+const approveReturn = async (req, res) => {
+  try {
+    console.log('From approveReturn');
+    const { orderId, productId } = req.body;
+
+    if (!orderId) {
+      throw new Error("Order ID not found");
+    }
+
+    if (!productId) {
+      throw new Error("Product ID not found");
+    }
+
+    const order = await Order.findOne({ _id: orderId });
+    if (!order) {
+      throw new Error("Order not found");
+    }
+
+    const product = order.items.find(item => item.productId.toString() === productId.toString());
+    if (!product) {
+      throw new Error("Product not found in order items");
+    }
+
+    // Update product status
+    product.status = 'returned';
+    product.isreturned = true;
+
+    // If all products are returned, mark order as returned
+    if (order.items.every(item => item.status === 'returned')) {
+      order.status = 'returned';
+    }
+
+    // Approve the return request
+    const returnRequest = order.returnRequests.find(req =>
+      req.productId?.toString() === productId.toString()
+    );
+
+    if (returnRequest) {
+      returnRequest.status = 'approved';
+    } else {
+      throw new Error("Return request not found for this product");
+    }
+
+    await order.save();
+    //product restocking
+
+    const quantity=product.quantity
+    console.log('quantity ',quantity);
+    const item=await Product.findOne({_id:productId})
+    item.stock+=quantity
+    item.save()
+    console.log('product restocked ');
+    
+    // wallet updation
+   
+    const userId=order.userId
+    if(!userId){
+      console.log('User id is nt found');
+      throw new Error("User id is not found")
+    }
+    const wallet =await Wallet.findOne({userId})
+    const refundAmount=quantity*item.price
+    wallet.balance+=refundAmount
+    wallet.save()
+    return res.json({
+      success: true,
+      message: "Return approved successfully",
+    });
+
+  } catch (error) {
+    console.error('Error in approveReturn:', error.message);
+    return res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+
+const rejectReturn=async (req,res)=>{
+  console.log('from rejectReturn');
+  const {orderId,productId}=req.body
+  console.log(orderId,productId,'orderId,productId');
+  if(!orderId ){
+    console.log(error);
+    throw new Error("Order id not found")
+  }else if(!productId){
+    console.log(error);
+    
+    throw new Error("Product Id is not found")
+  }
+  const order=await Order.findOne({_id:orderId})
+  if(!order){
+    console.log(error);
+    throw new Error("Order not found")
+  }
+  let product=order.items.find(item=>item.productId.toString()==productId.toString())
+  console.log(' rejecting product ',product);
+  product.status='delivered'
+  
+  returnRequest=order.returnRequests.find(req=>req.productId?.toString()==productId.toString())
+  returnRequest.status='rejected'
+  await order.save()
+  
+  return res.json({success:true,message:"Return Rejected successfully"})
+}
 module.exports = {
   getLogin,
   postLogin,
@@ -819,5 +989,8 @@ module.exports = {
   referalOffers,
   deleteReferalOffers,
   getSinglerefferal,
-  editReffferalOffer
+  editReffferalOffer,
+  getPendings,
+  approveReturn,
+  rejectReturn
 };

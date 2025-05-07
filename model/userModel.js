@@ -2,7 +2,8 @@ const mongoose=require('mongoose')
 const userShema=mongoose.Schema({
     email:{
         type:String,
-        required:true
+        required:true,
+        uneque:true
     },
     hashedPassword:{
         type:String,
@@ -19,7 +20,9 @@ const userShema=mongoose.Schema({
     isActive:{type:Boolean,default:true},
     otp: { type: String }, // OTP for verification
     otpExpiry: { type: Date },
-    profilePicture:{type:String}
-   
+    profilePicture:{type:String},
+   refferalCode:{type:String,unique: true},
+   referredBy:{type:String},
+
 })
 module.exports=mongoose.model('User',userShema)

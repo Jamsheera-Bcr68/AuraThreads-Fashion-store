@@ -36,7 +36,8 @@ const orderSchema=mongoose.Schema({
           ref: 'Product'
         },
         reason : String,
-        date: Date
+        date: Date,
+        status:String
       }
     ]
 })

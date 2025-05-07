@@ -1,307 +1,42 @@
-<body>
-    <div class="container">
-     
-        <header>
-          
-            <h1>Coupon Management</h1>
-            <button class="btn" id="addCouponBtn">+ Add New Coupon</button>
-        </header>
-
-        <div class="statistics">
-            <div class="stat-card">
-                <h3>Active Coupons</h3>
-                <p>24</p>
-            </div>
-            <div class="stat-card">
-                <h3>Total Redemptions</h3>
-                <p>1,532</p>
-            </div>
-            <div class="stat-card">
-                <h3>Revenue Impact</h3>
-                <p>$12,450</p>
-            </div>
-            <div class="stat-card">
-                <h3>Expiring Soon</h3>
-                <p>5</p>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="filter-section">
-                <div class="search-box">
-                    <input type="text" placeholder="Search coupons...">
-                    <button class="btn">Search</button>
-                </div>
-                <div class="filter-options">
-                    <select>
-                        <option>All Status</option>
-                        <option>Active</option>
-                        <option>Inactive</option>
-                    </select>
-                    <select>
-                        <option>All Types</option>
-                        <option>Percentage</option>
-                        <option>Fixed Amount</option>
-                        <option>Free Shipping</option>
-                    </select>
-                </div>
-            </div>
-
-            <table>
-                <thead>
-                    <tr>
-                        <th>Code</th>
-                        <th>Discount</th>
-                        <th>Type</th>
-                        <th>Limit</th>
-                        <th>Used</th>
-                        <th>Expires</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>SUMMER2025</td>
-                        <td>20%</td>
-                        <td>Percentage</td>
-                        <td>500</td>
-                        <td>123</td>
-                        <td>May 31, 2025</td>
-                        <td><span class="status status-active">Active</span></td>
-                        <td class="actions">
-                            <button class="btn" onclick="editCoupon('SUMMER2025')">Edit</button>
-                            <button class="btn btn-danger" onclick="removeCoupon('SUMMER2025')">Remove</button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>WELCOME10</td>
-                        <td>$10</td>
-                        <td>Fixed Amount</td>
-                        <td>Unlimited</td>
-                        <td>245</td>
-                        <td>Dec 31, 2025</td>
-                        <td><span class="status status-active">Active</span></td>
-                        <td class="actions">
-                            <button class="btn" onclick="editCoupon('WELCOME10')">Edit</button>
-                            <button class="btn btn-danger" onclick="removeCoupon('WELCOME10')">Remove</button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>FREESHIP</td>
-                        <td>Free Shipping</td>
-                        <td>Shipping</td>
-                        <td>100</td>
-                        <td>87</td>
-                        <td>Apr 15, 2025</td>
-                        <td><span class="status status-inactive">Inactive</span></td>
-                        <td class="actions">
-                            <button class="btn" onclick="editCoupon('FREESHIP')">Edit</button>
-                            <button class="btn btn-success" onclick="applyCoupon('FREESHIP')">Apply</button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>FLASH15</td>
-                        <td>15%</td>
-                        <td>Percentage</td>
-                        <td>200</td>
-                        <td>76</td>
-                        <td>May 5, 2025</td>
-                        <td><span class="status status-active">Active</span></td>
-                        <td class="actions">
-                            <button class="btn" onclick="editCoupon('FLASH15')">Edit</button>
-                            <button class="btn btn-danger" onclick="removeCoupon('FLASH15')">Remove</button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>SPRING25</td>
-                        <td>25%</td>
-                        <td>Percentage</td>
-                        <td>300</td>
-                        <td>0</td>
-                        <td>Jun 30, 2025</td>
-                        <td><span class="status status-inactive">Inactive</span></td>
-                        <td class="actions">
-                            <button class="btn" onclick="editCoupon('SPRING25')">Edit</button>
-                            <button class="btn btn-success" onclick="applyCoupon('SPRING25')">Apply</button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <div class="pagination">
-                <button>Previous</button>
-                <button class="active">1</button>
-                <button>2</button>
-                <button>3</button>
-                <button>Next</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Add/Edit Coupon Modal -->
-    <div id="couponModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="modalTitle">Add New Coupon</h2>
-                <span class="close">&times;</span>
-            </div>
-            <form id="couponForm">
-                <div class="form-group">
-                    <label for="code">Coupon Code</label>
-                    <input type="text" id="code" placeholder="Enter coupon code" required>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="discountType">Discount Type</label>
-                        <select id="discountType">
-                            <option value="percentage">Percentage</option>
-                            <option value="fixed">Fixed Amount</option>
-                            <option value="shipping">Free Shipping</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="discountValue">Discount Value</label>
-                        <input type="number" id="discountValue" placeholder="Enter value">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="startDate">Start Date</label>
-                        <input type="date" id="startDate">
-                    </div>
-                    <div class="form-group">
-                        <label for="endDate">End Date</label>
-                        <input type="date" id="endDate">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="usageLimit">Usage Limit</label>
-                        <input type="number" id="usageLimit" placeholder="Enter limit">
-                    </div>
-                    <div class="form-group">
-                        <label for="minOrder">Minimum Order Amount</label>
-                        <input type="number" id="minOrder" placeholder="Enter minimum amount">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="description">Description</label>
-                    <textarea id="description" rows="3" placeholder="Enter coupon description"></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="status">Status</label>
-                    <select id="status">
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
-                    </select>
-                </div>
-                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
-                    <button type="button" class="btn btn-danger" id="cancelBtn">Cancel</button>
-                    <button type="submit" class="btn btn-success">Save Coupon</button>
-                </div>
+<div class="container mt-5">
+    <h2 class="mb-4">Return Requests</h2>
+    
+    <!-- Table -->
+    <table class="table table-bordered table-hover">
+      <thead class="table-dark">
+        <tr>
+          <th>Order ID</th>
+          <th>User</th>
+          <th>Product</th>
+          <th>Reason</th>
+          <th>Date</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Repeat this <tr> block dynamically using your view engine -->
+        <tr>
+          <td>ORD12345</td>
+          <td>jamsheera@example.com</td>
+          <td>Dress - Blue Floral</td>
+          <td>Size too small</td>
+          <td>2025-05-05</td>
+          <td><span class="badge bg-warning">Pending</span></td>
+          <td>
+            <form method="POST" action="/admin/returns/approve" style="display:inline;">
+              <input type="hidden" name="orderId" value="ORD12345">
+              <input type="hidden" name="productId" value="PROD987">
+              <button class="btn btn-success btn-sm">Approve</button>
             </form>
-        </div>
-    </div>
-
-    <script>
-        // Modal functionality
-        const modal = document.getElementById("couponModal");
-        const addCouponBtn = document.getElementById("addCouponBtn");
-        const closeBtn = document.querySelector(".close");
-        const cancelBtn = document.getElementById("cancelBtn");
-        const modalTitle = document.getElementById("modalTitle");
-        const couponForm = document.getElementById("couponForm");
-
-        addCouponBtn.onclick = function() {
-            modalTitle.textContent = "Add New Coupon";
-            resetForm();
-            modal.style.display = "block";
-        }
-
-        closeBtn.onclick = function() {
-            modal.style.display = "none";
-        }
-
-        cancelBtn.onclick = function() {
-            modal.style.display = "none";
-        }
-
-        window.onclick = function(event) {
-            if (event.target == modal) {
-                modal.style.display = "none";
-            }
-        }
-
-        // Form submission
-        couponForm.onsubmit = function(e) {
-            e.preventDefault();
-            // Gather form data and process
-            const formData = {
-                code: document.getElementById('code').value,
-                discountType: document.getElementById('discountType').value,
-                discountValue: document.getElementById('discountValue').value,
-                startDate: document.getElementById('startDate').value,
-                endDate: document.getElementById('endDate').value,
-                usageLimit: document.getElementById('usageLimit').value,
-                minOrder: document.getElementById('minOrder').value,
-                description: document.getElementById('description').value,
-                status: document.getElementById('status').value
-            };
-            
-            console.log('Coupon data:', formData);
-            // Here you would typically send this data to your backend
-            
-            // Close modal and optionally refresh the table
-            modal.style.display = "none";
-            alert('Coupon saved successfully!');
-        }
-
-        function resetForm() {
-            document.getElementById('code').value = '';
-            document.getElementById('discountValue').value = '';
-            document.getElementById('startDate').value = '';
-            document.getElementById('endDate').value = '';
-            document.getElementById('usageLimit').value = '';
-            document.getElementById('minOrder').value = '';
-            document.getElementById('description').value = '';
-            document.getElementById('discountType').selectedIndex = 0;
-            document.getElementById('status').selectedIndex = 0;
-        }
-
-        function editCoupon(code) {
-            modalTitle.textContent = "Edit Coupon";
-            // In a real application, you would fetch the coupon data here
-            // For demo purposes, we'll just set some example values
-            document.getElementById('code').value = code;
-            document.getElementById('discountValue').value = code === 'SUMMER2025' ? '20' : '15';
-            document.getElementById('startDate').value = '2025-04-01';
-            document.getElementById('endDate').value = code === 'SUMMER2025' ? '2025-05-31' : '2025-12-31';
-            document.getElementById('usageLimit').value = '500';
-            document.getElementById('minOrder').value = '50';
-            document.getElementById('description').value = `${code} promotional coupon`;
-            document.getElementById('discountType').value = code === 'WELCOME10' ? 'fixed' : 'percentage';
-            document.getElementById('status').value = 'active';
-            
-            modal.style.display = "block";
-        }
-
-        function removeCoupon(code) {
-            if (confirm(`Are you sure you want to remove coupon "${code}"?`)) {
-                // In a real application, you would send a request to your backend
-                console.log(`Removing coupon: ${code}`);
-                alert(`Coupon ${code} has been removed`);
-                // Optionally refresh the table here
-            }
-        }
-
-        function applyCoupon(code) {
-            if (confirm(`Are you sure you want to activate coupon "${code}"?`)) {
-                // In a real application, you would send a request to your backend
-                console.log(`Activating coupon: ${code}`);
-                alert(`Coupon ${code} has been activated`);
-                // Optionally refresh the table here
-            }
-        }
-    </script>
-</body>
+            <form method="POST" action="/admin/returns/reject" style="display:inline;">
+              <input type="hidden" name="orderId" value="ORD12345">
+              <input type="hidden" name="productId" value="PROD987">
+              <button class="btn btn-danger btn-sm">Reject</button>
+            </form>
+          </td>
+        </tr>
+        <!-- End repeat -->
+      </tbody>
+    </table>
+  </div>
