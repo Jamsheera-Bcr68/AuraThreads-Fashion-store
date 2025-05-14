@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Report</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center">Sales Report</h1>
+
+        <!-- Filter Options -->
+        <div class="row mt-4">
+            <div class="col-md-4">
+                <label for="dateFilter">Select Date Range:</label>
+                <select id="dateFilter" class="form-control">
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="custom">Custom Date Range</option>
+                </select>
+            </div>
+
+            <div class="col-md-4" id="customDateRange" style="display: none;">
+                <label for="startDate">Start Date:</label>
+                <input type="date" id="startDate" class="form-control">
+                <label for="endDate" class="mt-2">End Date:</label>
+                <input type="date" id="endDate" class="form-control">
+            </div>
+
+            <div class="col-md-4 mt-4">
+                <button id="generateReport" class="btn btn-primary btn-block">Generate Sales Report</button>
+            </div>
+        </div>
+
+        <!-- Sales Data Display -->
+        <div class="row mt-5">
+            <div class="col-md-12">
+                <h3>Overall Sales</h3>
+                <p><strong>Total Sales Amount:</strong> ₹<%= totalSalesAmount %></p>
+                <p><strong>Overall Sales Count:</strong> <%= overallSalesCount %></p>
+                <p><strong>Overall Discount:</strong> ₹<%= overallDiscount %></p>
+                <p><strong>Overall Order Amount:</strong> ₹<%= overallOrderAmount %></p>
+            </div>
+        </div>
+
+        <!-- Chart Display -->
+        <div class="row mt-5">
+            <div class="col-md-12">
+                <canvas id="sales-chart"></canvas>
+            </div>
+        </div>
+
+        <!-- Sales Report Download -->
+        <div class="row mt-5">
+            <div class="col-md-4">
+                <button id="downloadPDF" class="btn btn-danger btn-block">Download PDF Report</button>
+            </div>
+            <div class="col-md-4">
+                <button id="downloadExcel" class="btn btn-success btn-block">Download Excel Report</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dummy Sales Data
+        const salesDates = ["2025-05-06", "2025-05-07", "2025-05-08"];
+        const salesAmount = [3419, 2800, 1629];
+
+        // Initialize Sales Chart
+        const salesCtx = document.getElementById('sales-chart').getContext('2d');
+        const salesChart = new Chart(salesCtx, {
+            type: 'line',
+            data: {
+                labels: salesDates,
+                datasets: [{
+                    label: 'Total Sales (₹)',
+                    data: salesAmount,
+                    borderColor: '#6a1b9a',
+                    backgroundColor: 'rgba(106, 27, 154, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { mode: 'index', intersect: false }
+                },
+                scales: {
+                    y: { beginAtZero: true, grid: { drawBorder: false } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+
+        // Display Sales Data
+        const totalSalesAmount = 7848;  // Total sales amount for the selected range
+        const overallSalesCount = 19;   // Total number of items sold in the selected range
+        const overallDiscount = 560;    // Total discount given during the selected period
+        const overallOrderAmount = 7388; // Total order amount after discount
+    </script>
+
+</body>
+</html>
+

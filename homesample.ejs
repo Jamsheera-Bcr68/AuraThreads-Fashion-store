@@ -1,42 +1,234 @@
-<div class="container mt-5">
-    <h2 class="mb-4">Return Requests</h2>
-    
-    <!-- Table -->
-    <table class="table table-bordered table-hover">
-      <thead class="table-dark">
-        <tr>
-          <th>Order ID</th>
-          <th>User</th>
-          <th>Product</th>
-          <th>Reason</th>
-          <th>Date</th>
-          <th>Status</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- Repeat this <tr> block dynamically using your view engine -->
-        <tr>
-          <td>ORD12345</td>
-          <td>jamsheera@example.com</td>
-          <td>Dress - Blue Floral</td>
-          <td>Size too small</td>
-          <td>2025-05-05</td>
-          <td><span class="badge bg-warning">Pending</span></td>
-          <td>
-            <form method="POST" action="/admin/returns/approve" style="display:inline;">
-              <input type="hidden" name="orderId" value="ORD12345">
-              <input type="hidden" name="productId" value="PROD987">
-              <button class="btn btn-success btn-sm">Approve</button>
-            </form>
-            <form method="POST" action="/admin/returns/reject" style="display:inline;">
-              <input type="hidden" name="orderId" value="ORD12345">
-              <input type="hidden" name="productId" value="PROD987">
-              <button class="btn btn-danger btn-sm">Reject</button>
-            </form>
-          </td>
-        </tr>
-        <!-- End repeat -->
-      </tbody>
-    </table>
+<div class="container">
+  <!-- Sidebar -->
+  <div class="sidebar">
+      <div class="brand">
+          <i class="fas fa-tshirt"></i> FashionAdmin
+      </div>
+      <nav>
+          <a href="#" class="nav-item">
+              <i class="fas fa-tachometer-alt"></i> Dashboard
+          </a>
+          <a href="#" class="nav-item active">
+              <i class="fas fa-chart-line"></i> Sales Reports
+          </a>
+          <a href="#" class="nav-item">
+              <i class="fas fa-shopping-bag"></i> Products
+          </a>
+          <a href="#" class="nav-item">
+              <i class="fas fa-users"></i> Customers
+          </a>
+          <a href="#" class="nav-item">
+              <i class="fas fa-box"></i> Orders
+          </a>
+          <a href="#" class="nav-item">
+              <i class="fas fa-tags"></i> Promotions
+          </a>
+          <a href="#" class="nav-item">
+              <i class="fas fa-cog"></i> Settings
+          </a>
+      </nav>
   </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+      <div class="page-header">
+          <h1 class="page-title">Sales Report</h1>
+          <div class="date-filter">
+              <select id="date-range">
+                  <option value="today">Today</option>
+                  <option value="yesterday">Yesterday</option>
+                  <option value="week" selected>This Week</option>
+                  <option value="month">This Month</option>
+                  <option value="quarter">This Quarter</option>
+                  <option value="year">This Year</option>
+                  <option value="custom">Custom Range</option>
+              </select>
+              <input type="date" id="start-date" value="2025-05-01">
+              <input type="date" id="end-date" value="2025-05-07">
+              <button id="apply-filter">Apply Filter</button>
+          </div>
+      </div>
+
+      <!-- Summary Cards -->
+      <div class="summary-cards">
+          <div class="summary-card">
+              <h3>TOTAL SALES</h3>
+              <div class="value">$35,842</div>
+              <div class="trend up">
+                  <i class="fas fa-arrow-up"></i> 12.5% from last period
+              </div>
+          </div>
+          <div class="summary-card">
+              <h3>ORDERS</h3>
+              <div class="value">428</div>
+              <div class="trend up">
+                  <i class="fas fa-arrow-up"></i> 8.3% from last period
+              </div>
+          </div>
+          <div class="summary-card">
+              <h3>AVERAGE ORDER VALUE</h3>
+              <div class="value">$83.74</div>
+              <div class="trend up">
+                  <i class="fas fa-arrow-up"></i> 3.9% from last period
+              </div>
+          </div>
+          <div class="summary-card">
+              <h3>CONVERSION RATE</h3>
+              <div class="value">3.82%</div>
+              <div class="trend down">
+                  <i class="fas fa-arrow-down"></i> 0.5% from last period
+              </div>
+          </div>
+      </div>
+
+      <!-- Charts and Recent Orders -->
+      <div class="data-section">
+          <!-- Sales Trend Chart -->
+          <div class="chart-container">
+              <div class="section-header">
+                  <h2>Sales Trend</h2>
+                  <div class="actions">
+                      <button id="daily-view">Daily</button>
+                      <button id="weekly-view">Weekly</button>
+                      <button id="monthly-view">Monthly</button>
+                      <button id="export-chart"><i class="fas fa-download"></i> Export</button>
+                  </div>
+              </div>
+              <canvas id="sales-chart" height="300"></canvas>
+          </div>
+
+          <!-- Recent Orders -->
+          <div class="table-container">
+              <div class="section-header">
+                  <h2>Recent Orders</h2>
+                  <div class="actions">
+                      <button id="view-all-orders">View All</button>
+                  </div>
+              </div>
+              <table class="orders-table">
+                  <thead>
+                      <tr>
+                          <th>Order ID</th>
+                          <th>Amount</th>
+                          <th>Status</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                      <tr>
+                          <td>#ORD-5923</td>
+                          <td>$129.99</td>
+                          <td><span class="status completed">Completed</span></td>
+                      </tr>
+                      <tr>
+                          <td>#ORD-5922</td>
+                          <td>$89.50</td>
+                          <td><span class="status pending">Pending</span></td>
+                      </tr>
+                      <tr>
+                          <td>#ORD-5921</td>
+                          <td>$215.75</td>
+                          <td><span class="status completed">Completed</span></td>
+                      </tr>
+                      <tr>
+                          <td>#ORD-5920</td>
+                          <td>$64.25</td>
+                          <td><span class="status cancelled">Cancelled</span></td>
+                      </tr>
+                      <tr>
+                          <td>#ORD-5919</td>
+                          <td>$145.00</td>
+                          <td><span class="status completed">Completed</span></td>
+                      </tr>
+                      <tr>
+                          <td>#ORD-5918</td>
+                          <td>$78.50</td>
+                          <td><span class="status pending">Pending</span></td>
+                      </tr>
+                  </tbody>
+              </table>
+          </div>
+      </div>
+
+      <!-- Sales by Category Chart -->
+      <div class="chart-container">
+          <div class="section-header">
+              <h2>Sales by Category</h2>
+              <div class="actions">
+                  <button id="export-category"><i class="fas fa-download"></i> Export</button>
+              </div>
+          </div>
+          <div style="display: flex; gap: 20px;">
+              <div style="flex: 1;">
+                  <canvas id="category-chart" height="300"></canvas>
+              </div>
+              <div style="flex: 1;">
+                  <canvas id="subcategory-chart" height="300"></canvas>
+              </div>
+          </div>
+      </div>
+
+      <!-- Top Selling Products -->
+      <div class="top-products">
+          <div class="section-header">
+              <h2>Top Selling Products</h2>
+              <div class="actions">
+                  <button id="view-all-products">View All Products</button>
+              </div>
+          </div>
+          <div class="product-list">
+              <div class="product-card">
+                  <div class="product-image">
+                      <img src="/api/placeholder/250/150" alt="Evening Dress">
+                  </div>
+                  <div class="product-details">
+                      <div class="product-name">Elegant Evening Dress</div>
+                      <div class="product-stats">
+                          <span>Sold: 83 units</span>
+                          <span>$6,640</span>
+                      </div>
+                  </div>
+              </div>
+              <div class="product-card">
+                  <div class="product-image">
+                      <img src="/api/placeholder/250/150" alt="Summer Dress">
+                  </div>
+                  <div class="product-details">
+                      <div class="product-name">Summer Floral Dress</div>
+                      <div class="product-stats">
+                          <span>Sold: 76 units</span>
+                          <span>$5,320</span>
+                      </div>
+                  </div>
+              </div>
+              <div class="product-card">
+                  <div class="product-image">
+                      <img src="/api/placeholder/250/150" alt="Cocktail Dress">
+                  </div>
+                  <div class="product-details">
+                      <div class="product-name">Cocktail Mini Dress</div>
+                      <div class="product-stats">
+                          <span>Sold: 65 units</span>
+                          <span>$4,550</span>
+                      </div>
+                  </div>
+              </div>
+              <div class="product-card">
+                  <div class="product-image">
+                      <img src="/api/placeholder/250/150" alt="Maxi Dress">
+                  </div>
+                  <div class="product-details">
+                      <div class="product-name">Bohemian Maxi Dress</div>
+                      <div class="product-stats">
+                          <span>Sold: 52 units</span>
+                          <span>$3,640</span>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </div>
+
+      <div class="footer">
+          © 2025 FashionAdmin Dashboard. All rights reserved.
+      </div>
+  </div>
+</div>

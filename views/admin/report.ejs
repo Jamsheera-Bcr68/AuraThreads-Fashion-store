@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sales Report Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  
+</head>
+<body>
+   <%- include('../partials/header.ejs') %>
+    <div class="d-flex" id="wrapper">
+       <%- include('../partials/sidebar') %>
+    <div class="container py-4">
+  <h1 class="mb-4">Sales Report</h1>
+
+  <!-- Filters -->
+  <div class="row mb-4">
+    <div class="col-md-3">
+      <select class="form-select" id="reportType">
+        <option value="daily">Daily</option>
+        <option value="weekly">Weekly</option>
+        <option value="monthly">Monthly</option>
+        <option value="yearly">Yearly</option>
+        <option value="custom">Custom Range</option>
+      </select>
+    </div>
+   <div class="col-md-3">
+    <input  id="startDate" style="display: none;"  type="date">
+   </div>
+   <div class="col-md-3">
+    <input  id="endDate" style="display: none;"  type="date">
+   </div>
+   <div class="col-md-3">
+    <input id="createBtn" style="display: none;" type="button" style="background-color: green; color: white;font-weight: bold;" value="Create Report">
+   </div>
+    
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-3">
+      <div class="summary-card">
+        <h3>Total Sales</h3>
+        <div class="value">₹ <%= summary.totalRevenue %></div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="summary-card">
+        <h3>Orders</h3>
+        <div class="value"><%= summary.totalOrders %></div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="summary-card">
+        <h3>Total Discount</h3>
+        <div class="value">₹ <%= summary.offerDiscountAmount %></div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="summary-card">
+        <h3>Coupon Deductions</h3>
+        <div class="value">₹ <%= summary.couponDiscount %></div>
+      </div>
+    </div>
+  </div>
+
+<table class="table table-bordered mt-5" id="salesReportTable">
+  <thead class="table-dark">
+    <tr>
+      <th>No:</th>
+      <th>Date</th>
+      <th>Total Orders</th>
+      <th>Total Sales (₹)</th>
+      <th>Offer  Deduction (₹)</th>
+      <th>Coupon Deduction (₹)</th>
+      <th>Total Deduction</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% salesData.forEach((data, index) => { %>
+      <tr>
+        <td><%= index + 1 %></td>
+        <td><%= data._id %></td> <!-- assuming _id is the date -->
+        <td><%= data.orderCount %></td>
+        <td><%= data.totalSales %></td>
+        <td><%= data.offerDeduction || 0 %></td>
+        <td><%= data.couponDeduction || 0 %></td>
+        <td><%= data.offerDeduction+data.couponDeduction|| 0 %></td>
+      </tr>
+    <% }); %>
+  </tbody>
+</table>
+
+<!-- Chart -->
+<div  class="card mb-4 mt-5">
+  <div class="card-body">
+    <div class="section-header d-flex justify-content-between align-items-center">
+      <h4>Sales Trend</h4>
+      <div>
+        <button id="downloadPdfBtn" class="btn btn-outline-secondary btn-sm">Download PDF</button>
+       <a id="downloadExcelBtn" class="btn btn-success">Download Excel</a>
+    
+      </div>
+    </div>
+    <canvas id="salesChart" height="100"></canvas>
+  </div>
+</div>
+
+  <!-- Recent Orders -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <h4>Recent Orders</h4>
+      <table class="table table-bordered mt-3">
+        <thead>
+          <tr><th>Order ID</th><th>Amount</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          <% recentOrders.forEach(order => { %>
+            <tr>
+              <td><%= order.id %></td>
+               
+              <td>₹ <%= order.finalAmount %></td>
+              <td><%= order.status %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Top Products -->
+  <div class="card">
+    <div class="card-body">
+      <h4>Top Selling Products</h4>
+      <div class="row g-3 mt-3">
+        <% topProducts.forEach(product => { %>
+          <div class="col-md-4">
+            <div class="product-card d-flex align-items-center gap-3">
+              <div class="product-image">
+                <img src="<%= product.images[0] %>" alt="<%= product.productName %>" width="60">
+              </div>
+              <div>
+                <h6><%= product.productName %></h6>
+                <p>Sold: <%= product.totalSold %> units</p>
+              </div>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+  </div>
+</div>
+
+    </div>
+  <%- include('../partials/footer') %>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+ <script>
+  const salesDates = <%- JSON.stringify(salesDates) %>;
+  const totalSales = <%- JSON.stringify(salesData.map(item => item.totalSales)) %>;
+
+  function updateTable(data) {
+    const dataTable = document.getElementById('salesReportTable');
+    const tableBody = dataTable.querySelector('tbody') || dataTable;
+
+    // Clear previous rows (except header if present)
+    const rows = dataTable.querySelectorAll("tr");
+    rows.forEach((row, index) => {
+      if (index !== 0) row.remove(); // keep header row
+    });
+
+    // 🟡 If data is array (detailed report)
+    if (Array.isArray(data)) {
+      data.forEach((sale, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${sale._id}</td>
+          <td>${sale.orderCount}</td>
+          <td>${sale.totalSales}</td>
+          <td>${sale.offerDeduction}</td>
+          <td>${sale.couponDeduction}</td>
+          <td>${sale.offerDeduction + sale.couponDeduction}</td>
+        `;
+        dataTable.appendChild(row);
+      });
+    } else if (data.salesDates && data.totalSales) {
+      // ✅ If data contains simple date and totalSales arrays
+      data.salesDates.forEach((date, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${date}</td>
+          <td>₹${data.totalSales[index]}</td>
+        `;
+        tableBody.appendChild(row);
+      });
+    }
+  }
+
+  let chartInstance;
+  function updateReport(data) {
+    const ctx = document.getElementById('salesChart').getContext('2d');
+    if (chartInstance) {
+      chartInstance.destroy();
+    }
+    chartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: data.salesDates,
+        datasets: [{
+          label: 'Sales',
+          data: data.totalSales,
+          borderColor: 'rgba(75, 192, 192, 1)',
+          tension: 0.3
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: { beginAtZero: true }
+        }
+      }
+    });
+  }
+
+  updateReport({ salesDates, totalSales });
+
+  document.getElementById('reportType').addEventListener('change', function () {
+    const reportType = this.value;
+    const startDateInput = document.getElementById('startDate');
+    const endDateInput = document.getElementById('endDate');
+    const createBtn = document.getElementById('createBtn');
+
+    if (reportType === 'custom') {
+      startDateInput.style.display = 'inline-block';
+      endDateInput.style.display = 'inline-block';
+      createBtn.style.display = 'inline-block';
+    } else {
+      startDateInput.style.display = 'none';
+      endDateInput.style.display = 'none';
+      createBtn.style.display = 'none';
+
+      const url = `/admin/updateReport?reportType=${reportType}`;
+      fetch(url)
+        .then(res => res.json())
+        .then(data => {
+          console.log('Report data:', data);
+          updateReport(data);
+          updateTable(data.salesData);
+        })
+        .catch(err => console.error('Error:', err));
+    }
+  });
+
+  document.getElementById('createBtn').addEventListener('click', function () {
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+
+    if (!startDate || !endDate) {
+      Swal.fire("Please select both start and end dates.");
+      return;
+    }
+
+    if (startDate >= endDate) {
+      Swal.fire("Start Date Cannot be greater than end Date");
+      return;
+    }
+
+    const today = new Date();
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    if (start > today || end > today) {
+      Swal.fire("Cannot use future dates");
+      return;
+    }
+
+    const url = `/admin/updateReport?reportType=custom&startDate=${startDate}&endDate=${endDate}`;
+    fetch(url)
+      .then(res => res.json())
+      .then(data => {
+        console.log('Custom report data:', data);
+        updateReport(data);
+        updateTable(data.salesData || data); // smart handling
+      })
+      .catch(err => console.error('Error:', err));
+  });
+
+//report download as pdf
+function getChartBase64() {
+  const chartCanvas = document.getElementById('salesChart');
+  return chartCanvas.toDataURL('image/png'); // Base64 image
+}
+
+const downloadPdfBtn=document.getElementById('downloadPdfBtn')
+
+downloadPdfBtn.addEventListener('click',function(){
+  const chartImage=getChartBase64()
+
+  const reportType = document.getElementById('reportType').value;
+  const startDateInput = document.getElementById('startDate');
+  const endDateInput = document.getElementById('endDate');
+
+  const startDate = reportType === 'custom' ? startDateInput.value : null;
+  const endDate = reportType === 'custom' ? endDateInput.value : null;
+
+  fetch('/admin/downloadSaleReportpdf',{
+    method:"POST",
+    headers:{'Content-Type': 'application/json'},
+    body:JSON.stringify({
+      chartImage,
+      startDate,endDate,reportType
+    })
+  }).then(res=>res.blob())
+  .then(blob=>{
+    const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'SalesReport.pdf';
+      a.click()
+  })
+})
+
+const downloadExcelBtn = document.getElementById('downloadExcelBtn');
+
+downloadExcelBtn.addEventListener('click', function () {
+  console.log('downloadExcelBtn clicked');
+
+  const reportType = document.getElementById('reportType').value;
+  const startDate = document.getElementById('startDate').value;
+  const endDate = document.getElementById('endDate').value;
+window.location.href = `/admin/downloadSaleReportExcel?reportType=${reportType}&startDate=${startDate}&endDate=${endDate}`;
+});
+
+</script>
+
+</body>
+</html>

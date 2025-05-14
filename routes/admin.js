@@ -358,4 +358,15 @@ router.post('/returns/approve',adminController.approveReturn)
 
 //admin reject return
 router.post('/returns/reject',adminController.rejectReturn)
+
+//admin report get
+router.get('/reports',adminController.getSalesReport)
+
+router.get('/updateReport',adminController.updateSaleReport)
+
+// get salesreport pdf
+router.post('/downloadSaleReportpdf',adminController.downloadSaleReportpdf)
+
+//downloadSaleReportExcel
+router.get('/downloadSaleReportExcel',adminController.downloadSaleReportExcel)
 module.exports = router;

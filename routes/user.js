@@ -188,4 +188,6 @@ router.get('/checkout',userAuth,userController.getCheckout)
  router.post('/return-product',userAuth,userController.returnProduct)
 
  router.post('/test',userController.usertest)
+
+ router.get('/allcoupons',userController.getAllCoupons)
 module.exports = router;

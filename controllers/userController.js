@@ -2112,6 +2112,17 @@ const returnProduct = async (req, res) => {
 
 }
 
+const getAllCoupons=async (req,res,next)=>{
+console.log('from getAllCoupons');
+try {
+  const coupons=await Coupon.find({ isActive: true, expiryDate: { $gte: new Date() } })
+   res.json({ success: true, coupons });
+} catch (error) {
+  console.log(error);
+  next(error)
+}
+}
+
 const usertest = (req, res, next) => {
   try {
     console.log("user login route");
@@ -2166,5 +2177,6 @@ module.exports = {
   removeProfileImage,
   usertest,
   getProductList,
-  getSingleProduct
+  getSingleProduct,
+  getAllCoupons
 }
