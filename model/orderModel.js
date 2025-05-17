@@ -18,7 +18,12 @@ const orderSchema=mongoose.Schema({
       ],
     totalAmount:{type:Number},
     paymentMethod:{type:String},
-    paymentDetails:{type:Object},
+    paymentDetails:{
+      razorpayOrderId:String,
+       
+    razorpayPaymentId: String,
+    razorpaySignature: String,
+    },
     status:{type:String},
     createdAt:{type:Date},
     deliveryDate:{type:Date},
@@ -29,6 +34,7 @@ const orderSchema=mongoose.Schema({
     isCouponApplied:{type:Boolean,default:false},
     couponCode:{type:String,default:''},
     useWallet:{type:Boolean,default:false},
+   
     returnRequests: [
       {
         productId: {

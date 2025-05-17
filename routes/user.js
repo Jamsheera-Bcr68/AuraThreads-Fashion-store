@@ -166,6 +166,9 @@ router.get('/checkout',userAuth,userController.getCheckout)
  //apply coupon
  router.post('/applyCoupon/',userController.applyCoupon)
 
+ //remove Coupon
+ router.get('/removeCoupon',userController.removeCoupon)
+
  //user wishlist
  router.get('/wishList',userAuth,userController.getWishList)
 
@@ -189,5 +192,13 @@ router.get('/checkout',userAuth,userController.getCheckout)
 
  router.post('/test',userController.usertest)
 
- router.get('/allcoupons',userController.getAllCoupons)
+ //router.get('/allcoupons',userController.getAllCoupons)
+
+ //varify payment
+router.post('/varifyPayment',userController.varifyPayment)
+
+//payment failure
+router.get('/order-failure',userController.getPaymentFailure)
+
+
 module.exports = router;

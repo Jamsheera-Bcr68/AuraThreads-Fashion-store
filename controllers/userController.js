@@ -15,7 +15,9 @@ const WishList = require('../model/wishListModel')
 const Wallet = require('../model/walletModel');
 const errorHandler = require('../middleweres/errorHandler')
 const Offer = require('../model/offerModel')
-
+const razorpay = require('../config/razorPay');
+const crypto = require('crypto');
+const { title } = require("process");
 
 //get Register
 const getRegister = async (req, res) => {
@@ -33,13 +35,13 @@ const postRegister = async (req, res) => {
   console.log('this ia google regiser');
 
   try {
-    let { email, password, phone,referredBy } = req.body;
-    
+    let { email, password, phone, referredBy } = req.body;
+
     console.log(`emil is${email} password is ${password} and phone is ${phone} userReferalCode ${referredBy}`);
 
-    const referalExist=await User.findOne({refferalCode:referredBy})
-    if(!referalExist){
-      return res.json({success:false,message:"Refferal code not exist"})
+    const referalExist = await User.findOne({ refferalCode: referredBy })
+    if (!referalExist) {
+      return res.json({ success: false, message: "Refferal code not exist" })
     }
     let hashedPassword = await bcrypt.hash(password, 10);
     console.log('hashed pwd' + hashedPassword);
@@ -50,14 +52,14 @@ const postRegister = async (req, res) => {
     if (userExist) {
       console.log("User already exists");
       return res.json({ success: false, message: "User alredy exist" })
-      
+
     } else {
       // Generate OTP
       console.log('User not existing');
 
       const otp = generateOTP()
       req.session.otp = otp //store otp in session
-      req.session.userData = { email, password, phone ,referredBy}; // Store user data temporarily
+      req.session.userData = { email, password, phone, referredBy }; // Store user data temporarily
 
       //send otp through email
       const mailOptions = {
@@ -189,70 +191,70 @@ const varifyOtp = async (req, res) => {
     console.log('otp is ', otp);
     if (otp !== req.session.otp) {
       console.log('Invalid otp');
-      
+
       return res.json({ success: false, message: "Invalid OTP" });
     }
     console.log('otp validated succesfully');
     //generate refferalCode
-   
+
     // OTP is correct → Hash password & save user
     const isVerified = true
     console.log('isVerified = true');
-    
+
     const { name, email, password, phone } = req.session.userData;
     const hashedPassword = await bcrypt.hash(password, 10);
-    const {referredBy}=req.session.userData ||''
-    console.log('reffered by ',referredBy);
-    
+    const { referredBy } = req.session.userData || ''
+    console.log('reffered by ', referredBy);
+
     let code
     do {
       code = generateReferralCode()
     } while (await User.findOne({ refferalCode: code }))
 
-    const newUser = new User({ phone, name, email, hashedPassword, isVerified, refferalCode: code,referredBy });
+    const newUser = new User({ phone, name, email, hashedPassword, isVerified, refferalCode: code, referredBy });
     await newUser.save();
-      console.log('new user saved successfuly');
- 
+    console.log('new user saved successfuly');
+
     // creating wallt
     const wallet = new Wallet({ userId: newUser._id });
-    if(referredBy){
+    if (referredBy) {
       console.log('This is  a referred user');
-      
-      wallet.balance=50
+
+      wallet.balance = 50
       await wallet.save();
       console.log('user got referalcode benefit');
 
-      let referrer=await User.findOne({refferalCode:referredBy})
-      console.log('referrer ',referrer);
-      
-    if(!referrer){
-      console.log('refferedUser not found');
-      return res.json({success:false,message:"referredUser not found"})
-    }
-    let referrerId=referrer._id
-    const referrerWallet=await Wallet.findOne({userId:referrerId})
-    if(!referrerWallet){
-      console.log('refferedUser wallet not found');
-      return res.json({success:false,message:"refferedUser not found"})
-    }
-    console.log(referrerWallet.balance,'before');
-    
-    referrerWallet.balance=referrerWallet.balance+100
-   await referrerWallet.save()
-    console.log(referrerWallet.balance,'after')
-   console.log('refered user go referalcode benefit');
-    }else{
+      let referrer = await User.findOne({ refferalCode: referredBy })
+      console.log('referrer ', referrer);
+
+      if (!referrer) {
+        console.log('refferedUser not found');
+        return res.json({ success: false, message: "referredUser not found" })
+      }
+      let referrerId = referrer._id
+      const referrerWallet = await Wallet.findOne({ userId: referrerId })
+      if (!referrerWallet) {
+        console.log('refferedUser wallet not found');
+        return res.json({ success: false, message: "refferedUser not found" })
+      }
+      console.log(referrerWallet.balance, 'before');
+
+      referrerWallet.balance = referrerWallet.balance + 100
+      await referrerWallet.save()
+      console.log(referrerWallet.balance, 'after')
+      console.log('refered user go referalcode benefit');
+    } else {
       console.log('this is a nonreferreduser');
-      
+
     }
-   
+
     // Clear session
     req.session.otp = null;
     req.session.userData = null;
 
     // referal discount for both
     console.log('registration succesfull');
-    
+
 
     return res.json({ success: true, message: "Registration successful" });
   } catch (error) {
@@ -1288,8 +1290,7 @@ const getCheckout = async (req, res) => {
 
   }
 
-  // console.log('req.session',req.session);
-
+  
 
   const shippingCharge = 0.00
   const taxAmount = 0.00
@@ -1319,6 +1320,9 @@ const getCheckout = async (req, res) => {
   const offerDiscountAmount = req.session.totalDiscount
   console.log('offerDiscountAmount', offerDiscountAmount);
 
+  //getting available coupons
+const coupons = await Coupon.find({ isActive: true, expiryDate: { $gte: new Date() } });
+
   return res.render('user/userCkeckout', {
     categoryId: null,
     priceRange: null,
@@ -1333,7 +1337,8 @@ const getCheckout = async (req, res) => {
     couponDiscountAmount: req.session.discountAmount || 0,
     offerDiscountAmount: req.session.totalDiscount || 0,
     totalAmount,
-    wallet
+    wallet,
+    coupons
   })
 }
 
@@ -1440,8 +1445,18 @@ const placeOrder = async (req, res) => {
       }
       paymentMethod = 'wallet'
     }
+
+    // razorpay id
+
+    const options = {
+      amount: finalAmount * 100,
+      currency: 'INR',
+      receipt: "receipt_" + Date.now()
+    }
+    const razorpayOrder = await razorpay.orders.create(options);
+
     //creating new order document
-    const order = new Order({
+    req.session.tempOrder = {
       userId: req.session.user._id,
       address,
       coupenDiscountAmount,
@@ -1452,6 +1467,7 @@ const placeOrder = async (req, res) => {
       finalAmount,
       paymentMethod,
       totalAmount,
+     
       status: paymentMethod === 'COD' ? 'Pending' : 'Processing',
       paymentDetails: paymentMethod == 'Credit Card' ? {
         cardNumber,
@@ -1460,50 +1476,29 @@ const placeOrder = async (req, res) => {
         cardName
       } : paymentMethod == 'UPI' ? {
         upiId
+      } : paymentMethod=='wallet' ?{
+        razorpayOrderId : razorpayOrder.id,
+        
       } : null,
 
       items: cart.items,
       createdAt,
       deliveryDate,
       useWallet
-    })
-    await order.save()
-
-    //update wallet
-    if (useWallet == true) {
-      wallet.balance = wallet.balance - finalAmount
-      wallet.transactions.push({
-        amount: finalAmount,
-        type: "debit",
-        date: new Date(),
-        description: "Orer placed using wallet"
-      })
-
-      await wallet.save()
-
-    }
-    for (let item of cart.items) {
-      await Product.findByIdAndUpdate(item.productId, {
-        $inc: { stock: -item.quantity }
-      });
     }
 
-    // making cart empty
-    await Cart.updateOne({ userId }, { $set: { items: [] } });
-    req.session.discountAmount = 0
-    req.session.finalAmount = 0
-    req.session.code = ''
-    req.session.appliedCoupon = null
-    req.session.offer = null
-    req.session.cartTotal = 0
-    req.session.netAmount = 0
-    req.session.totalDiscount = 0
 
 
     return res.json({
       success: true,
       message: "Order completed successfully",
-      orderId: order._id  //this line sends the ID to frontend
+
+      razorpayOrderId: razorpayOrder.id,// sending razor pay datas to front end
+      amount: razorpayOrder.amount,
+      currency: razorpayOrder.currency,
+      currency: razorpayOrder.currency,
+      key_id: process.env.RAZORPAY_KEY_ID,
+      user: req.session.user
     });
 
 
@@ -1768,7 +1763,7 @@ const getWishList = async (req, res) => {
 
 
     const offers = await Offer.find({ status: 'active' });
-    const products=wishList.items
+    const products = wishList.items
     products.forEach(product => {
       const productOffer = offers.find(offer =>
         offer.applicableTo === 'product' && offer.productId?.toString() === product._id.toString()
@@ -1817,12 +1812,12 @@ const getWishList = async (req, res) => {
       products: wishList.items,
       categoryId: null,
       priceRange: null,
-      cartCount:cartCount||0,
+      cartCount: cartCount || 0,
       sort: '',
       query: '',
       title: 'your WishList',
       user: req.session.user,
-      
+
     })
   } catch (error) {
     console.log('error is ', error);
@@ -2095,7 +2090,7 @@ const returnProduct = async (req, res) => {
     order.returnRequests.push({
       productId: productId,
       reason: reason,
-      status:'pending',
+      status: 'pending',
       date: new Date()
     })
 
@@ -2112,15 +2107,16 @@ const returnProduct = async (req, res) => {
 
 }
 
-const getAllCoupons=async (req,res,next)=>{
-console.log('from getAllCoupons');
-try {
-  const coupons=await Coupon.find({ isActive: true, expiryDate: { $gte: new Date() } })
-   res.json({ success: true, coupons });
-} catch (error) {
-  console.log(error);
-  next(error)
-}
+const getAllCoupons = async (req, res, next) => {
+  console.log('from getAllCoupons');
+  try {
+    const currentDate=new Date()
+    const coupons = await Coupon.find({ isActive: true, expiryDate: { $gte:currentDate } })
+    res.json({ success: true, coupons });
+  } catch (error) {
+    console.log(error);
+    next(error)
+  }
 }
 
 const usertest = (req, res, next) => {
@@ -2136,6 +2132,108 @@ const usertest = (req, res, next) => {
     next(err)
   }
 }
+
+const varifyPayment = async (req, res, next) => {
+  console.log('varifyPayment');
+  try {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderId } = req.body
+    console.log('razorpay_order_id, razorpay_payment_id, razorpay_signature, orderId', razorpay_order_id, razorpay_payment_id, razorpay_signature, orderId);
+
+    const body = razorpay_order_id + '|' + razorpay_payment_id
+    console.log('body ', body);
+
+    const expectedSgnature = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+      .update(body.toString())
+      .digest("hex")
+
+    if (expectedSgnature == razorpay_signature) {
+      console.log('payment verified');
+      const newOrder = new Order(req.session.tempOrder)
+      console.log(newOrder);
+      await newOrder.save()
+
+      //update wallet
+      const userId=req.session.user._id
+      const wallet = await Wallet.findOne({ userId })
+
+      if (newOrder.useWallet == true) {
+        wallet.balance = wallet.balance - newOrder.finalAmount
+        wallet.transactions.push({
+          amount: newOrder.finalAmount,
+          type: "debit",
+          date: new Date(),
+          description: "Orer placed using wallet"
+        })
+
+        await wallet.save()
+
+      }
+
+      let cart=await Cart.findOne({userId})
+      for (let item of cart.items) {
+        await Product.findByIdAndUpdate(item.productId, {
+          $inc: { stock: -item.quantity }
+        });
+      }
+
+      // making cart empty
+      await Cart.updateOne({ userId }, { $set: { items: [] } });
+      req.session.discountAmount = 0
+      req.session.finalAmount = 0
+      req.session.code = ''
+      req.session.appliedCoupon = null
+      req.session.offer = null
+      req.session.cartTotal = 0
+      req.session.netAmount = 0
+      req.session.totalDiscount = 0
+
+      let orderId = newOrder._id
+
+
+      res.json({ success: true, message: "Payment verified successfully" ,orderId})
+    } else {
+      console.log('signamture is not matching');
+      throw new Error("Signature is not matching")
+    }
+
+
+  } catch (error) {
+    console.log(error);
+    next(error)
+  }
+
+}
+
+const getPaymentFailure=async (req,res,next)=>{
+  console.log('getPaymentFailure');
+  try {
+    res.render('user/orderFailure',{title:'Order Failure',order:req.session.tempOrder})
+  } catch (error) {
+    console.log(error);
+    next()
+  }
+  
+}
+
+const removeCoupon=async (req,res,next)=>{
+  console.log('removeCoupon');
+  try {
+     try {
+    req.session.appliedCoupon = null;
+    req.session.discountAmount = 0;
+    req.session.finalAmount = req.session.netAmount; // revert back to original
+      req.session.code=''
+    return res.json({ success: true, message: "Coupon removed successfully" });
+  } catch (error) {
+    console.log("Error removing coupon:", error);
+    return res.json({ success: false, message: "Something went wrong" });
+  }
+  } catch (error) {
+    console.log(error);
+    next(error)
+  }
+}
+
 module.exports = {
   getLogin,
   postLogin,
@@ -2178,5 +2276,8 @@ module.exports = {
   usertest,
   getProductList,
   getSingleProduct,
-  getAllCoupons
+  getAllCoupons,
+  varifyPayment,
+  getPaymentFailure,
+  removeCoupon
 }

@@ -160,11 +160,11 @@
       <!-- Promo Code -->
       <div class="form-group" style="margin-top: 25px;">
         <label for="coupon">Coupon Code</label>
-        <button id="showCouponsBtn">Show Available Coupons</button>
+        <button style="background-color: dodgerblue;color: white;margin-left: 10em;" onclick="openCouponModal()" id="showCouponsBtn">Show Available Coupons</button>
 
-        
+
         <div style="display: flex;">
-          <input type="text" id="coupon" placeholder="Enter Coupon code"
+          <input type="text" id="coupon"  placeholder="Enter Coupon code"
             style="flex: 1; padding: 10px; border: 1px solid #ccc; border-right: none; border-radius: 4px 0 0 4px;">
           <button id="coupenBtn"
             style="padding: 10px 16px; background-color: #104615; color: white; border: none; border-radius: 0 4px 4px 0; cursor: pointer;">Apply</button>
@@ -257,9 +257,34 @@
     </div>
     </form>
 
+    <!--Show Coupon Modal-->
+
+    <div id="couponModal" class="modal">
+      <div class="modal-content">
+        <span class="close" onclick="closeCouponModal()">&times;</span>
+        <h3>Available Coupons</h3>
+        <div id="coupon-list">
+          <% coupons.forEach(coupon=> { %>
+            <div class="coupon-card">
+              <input id="couponCode" type="text" value="<%= coupon.coupenCode %>">
+              <button id="Cbutton" onclick="copyCoupon('<%= coupon.coupenCode%>');  closeCouponModal();">copy</button>
+              <p>Discount: <%= coupon.discountValue || coupon.discountPercentage + '%' %>
+              </p>
+              <p>Minimum Purchase:<%=coupon.minPurchase %>
+              </p>
+              <p>Expires: <%= coupon.expiryDate.toDateString() %>
+              </p>
+
+
+            </div>
+            <% }) %>
+        </div>
+      </div>
+    </div>
 
   </div>
-  <%- include('../partials/userFooter') %>q `
+  <%- include('../partials/userFooter') %> `
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
       const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
@@ -357,76 +382,168 @@
 
         const orderData = {
           addressId: selectedAddressId,
-          paymentMethod, paymentDetails,
-          totalAmount, useWallet
-        }
-        fetch('/user/place-order', {
+          paymentMethod,
+          paymentDetails,
+          totalAmount,
+          useWallet,
+        };
+
+        fetch("/user/place-order", {
           method: "POST",
           headers: {
-            'Content-Type': 'application/json',
-            'CSRF-Token': csrfToken
-          },
-          body: JSON.stringify(orderData)
-        }).then(res => res.json())
-          .then(data => {
-            if (data && data.success) {
-              Swal.fire({
-                title: 'Order Placed!',
-                text: data.message,
-                icon: 'success',
-                confirmButtonText: 'View Order Details'
-              }).then(() => {
-                window.location.href = `/user/order-success?orderId=${data.orderId}`;
-              })
-            } else {
-              Swal.fire(data.message)
-            }
-          }).catch(error => {
-            Swal.fire('some thing went wrong')
-            console.log(error);
-
-          })
-
-
-      })
-
-      const coupenBtn = document.getElementById('coupenBtn')
-      coupenBtn.addEventListener('click', function () {
-        console.log('coupenBtn clicked');
-        const code = document.getElementById('coupon').value
-        console.log('code is ', code);
-
-
-        fetch('/user/applyCoupon', {
-          method: 'POST',
-          headers: {
             "Content-Type": "application/json",
-            'CSRF-Token': csrfToken
+            "CSRF-Token": csrfToken,
           },
-          body: JSON.stringify({ code })
-        }).then((res) => res.json())
+          body: JSON.stringify(orderData),
+        })
+          .then((res) => res.json())
           .then((data) => {
-            Swal.fire(data.message);
-            if (data.success) {
-              Swal.fire(data.message)
-              console.log('final Amount is ', data.finalAmount);
-              console.log('Discount Amount is 0', data.discountAmount);
-              document.getElementById('discountAmount').innerText = data.discountAmount
-              document.getElementById('finalAmount').innerText = data.finalAmount
-              document.getElementById('coupon').innerText = code
-              // For example: document.getElementById("discountAmount").innerText = data.discount;
+            if (data && data.success && data.razorpayOrderId) {
+              const options = {
+                key: data.key_id,
+                amount: data.amount, // in paisa
+                currency: data.currency,
+                name: "AuraThreads",
+                description: "Test Transaction",
+                order_id: data.razorpayOrderId,
+                handler: function (response) {
+                  console.log('before fetching');
+
+                  fetch("/user/varifyPayment", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", 'CSRF-Token': csrfToken },
+                    body: JSON.stringify({
+                      razorpay_payment_id: response.razorpay_payment_id,
+                      razorpay_order_id: response.razorpay_order_id,
+                      razorpay_signature: response.razorpay_signature,
+                      orderId: data.orderId,
+                    }),
+                  })
+                    .then((res) => res.json())
+                    .then((data) => {
+                      if (data && data.success) {
+                        Swal.fire({
+                          title: "Order Placed!",
+                          text: data.message,
+                          icon: "success",
+                          confirmButtonText: "View Order Details",
+                        }).then(() => {
+                          window.location.href = `/user/order-success?orderId=${data.orderId}`;
+                        });
+                      } else {
+                        Swal.fire("Payment verification failed.");
+                        window.location.href = '/user/order-failure'
+                      }
+                    });
+                },
+                prefill: {
+                  name: data.user?.fullName || "",
+                  email: data.user?.email || "",
+                  contact: data.user?.phone || "",
+                },
+                theme: { color: "#3399cc" },
+              };
+
+              const rzp = new Razorpay(options);
+              rzp.open();
             } else {
-              Swal.fire(data.message)
+              Swal.fire(data.message || "Order creation failed.");
             }
-          }).catch(error => {
-            console.log('errror is ', error);
-            Swal.fire("Server Error")
           })
+          .catch((error) => {
+            Swal.fire("Something went wrong.");
+            console.log(error);
+          });
       })
+      
+      
+  let isApplied = false;
+const coupenBtn = document.getElementById('coupenBtn');
 
-      function showCoupons() {
+coupenBtn.addEventListener('click', function () {
+  const code = document.getElementById('coupon').value;
+  console.log('Apply coupon button clicked');
+  console.log('Code is:', code);
+
+  // If coupon already applied, remove it
+  if (isApplied) {
+    fetch('/user/removeCoupon', {
+      method: 'GET',
+      headers: {
+        'CSRF-Token': csrfToken // If required by your server setup
+      }
+    })
+    .then((res) => res.json())
+    .then((data) => {
+      Swal.fire(data.message || "Coupon removed successfully!");
+      this.textContent = 'Apply';
+      this.style.backgroundColor = '#104615';
+      document.getElementById('discountAmount').innerText = '0';
+      document.getElementById('finalAmount').innerText = data.originalAmount || ''; // fallback if undefined
+      document.getElementById('coupon').value = ''; // Clear input field
+      isApplied = false;
+    })
+    .catch((error) => {
+      console.error('Error removing coupon:', error);
+      Swal.fire("Failed to remove coupon");
+    });
+    return;
+  }
+
+  // If not applied, apply the coupon
+  fetch('/user/applyCoupon', {
+    method: 'POST',
+    headers: {
+      "Content-Type": "application/json",
+      'CSRF-Token': csrfToken
+    },
+    body: JSON.stringify({ code })
+  })
+  .then((res) => res.json())
+  .then((data) => {
+    Swal.fire(data.message);
+    if (data.success) {
+      document.getElementById('discountAmount').innerText = data.discountAmount;
+      document.getElementById('finalAmount').innerText = data.finalAmount;
+      // Fix: this was previously using innerText on an input field (wrong), use .value
+      document.getElementById('coupon').value = code;
+
+      this.textContent = 'Remove';
+      this.style.backgroundColor = 'red';
+      isApplied = true;
+    } else {
+      document.getElementById('coupon').value = '';
+    }
+  })
+  .catch(error => {
+    console.log('Error is', error);
+    Swal.fire("Server Error");
+  });
+});
+
+
+
+      function openCouponModal() {
         console.log('showCoupons clicked');
+        document.getElementById('couponModal').style.display = 'block'
+      }
 
+      function closeCouponModal() {
+        document.getElementById('couponModal').style.display = 'none'
+      }
+      window.onclick(function (e) {
+        const modal = document.getElementById('couponModal')
+        if (e.target == modal) {
+          modal.style.display = 'none'
+        }
+      })
+      function copyCoupon(code) {
+        navigator.clipboard.writeText(code).then(() => {
+          Swal.fire("Coupon code copied: " + code);
+        }).catch(err => {
+          console.error("Copy failed: ", err);
+          Swal.fire("Failed to copy coupon code.");
+        });
       }
     </script>
 

@@ -237,12 +237,13 @@ router.post(
       console.log('imagepath ',imagePaths);
       
        // Extract image filenames
-      const { productName, categoryId, price, description } = req.body;
+      const { productName, categoryId, price, description,stock } = req.body;
       const { productId } = req.params;
 
       console.log("This is req.body:", JSON.stringify(req.body, null, 2));
       console.log("Product name is:", productName);
       console.log("Product ID is:", productId);
+       console.log("Product stock is:", stock);
 
       const productToUpdate = await Product.findOne({ _id: productId });
       if (!productToUpdate) {
@@ -257,7 +258,7 @@ router.post(
       }
       const updatedProduct = await Product.findOneAndUpdate(
         { _id: productId },
-        { $set: { productName, categoryId, description, price, images} },
+        { $set: { productName, categoryId, description, price, images,stock} },
         { new: true }
       );
 

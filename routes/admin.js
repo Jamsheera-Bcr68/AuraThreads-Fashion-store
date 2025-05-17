@@ -184,12 +184,7 @@ router.post("/category/edit/:id", async (req, res) => {
 
     req.flash('successMessage', 'Category Updated Successfully')
     res.redirect('/admin/category')
-    // const categories = await category.find({isDeleted:false});
-
-    // res.render("../views/admin/categoryManagement", {
-    //   categories,
-    //   title: "Category Manamgement",
-    // });
+    
   } catch (error) {
     console.log(error);
     req.flash('errorMessage', 'Error While Adding Caterory')

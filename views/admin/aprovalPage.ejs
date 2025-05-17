@@ -64,60 +64,57 @@
           </div>
           
     </div>
+   
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script>
-      const approvalForm=document.getElementById('approvalForm')
-      approvalForm.addEventListener('submit',function(e){
-        e.preventDefault()
-        console.log('approval form submitted');
-        const formData=new FormData(this)
-        formObject=Object.fromEntries(formData)
-        console.log('formdata',formObject);
+<script>
+  // Handle all approve buttons
+  document.querySelectorAll('form[action="/admin/returns/approve"]').forEach(form => {
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      const formObject = Object.fromEntries(formData);
+      console.log('Approving:', formObject);
 
-        fetch('/admin/returns/approve',{
-          method:"POST",
-          headers:{"Content-Type":"application/json"},
-          body:JSON.stringify(formObject)
-        }).then(res=>res.json())
-        .then(data=>{
-          if(data && data.success){
-            Swal.fire(data.message)
-          }else{
-            Swal.fire(data.message)
-          }
-        }).catch(error=>{
-          console.log(error);
-          
-          Swal.fir('Server Error')
-        })
-        
+      fetch('/admin/returns/approve', {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formObject)
       })
-
-      const rejectingForm=document.getElementById('rejectingForm')
-      rejectingForm.addEventListener('submit',function(e){
-        e.preventDefault()
-        console.log('rejectingForm submitted');
-        const formData=new FormData(this)
-      const formObject=Object.fromEntries(formData)
-      console.log(formObject);
-
-      fetch('/admin/returns/reject',{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify(formObject)
-      }).then(res=>res.json())
-      .then(data=>{
-        if(data && data.success){
-          Swal.fire(data.message)
-        }else{
-          Swal.fire(data.message)
-        }
-      }).catch(error=>{
+      .then(res => res.json())
+      .then(data => {
+        Swal.fire(data.message).then(() => location.reload()); // refresh after approval
+      })
+      .catch(error => {
         console.log(error);
-        Swal.fire("Server error")
+        Swal.fire('Server Error');
+      });
+    });
+  });
+
+  // Handle all reject buttons
+  document.querySelectorAll('form[action="/admin/returns/reject"]').forEach(form => {
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      const formObject = Object.fromEntries(formData);
+      console.log('Rejecting:', formObject);
+
+      fetch('/admin/returns/reject', {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formObject)
       })
-      
+      .then(res => res.json())
+      .then(data => {
+        Swal.fire(data.message).then(() => location.reload()); // refresh after rejection
       })
-    </script>
+      .catch(error => {
+        console.log(error);
+        Swal.fire('Server Error');
+      });
+    });
+  });
+</script>
+
 </body>
 </html>
