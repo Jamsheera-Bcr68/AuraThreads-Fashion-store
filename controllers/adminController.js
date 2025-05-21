@@ -16,7 +16,7 @@ const path=require('path')
 const fs = require('fs');
 const pdf = require('html-pdf');
 const ExcelJS = require('exceljs');
-console.log("Admin Controller Loaded!");
+
 const Razorpay = require("razorpay");
 // get login
 const getLogin = async (req, res) => {
@@ -357,6 +357,16 @@ const getCoupenPage = async (req, res) => {
     const totalCoupons = await Coupen.countDocuments()
     const totalPages = Math.floor(totalCoupons / limit)
 
+    const currentDate=new Date()
+    
+for (const coupon of coupons) {
+  if (coupon.expiryDate < currentDate) {
+    coupon.isActive = false;
+    await coupon.save();
+  }
+}
+    
+   
     res.render('admin/coupenManagement', {
       title: 'Admin Coupen Management',
       coupons,
@@ -509,8 +519,11 @@ const applyCoupon = async (req, res) => {
 
 //get offers
 const getOffers = async (req, res) => {
-  let date = new Date()
-  const totalOffers = await Offer.countDocuments()
+   
+  try {
+
+    let date = new Date()
+    const totalOffers = await Offer.countDocuments()
   const pendingOffers = await Offer.countDocuments({ status: 'pending' })
   const activeOffers = await Offer.countDocuments({ status: 'active' })
   const expiredOffers = await Offer.countDocuments({ endDate: { $lt: date } })
@@ -520,13 +533,12 @@ const getOffers = async (req, res) => {
     pendingOffers,
     expiredOffers
   };
-  try {
 
     const page = parseInt(req.query.page) || 1
     const limit = parseInt(req.query.limit) || 5
     const skip = (page - 1) * limit
 
-    const totalOffers = await Offer.countDocuments()
+    
     const totalPages = Math.ceil(totalOffers / limit)
 
     const products = await Product.find({ isDeleted: false })
@@ -535,6 +547,13 @@ const getOffers = async (req, res) => {
 
     console.log('from admin offer');
     const refferalOffers = await RefferalOffer.find().sort({ startDate: -1 })
+
+    for( let offer of offers){
+      if(offer.endDate<date){
+        offer.status='expired'
+        await offer.save()
+      }
+    }
 
     res.render('admin/offerManagement', {
       title: "Offer Management",
@@ -870,7 +889,7 @@ console.log('orderId, productId',orderId, productId);
     );
     if (!returnRequest) throw new Error("Return request not found for this product");
 
-    console.log('returnrequest brfore save',returnRequest);
+    //console.log('returnrequest before save',returnRequest);
     
     returnRequest.status = 'approved';
     order.markModified('returnRequests')
@@ -894,10 +913,31 @@ console.log('orderId, productId',orderId, productId);
     const wallet = await Wallet.findOne({ userId });
     if (!wallet) throw new Error("Wallet not found");
 
-    const refundAmount = quantity * item.price;
+    let refundAmount = quantity * item.price;
+    if(order.items.length==1 && order.isOfferApplied){
+      refundAmount-=order.offerDiscountAmount
+    }
+    
+    if(order.items.length==1 && order.isCouponApplied){
+      refundAmount=refundAmount-order.coupenDiscountAmount
+    }
     wallet.balance += refundAmount;
+
+    // UPDATE TRANSACTIONS
+     wallet.transactions.push({
+          amount: refundAmount,
+          type: "credit",
+          date: new Date(),
+          description: "Product returned"
+        })
+
     await wallet.save();
+    
     console.log('Wallet refunded with:', refundAmount);
+
+    order.totalAmount-=refundAmount
+    order.finalAmounf-=refundAmount
+    await order.save()
 
     return res.json({
       success: true,

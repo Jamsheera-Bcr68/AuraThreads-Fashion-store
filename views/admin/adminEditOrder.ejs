@@ -17,21 +17,29 @@
 
     <form id="editOrderForm" action="/admin/orders/<%= order._id %>/update-status" method="POST">
       <div class="section">
-        <h3>Update Status</h3>
-        <!-- Hidden field for orderId -->
-        <input type="hidden" name="orderId" value="<%= order._id %>">
-        <select name="status" required>
+     <h3>Update Status</h3>
 
-          <option value="">-- Select Status --</option>
-          <option value="Pending" <%= order.status === 'Pending' ? 'selected' : '' %>>Pending</option>
-          <option value="Processing" <%= order.status === 'Processing' ? 'selected' : '' %>>Processing</option>
-          <option value="Shipped" <%= order.status === 'Shipped' ? 'selected' : '' %>>Shipped</option>
-          <option value="Delivered" <%= order.status === 'Delivered' ? 'selected' : '' %>>Delivered</option>
-          <option value="Cancelled" <%= order.status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
-        </select>
+<!-- Hidden field for orderId -->
+<input type="hidden" name="orderId" value="<%= order._id %>">
 
-        <button type="submit">Update</button>
-      </div>
+<% if (order.status === 'Delivered') { %>
+  <p><strong>Order Status: Delivered</strong></p>
+  <select name="status" disabled style="display: none;">
+    <option value="Delivered" selected>Delivered</option>
+  </select>
+  <button type="submit" disabled style="display: none;">Update</button>
+<% } else { %>
+  <select name="status" required>
+    <option value="">-- Select Status --</option>
+    <option value="Pending" <%= order.status === 'Pending' ? 'selected' : '' %>>Pending</option>
+    <option value="Processing" <%= order.status === 'Processing' ? 'selected' : '' %>>Processing</option>
+    <option value="Shipped" <%= order.status === 'Shipped' ? 'selected' : '' %>>Shipped</option>
+    <option value="Delivered" <%= order.status === 'Delivered' ? 'selected' : '' %>>Delivered</option>
+    <option value="Cancelled" <%= order.status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
+  </select>
+  <button type="submit">Update</button>
+<% } %>
+
     </form>
 
     <a href="/admin/orders" class="btn-back">← Back to Orders</a>

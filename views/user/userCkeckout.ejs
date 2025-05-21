@@ -160,11 +160,12 @@
       <!-- Promo Code -->
       <div class="form-group" style="margin-top: 25px;">
         <label for="coupon">Coupon Code</label>
-        <button style="background-color: dodgerblue;color: white;margin-left: 10em;" onclick="openCouponModal()" id="showCouponsBtn">Show Available Coupons</button>
+        <button style="background-color: dodgerblue;color: white;margin-left: 10em;" onclick="openCouponModal()"
+          id="showCouponsBtn">Show Available Coupons</button>
 
 
         <div style="display: flex;">
-          <input type="text" id="coupon"  placeholder="Enter Coupon code"
+          <input type="text" id="coupon" placeholder="Enter Coupon code"
             style="flex: 1; padding: 10px; border: 1px solid #ccc; border-right: none; border-radius: 4px 0 0 4px;">
           <button id="coupenBtn"
             style="padding: 10px 16px; background-color: #104615; color: white; border: none; border-radius: 0 4px 4px 0; cursor: pointer;">Apply</button>
@@ -398,7 +399,18 @@
         })
           .then((res) => res.json())
           .then((data) => {
-            if (data && data.success && data.razorpayOrderId) {
+            if (data.paymentMethod == 'COD') {
+              Swal.fire({
+                title: "Order Placed!",
+                text: data.message,
+                icon: "success",
+                confirmButtonText: "View Order Details",
+              }).then(() => {
+                window.location.href = `/user/order-success?orderId=${data.orderId}`;
+              });
+
+            }
+          else if (data && data.success && data.razorpayOrderId) {
               const options = {
                 key: data.key_id,
                 amount: data.amount, // in paisa
@@ -451,75 +463,75 @@
             }
           })
           .catch((error) => {
-            Swal.fire("Something went wrong.");
+            Swal.fire(data.message||"Something went wrong.");
             console.log(error);
           });
       })
-      
-      
-  let isApplied = false;
-const coupenBtn = document.getElementById('coupenBtn');
 
-coupenBtn.addEventListener('click', function () {
-  const code = document.getElementById('coupon').value;
-  console.log('Apply coupon button clicked');
-  console.log('Code is:', code);
 
-  // If coupon already applied, remove it
-  if (isApplied) {
-    fetch('/user/removeCoupon', {
-      method: 'GET',
-      headers: {
-        'CSRF-Token': csrfToken // If required by your server setup
-      }
-    })
-    .then((res) => res.json())
-    .then((data) => {
-      Swal.fire(data.message || "Coupon removed successfully!");
-      this.textContent = 'Apply';
-      this.style.backgroundColor = '#104615';
-      document.getElementById('discountAmount').innerText = '0';
-      document.getElementById('finalAmount').innerText = data.originalAmount || ''; // fallback if undefined
-      document.getElementById('coupon').value = ''; // Clear input field
-      isApplied = false;
-    })
-    .catch((error) => {
-      console.error('Error removing coupon:', error);
-      Swal.fire("Failed to remove coupon");
-    });
-    return;
-  }
+      let isApplied = false;
+      const coupenBtn = document.getElementById('coupenBtn');
 
-  // If not applied, apply the coupon
-  fetch('/user/applyCoupon', {
-    method: 'POST',
-    headers: {
-      "Content-Type": "application/json",
-      'CSRF-Token': csrfToken
-    },
-    body: JSON.stringify({ code })
-  })
-  .then((res) => res.json())
-  .then((data) => {
-    Swal.fire(data.message);
-    if (data.success) {
-      document.getElementById('discountAmount').innerText = data.discountAmount;
-      document.getElementById('finalAmount').innerText = data.finalAmount;
-      // Fix: this was previously using innerText on an input field (wrong), use .value
-      document.getElementById('coupon').value = code;
+      coupenBtn.addEventListener('click', function () {
+        const code = document.getElementById('coupon').value;
+        console.log('Apply coupon button clicked');
+        console.log('Code is:', code);
 
-      this.textContent = 'Remove';
-      this.style.backgroundColor = 'red';
-      isApplied = true;
-    } else {
-      document.getElementById('coupon').value = '';
-    }
-  })
-  .catch(error => {
-    console.log('Error is', error);
-    Swal.fire("Server Error");
-  });
-});
+        // If coupon already applied, remove it
+        if (isApplied) {
+          fetch('/user/removeCoupon', {
+            method: 'GET',
+            headers: {
+              'CSRF-Token': csrfToken // If required by your server setup
+            }
+          })
+            .then((res) => res.json())
+            .then((data) => {
+              Swal.fire(data.message || "Coupon removed successfully!");
+              this.textContent = 'Apply';
+              this.style.backgroundColor = '#104615';
+              document.getElementById('discountAmount').innerText = '0';
+              document.getElementById('finalAmount').innerText = data.originalAmount || ''; // fallback if undefined
+              document.getElementById('coupon').value = ''; // Clear input field
+              isApplied = false;
+            })
+            .catch((error) => {
+              console.error('Error removing coupon:', error);
+              Swal.fire("Failed to remove coupon");
+            });
+          return;
+        }
+
+        // If not applied, apply the coupon
+        fetch('/user/applyCoupon', {
+          method: 'POST',
+          headers: {
+            "Content-Type": "application/json",
+            'CSRF-Token': csrfToken
+          },
+          body: JSON.stringify({ code })
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            Swal.fire(data.message);
+            if (data.success) {
+              document.getElementById('discountAmount').innerText = data.discountAmount;
+              document.getElementById('finalAmount').innerText = data.finalAmount;
+              // Fix: this was previously using innerText on an input field (wrong), use .value
+              document.getElementById('coupon').value = code;
+
+              this.textContent = 'Remove';
+              this.style.backgroundColor = 'red';
+              isApplied = true;
+            } else {
+              document.getElementById('coupon').value = '';
+            }
+          })
+          .catch(error => {
+            console.log('Error is', error);
+            Swal.fire("Server Error");
+          });
+      });
 
 
 

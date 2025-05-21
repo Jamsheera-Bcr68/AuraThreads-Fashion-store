@@ -221,6 +221,12 @@ const varifyOtp = async (req, res) => {
       console.log('This is  a referred user');
 
       wallet.balance = 50
+      wallet.transactions.push({
+          amount: 50,
+          type: "credit",
+          date: new Date(),
+          description: "Refferal code benefit"
+        })
       await wallet.save();
       console.log('user got referalcode benefit');
 
@@ -240,6 +246,14 @@ const varifyOtp = async (req, res) => {
       console.log(referrerWallet.balance, 'before');
 
       referrerWallet.balance = referrerWallet.balance + 100
+
+      referrerWallet.transactions.push({
+          amount: 100,
+          type: "credit",
+          date: new Date(),
+          description: "Refferal offer Credit"
+        })
+
       await referrerWallet.save()
       console.log(referrerWallet.balance, 'after')
       console.log('refered user go referalcode benefit');
@@ -1455,6 +1469,50 @@ const placeOrder = async (req, res) => {
     }
     const razorpayOrder = await razorpay.orders.create(options);
 
+    if(paymentMethod=='COD'){
+      const newOrder=new Order({
+        userId: req.session.user._id,
+      address,
+      coupenDiscountAmount,
+      offerDiscountAmount,
+      isCouponApplied,
+      isOfferApplied,
+      couponCode,
+      finalAmount,
+      paymentMethod,
+      totalAmount,
+      status:'Pending',
+      items: cart.items,
+      createdAt,
+      deliveryDate,
+      useWallet
+      })
+      await newOrder.save()
+
+      //update stock
+       for (let item of cart.items) {
+        await Product.findByIdAndUpdate(item.productId, {
+          $inc: { stock: -item.quantity }
+        });
+      }
+
+      //making cart empty
+      
+      // making cart empty
+      await Cart.updateOne({ userId }, { $set: { items: [] } });
+      req.session.discountAmount = 0
+      req.session.finalAmount = 0
+      req.session.code = ''
+      req.session.appliedCoupon = null
+      req.session.offer = null
+      req.session.cartTotal = 0
+      req.session.netAmount = 0
+      req.session.totalDiscount = 0
+
+      let orderId = newOrder._id
+
+       return res.json({success:true,message:"Order Placed Succesfully",paymentMethod,orderId})
+    }
     //creating new order document
     req.session.tempOrder = {
       userId: req.session.user._id,
@@ -1493,10 +1551,11 @@ const placeOrder = async (req, res) => {
       success: true,
       message: "Order completed successfully",
 
+      paymentMethod,
       razorpayOrderId: razorpayOrder.id,// sending razor pay datas to front end
       amount: razorpayOrder.amount,
       currency: razorpayOrder.currency,
-      currency: razorpayOrder.currency,
+      
       key_id: process.env.RAZORPAY_KEY_ID,
       user: req.session.user
     });
@@ -1634,7 +1693,7 @@ const deleteOrder = async (req, res) => {
         date: new Date(),
         description: "Order Cancelled,Amount refunded"
       })
-      wallet.save()
+     await wallet.save()
     }
 
     // restoring stock
@@ -1955,6 +2014,12 @@ const addMoney = async (req, res) => {
     }
 
     wallet.balance = wallet.balance + parseInt(amount)
+     wallet.transactions.push({
+        type: "credit",
+        amount: parseInt(amount),
+        date: new Date(),
+        description: "Fund Added"
+      })
     await wallet.save()
     return res.json({ success: true, message: "Fund Added succesfully" })
   } catch (error) {
@@ -1989,7 +2054,7 @@ const cancelSingleProduct = async (req, res) => {
     })
 
 
-    console.log('one product canselled');
+    console.log('one product cancelled');
     console.log('quantity ', itemQuantity);
 
     //stock restock
@@ -2006,6 +2071,14 @@ const cancelSingleProduct = async (req, res) => {
 
     //amount refund
     let refundAmount = itemPrice * itemQuantity
+
+    if(order.items.length==1 && order.isOfferApplied){
+      refundAmount=refundAmount-order.offerDiscountAmount
+    }
+    
+    if(order.items.length==1 && order.isCouponApplied){
+      refundAmount=refundAmount-order.coupenDiscountAmount
+    }
     order.totalAmount -= refundAmount
     order.finalAmount -= refundAmount
     if (order.finalAmount < 0) {
@@ -2031,7 +2104,15 @@ const cancelSingleProduct = async (req, res) => {
 
     if (order.useWallet == true) {
       wallet.balance += refundAmount
+     
+      wallet.transactions.push({
+          amount: refundAmount,
+          type: "credit",
+          date: new Date(),
+          description: "Product Cancelled"
+        })
       await wallet.save()
+
       console.log(refundAmount, 'refunded to wallet');
     }
     return res.json({ success: true, message: "Product order cancelled" })
@@ -2084,7 +2165,13 @@ const returnProduct = async (req, res) => {
       console.log('Product  not found');
       return res.json({ success: false, message: "Product not found" })
     }
+    const existReturn= order.returnRequests.find(req=>req.productId.toString()==productId.toString())  
+     if(existReturn){
+      console.log('already requested');
+      return res.json({success:false,message:"Already requested"})
+     }
 
+     productInOrder.status='returnRequested'
     // saving reason in order
     order.returnRequests = order.returnRequests || [];
     order.returnRequests.push({
@@ -2192,7 +2279,7 @@ const varifyPayment = async (req, res, next) => {
 
       res.json({ success: true, message: "Payment verified successfully" ,orderId})
     } else {
-      console.log('signamture is not matching');
+      console.log('signature is not matching');
       throw new Error("Signature is not matching")
     }
 

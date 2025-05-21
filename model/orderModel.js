@@ -12,7 +12,9 @@ const orderSchema=mongoose.Schema({
           },
           quantity: Number,
           status:{type:String,default:"active"},
-          isReturned: { type: Boolean, default: false }
+          isReturned: { type: Boolean, default: false },
+          itemTotal:Number,
+          itemOfferDiscount:Number
         }
         
       ],

@@ -37,9 +37,10 @@
                     </p>
                     <p><strong>Total Amount:</strong>₹ <%= order.totalAmount.toFixed(2) %>
                             <p><strong>Discount Thruogh Coupon:</strong>₹ <%= order.coupenDiscountAmount.toFixed(2) %>
-                                <p><strong>Discount Thruogh Offer:</strong>₹ <%= order.offerDiscountAmount.toFixed(2) %>
-                                    <p><strong>Net Total :</strong>₹ <%= order.finalAmount.toFixed(2) %>
-                                    </p>
+                                    <p><strong>Discount Thruogh Offer:</strong>₹ <%=
+                                            order.offerDiscountAmount.toFixed(2) %>
+                                            <p><strong>Net Total :</strong>₹ <%= order.finalAmount.toFixed(2) %>
+                                            </p>
         </div>
 
         <div class="section">
@@ -91,10 +92,11 @@
                                         <button
                                             onclick="cancelSingleProduct('<%= item.productId._id %>', '<%= order._id %>')"
                                             class="orderCancel">Cancel</button>
-                                        <button data-productid="<%= item.productId._id %>"
-                                            data-orderid="<%= order._id %>" class="returnProduct"
-                                            id="returnBtn">Return</button>
-                                        <% } %>
+                                        <button id="returnBtn" data-productid="<%= item.productId._id %>" data-orderid="<%= order._id %>" class="returnProduct"
+                                       >Return
+                                        </button>
+                                    
+                                            <% } %>
 
                             </td>
                         </tr>
@@ -155,9 +157,10 @@
                 if (result.isConfirmed) {
                     fetch('/user/cancelSingleProduct', {
                         method: "DELETE",
-                        headers: { "Content-Type": "application/json",
+                        headers: {
+                            "Content-Type": "application/json",
                             'CSRF-Token': csrfToken
-                         },
+                        },
                         body: JSON.stringify({ productId, orderId })
                     }).then(res => res.json())
                         .then(data => {
@@ -179,22 +182,30 @@
 
         }
 
-        const returnBtn = document.getElementById('returnBtn');
+        const returnBtns = document.querySelectorAll('.returnProduct');
         const returnModal = document.getElementById('returnModal');
         const closeBtn = document.querySelector('.close');
         const submitBtn = document.getElementById('submitReason');
+       const returnBtn= document.getElementById('returnBtn')
 
         let productId = '';
         let orderId = '';
-
+        let clickedBtn=null
         // Open Modal
-        returnBtn.onclick = function () {
-            console.log('retun btn clicked');
-            
+        returnBtns.forEach(btn=>btn.addEventListener('click',function(){
+             console.log('retun btn clicked');
+            clickedBtn=this
             productId = this.getAttribute('data-productid');
             orderId = this.getAttribute('data-orderid');
             returnModal.style.display = 'block';
-        }
+        }))
+        // returnBtn.onclick = function () {
+        //     console.log('retun btn clicked');
+
+        //     productId = this.getAttribute('data-productid');
+        //     orderId = this.getAttribute('data-orderid');
+        //     returnModal.style.display = 'block';
+        // }
 
         // Close Modal
         closeBtn.onclick = function () {
@@ -211,12 +222,12 @@
         // Submit Reason
         submitBtn.onclick = async function () {
             console.log('reason submitted');
-            
+
             const reason = document.getElementById('returnReason').value.trim();
-            console.log('reason ',reason);
-            
-            if (reason!=='') {
-                
+            console.log('reason ', reason);
+
+            if (reason !== '') {
+
                 try {
                     const response = await fetch('/user/return-product', {
                         method: 'POST',
@@ -235,6 +246,9 @@
                     if (result.success) {
                         Swal.fire('Return request submitted successfully!');
                         returnModal.style.display = 'none';
+                        // update the button
+                        clickedBtn.textContent = 'Return Requested';
+                        returnBtn.disabled = true;
                     } else {
                         Swal.fire(result.message);
                     }
@@ -247,7 +261,7 @@
                 Swal.fire("Please enter a reason.");
             }
         }
-    
+
     </script>
 
 
