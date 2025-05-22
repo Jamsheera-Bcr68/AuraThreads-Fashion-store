@@ -18,6 +18,7 @@ const Offer = require('../model/offerModel')
 const razorpay = require('../config/razorPay');
 const crypto = require('crypto');
 const { title } = require("process");
+const messages = require("dote/src/messages");
 
 //get Register
 const getRegister = async (req, res) => {
@@ -222,11 +223,11 @@ const varifyOtp = async (req, res) => {
 
       wallet.balance = 50
       wallet.transactions.push({
-          amount: 50,
-          type: "credit",
-          date: new Date(),
-          description: "Refferal code benefit"
-        })
+        amount: 50,
+        type: "credit",
+        date: new Date(),
+        description: "Refferal code benefit"
+      })
       await wallet.save();
       console.log('user got referalcode benefit');
 
@@ -248,11 +249,11 @@ const varifyOtp = async (req, res) => {
       referrerWallet.balance = referrerWallet.balance + 100
 
       referrerWallet.transactions.push({
-          amount: 100,
-          type: "credit",
-          date: new Date(),
-          description: "Refferal offer Credit"
-        })
+        amount: 100,
+        type: "credit",
+        date: new Date(),
+        description: "Refferal offer Credit"
+      })
 
       await referrerWallet.save()
       console.log(referrerWallet.balance, 'after')
@@ -421,6 +422,11 @@ const getSingleProduct = async (req, res) => {
   console.log("productId is equal to " + productId);
 
   try {
+    if (!productId) {
+      console.log('Product id is not fount');
+
+      return res.json({ success: false, message: "Product Id is not fount" })
+    }
     const singleProduct = await Product.findOne({
       isDeleted: false,
       _id: productId,
@@ -430,7 +436,7 @@ const getSingleProduct = async (req, res) => {
       console.log("No product found");
       return res
         .status(404)
-        .render("user/error", { message: "Product not found" });
+        .render({ success: false, message: "Product not found" });
     }
 
     singleProduct.images = singleProduct.images.map((image) =>
@@ -443,10 +449,10 @@ const getSingleProduct = async (req, res) => {
     relatedProducts.forEach(product => {
       product.images = product.images.map(image => image.replace(/\\/g, '/'))
     })
-    console.log('related images' + relatedProducts[0].images);
+    //console.log('related images' + relatedProducts[0].images);
 
 
-    console.log(relatedProducts + ' related products');
+    // console.log(relatedProducts + ' related products');
 
     //get cart count
     let cartCount = 0
@@ -473,7 +479,7 @@ const getSingleProduct = async (req, res) => {
 
 
     if (productOffer && categoryOffer) {
-      console.log('both available fronm single product page');
+      console.log('Both available fronm single product page');
 
 
       const productdiscountAmount = productOffer.discountType == 'amount' ? productOffer.discountValue : (productOffer.discountValue * singleProduct.price) / 100
@@ -482,10 +488,14 @@ const getSingleProduct = async (req, res) => {
       discountAmount = productdiscountAmount > categoryDiscountAmount ? productdiscountAmount : categoryDiscountAmount
       finalOffer = productdiscountAmount > categoryDiscountAmount ? productOffer : categoryOffer
 
-    } else {
+    } else if (productOffer || categoryOffer) {
       console.log('one offer applicable fronm single product page');
       finalOffer = productOffer || categoryOffer
       discountAmount = finalOffer.discountType == 'amount' ? finalOffer.discountValue : (finalOffer.discountValue * singleProduct.price) / 100
+    } else {
+      console.log('No offer applicable from single product page');
+      finalOffer = null;
+      discountAmount = 0;
     }
 
     if (finalOffer) {
@@ -511,7 +521,8 @@ const getSingleProduct = async (req, res) => {
     console.error("Error fetching product:", error);
     res
       .status(500)
-      .render("user/error", {
+      .render({
+        success: false,
         message: "Something went wrong. Please try again.",
       });
   }
@@ -614,13 +625,23 @@ const getProductList = async (req, res) => {
 
     //get cart count
     let cartCount = 0
+    let wishlistIds = []
     if (req.session.user) {
       const userId = req.session.user._id
+
+      //console.log('userId', userId);
+
+      const wishList = await WishList.findOne({ userId: req.session.user._id })
+      //console.log('wishlist', wishList);
+
+      wishlistIds = wishList.items.map(item => item.toString())
+      //console.log('wishlist ids', wishlistIds);
 
       const cart = await Cart.findOne({ userId })
       if (cart) {
         cartCount = cart.items.length
-        console.log('cart count is ', cartCount);
+        //console.log('cart count is ', cartCount);
+
       } else {
         console.log('cart not fount');
 
@@ -674,10 +695,9 @@ const getProductList = async (req, res) => {
 
 
 
-
     res.render('user/productList', {
       products,
-
+      wishlist: wishlistIds,
       categoryId: categoryId || null,
       categories,
       sort: sort || null,
@@ -1061,11 +1081,12 @@ const getCart = async (req, res) => {
 const addToCart = async (req, res) => {
   console.log('from add to cart');
   try {
-    const user = req.session.user;
-    const userId = user._id;
-    if (!userId) {
+    if (!req.session.user) {
       return res.json({ success: false, message: "User not registered" })
     }
+    const user = req.session.user;
+    const userId = user._id;
+
     const { productId } = req.body;
     console.log('product id is ', productId);
 
@@ -1304,7 +1325,7 @@ const getCheckout = async (req, res) => {
 
   }
 
-  
+
 
   const shippingCharge = 0.00
   const taxAmount = 0.00
@@ -1335,7 +1356,7 @@ const getCheckout = async (req, res) => {
   console.log('offerDiscountAmount', offerDiscountAmount);
 
   //getting available coupons
-const coupons = await Coupon.find({ isActive: true, expiryDate: { $gte: new Date() } });
+  const coupons = await Coupon.find({ isActive: true, expiryDate: { $gte: new Date() } });
 
   return res.render('user/userCkeckout', {
     categoryId: null,
@@ -1469,35 +1490,35 @@ const placeOrder = async (req, res) => {
     }
     const razorpayOrder = await razorpay.orders.create(options);
 
-    if(paymentMethod=='COD'){
-      const newOrder=new Order({
+    if (paymentMethod == 'COD') {
+      const newOrder = new Order({
         userId: req.session.user._id,
-      address,
-      coupenDiscountAmount,
-      offerDiscountAmount,
-      isCouponApplied,
-      isOfferApplied,
-      couponCode,
-      finalAmount,
-      paymentMethod,
-      totalAmount,
-      status:'Pending',
-      items: cart.items,
-      createdAt,
-      deliveryDate,
-      useWallet
+        address,
+        coupenDiscountAmount,
+        offerDiscountAmount,
+        isCouponApplied,
+        isOfferApplied,
+        couponCode,
+        finalAmount,
+        paymentMethod,
+        totalAmount,
+        status: 'Pending',
+        items: cart.items,
+        createdAt,
+        deliveryDate,
+        useWallet
       })
       await newOrder.save()
 
       //update stock
-       for (let item of cart.items) {
+      for (let item of cart.items) {
         await Product.findByIdAndUpdate(item.productId, {
           $inc: { stock: -item.quantity }
         });
       }
 
       //making cart empty
-      
+
       // making cart empty
       await Cart.updateOne({ userId }, { $set: { items: [] } });
       req.session.discountAmount = 0
@@ -1511,7 +1532,7 @@ const placeOrder = async (req, res) => {
 
       let orderId = newOrder._id
 
-       return res.json({success:true,message:"Order Placed Succesfully",paymentMethod,orderId})
+      return res.json({ success: true, message: "Order Placed Succesfully", paymentMethod, orderId })
     }
     //creating new order document
     req.session.tempOrder = {
@@ -1525,7 +1546,7 @@ const placeOrder = async (req, res) => {
       finalAmount,
       paymentMethod,
       totalAmount,
-     
+
       status: paymentMethod === 'COD' ? 'Pending' : 'Processing',
       paymentDetails: paymentMethod == 'Credit Card' ? {
         cardNumber,
@@ -1534,9 +1555,9 @@ const placeOrder = async (req, res) => {
         cardName
       } : paymentMethod == 'UPI' ? {
         upiId
-      } : paymentMethod=='wallet' ?{
-        razorpayOrderId : razorpayOrder.id,
-        
+      } : paymentMethod == 'wallet' ? {
+        razorpayOrderId: razorpayOrder.id,
+
       } : null,
 
       items: cart.items,
@@ -1555,7 +1576,7 @@ const placeOrder = async (req, res) => {
       razorpayOrderId: razorpayOrder.id,// sending razor pay datas to front end
       amount: razorpayOrder.amount,
       currency: razorpayOrder.currency,
-      
+
       key_id: process.env.RAZORPAY_KEY_ID,
       user: req.session.user
     });
@@ -1693,7 +1714,7 @@ const deleteOrder = async (req, res) => {
         date: new Date(),
         description: "Order Cancelled,Amount refunded"
       })
-     await wallet.save()
+      await wallet.save()
     }
 
     // restoring stock
@@ -1898,7 +1919,13 @@ const addToWishList = async (req, res) => {
 
       return res.json({ success: false, message: "Product not Found " })
     }
+    if (!req.session.user) {
+      return res.json({ success: false, message: "You are not registered" })
+    }
     const userId = req.session.user._id
+    if (!userId) {
+      return res.json({ success: false, message: "User is not registered" })
+    }
     let wishList = await WishList.findOne({ userId })
     console.log('wishList ', wishList);
 
@@ -2014,12 +2041,12 @@ const addMoney = async (req, res) => {
     }
 
     wallet.balance = wallet.balance + parseInt(amount)
-     wallet.transactions.push({
-        type: "credit",
-        amount: parseInt(amount),
-        date: new Date(),
-        description: "Fund Added"
-      })
+    wallet.transactions.push({
+      type: "credit",
+      amount: parseInt(amount),
+      date: new Date(),
+      description: "Fund Added"
+    })
     await wallet.save()
     return res.json({ success: true, message: "Fund Added succesfully" })
   } catch (error) {
@@ -2072,12 +2099,12 @@ const cancelSingleProduct = async (req, res) => {
     //amount refund
     let refundAmount = itemPrice * itemQuantity
 
-    if(order.items.length==1 && order.isOfferApplied){
-      refundAmount=refundAmount-order.offerDiscountAmount
+    if (order.items.length == 1 && order.isOfferApplied) {
+      refundAmount = refundAmount - order.offerDiscountAmount
     }
-    
-    if(order.items.length==1 && order.isCouponApplied){
-      refundAmount=refundAmount-order.coupenDiscountAmount
+
+    if (order.items.length == 1 && order.isCouponApplied) {
+      refundAmount = refundAmount - order.coupenDiscountAmount
     }
     order.totalAmount -= refundAmount
     order.finalAmount -= refundAmount
@@ -2104,13 +2131,13 @@ const cancelSingleProduct = async (req, res) => {
 
     if (order.useWallet == true) {
       wallet.balance += refundAmount
-     
+
       wallet.transactions.push({
-          amount: refundAmount,
-          type: "credit",
-          date: new Date(),
-          description: "Product Cancelled"
-        })
+        amount: refundAmount,
+        type: "credit",
+        date: new Date(),
+        description: "Product Cancelled"
+      })
       await wallet.save()
 
       console.log(refundAmount, 'refunded to wallet');
@@ -2165,13 +2192,13 @@ const returnProduct = async (req, res) => {
       console.log('Product  not found');
       return res.json({ success: false, message: "Product not found" })
     }
-    const existReturn= order.returnRequests.find(req=>req.productId.toString()==productId.toString())  
-     if(existReturn){
+    const existReturn = order.returnRequests.find(req => req.productId.toString() == productId.toString())
+    if (existReturn) {
       console.log('already requested');
-      return res.json({success:false,message:"Already requested"})
-     }
+      return res.json({ success: false, message: "Already requested" })
+    }
 
-     productInOrder.status='returnRequested'
+    productInOrder.status = 'returnRequested'
     // saving reason in order
     order.returnRequests = order.returnRequests || [];
     order.returnRequests.push({
@@ -2197,8 +2224,8 @@ const returnProduct = async (req, res) => {
 const getAllCoupons = async (req, res, next) => {
   console.log('from getAllCoupons');
   try {
-    const currentDate=new Date()
-    const coupons = await Coupon.find({ isActive: true, expiryDate: { $gte:currentDate } })
+    const currentDate = new Date()
+    const coupons = await Coupon.find({ isActive: true, expiryDate: { $gte: currentDate } })
     res.json({ success: true, coupons });
   } catch (error) {
     console.log(error);
@@ -2240,7 +2267,7 @@ const varifyPayment = async (req, res, next) => {
       await newOrder.save()
 
       //update wallet
-      const userId=req.session.user._id
+      const userId = req.session.user._id
       const wallet = await Wallet.findOne({ userId })
 
       if (newOrder.useWallet == true) {
@@ -2256,7 +2283,7 @@ const varifyPayment = async (req, res, next) => {
 
       }
 
-      let cart=await Cart.findOne({userId})
+      let cart = await Cart.findOne({ userId })
       for (let item of cart.items) {
         await Product.findByIdAndUpdate(item.productId, {
           $inc: { stock: -item.quantity }
@@ -2277,7 +2304,7 @@ const varifyPayment = async (req, res, next) => {
       let orderId = newOrder._id
 
 
-      res.json({ success: true, message: "Payment verified successfully" ,orderId})
+      res.json({ success: true, message: "Payment verified successfully", orderId })
     } else {
       console.log('signature is not matching');
       throw new Error("Signature is not matching")
@@ -2291,30 +2318,30 @@ const varifyPayment = async (req, res, next) => {
 
 }
 
-const getPaymentFailure=async (req,res,next)=>{
+const getPaymentFailure = async (req, res, next) => {
   console.log('getPaymentFailure');
   try {
-    res.render('user/orderFailure',{title:'Order Failure',order:req.session.tempOrder})
+    res.render('user/orderFailure', { title: 'Order Failure', order: req.session.tempOrder })
   } catch (error) {
     console.log(error);
     next()
   }
-  
+
 }
 
-const removeCoupon=async (req,res,next)=>{
+const removeCoupon = async (req, res, next) => {
   console.log('removeCoupon');
   try {
-     try {
-    req.session.appliedCoupon = null;
-    req.session.discountAmount = 0;
-    req.session.finalAmount = req.session.netAmount; // revert back to original
-      req.session.code=''
-    return res.json({ success: true, message: "Coupon removed successfully" });
-  } catch (error) {
-    console.log("Error removing coupon:", error);
-    return res.json({ success: false, message: "Something went wrong" });
-  }
+    try {
+      req.session.appliedCoupon = null;
+      req.session.discountAmount = 0;
+      req.session.finalAmount = req.session.netAmount; // revert back to original
+      req.session.code = ''
+      return res.json({ success: true, message: "Coupon removed successfully" });
+    } catch (error) {
+      console.log("Error removing coupon:", error);
+      return res.json({ success: false, message: "Something went wrong" });
+    }
   } catch (error) {
     console.log(error);
     next(error)

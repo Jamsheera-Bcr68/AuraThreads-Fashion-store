@@ -79,7 +79,7 @@
                                   <% } else if (order.status === 'Processing') { %>
                                     <button onclick="cancelOrder('<%= order._id %>', this)" class="btn btn-sm bg-danger text-white btn-cancel">Cancel</button>
                                   <% } else if (order.status === 'Shipped' || order.status === 'Delivered') { %>
-                                    <button class="btn btn-sm btn-track">Track</button>
+                                    <!-- <button class="btn btn-sm btn-track">Track</button> -->
                                     <button class="btn btn-sm btn-cancel btn-disabled" disabled>Cancel</button>
                                   <% } else { %>
                                     <button onclick="cancelOrder('<%= order._id %>', this)" class="btn btn-sm bg-danger text-white btn-cancel">Cancel</button>

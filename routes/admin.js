@@ -298,7 +298,7 @@ router.delete('/deleteOrder/:orderId', adminController.deleteOrder)
 router.post('/logout', adminController.postLogout)
 
 //admin coupenMangement
-router.get('/coupens', adminController.getCoupenPage)
+router.get('/coupens',adminController.getCoupenPage)
 
 //admin add coupen 
 router.post('/addCoupon', adminController.addCoupen)

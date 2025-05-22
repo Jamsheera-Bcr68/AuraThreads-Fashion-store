@@ -368,7 +368,7 @@ for (const coupon of coupons) {
     
    
     res.render('admin/coupenManagement', {
-      title: 'Admin Coupen Management',
+      title: 'Admin Coupon Management',
       coupons,
       activeCouponsCount,
       totalRedemptions: 10,
@@ -385,7 +385,7 @@ for (const coupon of coupons) {
   }
 }
 
-//add coupen
+//add coupon
 const addCoupen = async (req, res) => {
   console.log('from add coupen');
   try {
@@ -422,7 +422,7 @@ const addCoupen = async (req, res) => {
 
 }
 
-//editCoupen
+//editCoupon
 const editCoupen = async (req, res) => {
   console.log('from edit coupen');
   try {

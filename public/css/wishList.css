@@ -1,4 +1,4 @@
-
+@import "card.css";
 :root {
     --primary-color: #ff6b6b;
     --secondary-color: #546de5;
@@ -97,7 +97,7 @@ body {
 .wishlist-item {
     border-radius: 8px;
     overflow: hidden;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 10px rgba(158, 47, 47, 0.05);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     background: white;
     position: relative;
@@ -105,7 +105,7 @@ body {
 
 .wishlist-item:hover {
     transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 10px 20px rgba(113, 52, 52, 0.1);
 }
 
     .item-actions {
@@ -274,4 +274,9 @@ footer {
     .wishlist-grid {
         grid-template-columns: 1fr;
     }
+}
+
+
+.wishlist-true {
+  color: #dc3545 !important;
 }
