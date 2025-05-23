@@ -135,7 +135,7 @@ router.post('/address/edit/:editAddressId',userController.editAddress)
 router.delete('/address/delete/:addressId',userController.deleteAddress)
 
 //user cart
-router.get('/cart',userController.getCart)
+router.get('/cart',userAuth,userController.getCart)
 
 //user add to cart
 router.post('/cart/add',userAuth,userController.addToCart)

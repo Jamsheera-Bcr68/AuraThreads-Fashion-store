@@ -967,6 +967,7 @@ const getCart = async (req, res) => {
   let cartCount = 0
   console.log('this is from get cart');
   try {
+
     const user = req.session.user
     const userId = user._id
     if (!userId) {
@@ -1630,19 +1631,19 @@ const getOrders = async (req, res) => {
 
       res.json({ success: false, message: "orders are not found" })
     }
-    console.log('your orders are ', orders);
+    // console.log('your orders are ', orders);
 
     const totalOrders = await Order.countDocuments()
-    console.log('total orders', totalOrders);
+    // console.log('total orders', totalOrders);
 
     const totalPages = Math.ceil(totalOrders / limit)
-    console.log('totalPages ', totalPages);
+    //console.log('totalPages ', totalPages);
 
     //get cart count
     const cart = await Cart.findOne({ userId }).populate('items.productId')
     if (cart) {
       cartCount = cart.items.length
-      console.log('cart count is ', cartCount);
+      //  console.log('cart count is ', cartCount);
     } else {
       console.log('cart not fount');
 
@@ -2096,28 +2097,72 @@ const cancelSingleProduct = async (req, res) => {
     itemPrice = product.price
     console.log('price ', itemPrice);
 
-    //amount refund
-    let refundAmount = itemPrice * itemQuantity
+    // amount refund
+    let refundAmount = itemPrice * itemQuantity;
+    let actualRefundAmount = refundAmount;
 
-    if (order.items.length == 1 && order.isOfferApplied) {
-      refundAmount = refundAmount - order.offerDiscountAmount
+    if (order.items.length === 1) {
+      console.log('Only one item in order.');
+
+      if (order.isOfferApplied) {
+        refundAmount -= order.offerDiscountAmount;
+      }
+
+      if (order.isCouponApplied) {
+        refundAmount -= order.coupenDiscountAmount;
+      }
+
+      // Entire order is cancelled
+      order.totalAmount = 0;
+      order.finalAmount = 0;
+      order.coupenDiscountAmount = 0;
+      order.isCouponApplied = false;
+
+    } else {
+      // More than one item in the order
+      if (order.isCouponApplied) {
+        const code = order.couponCode;
+        const coupon = await Coupon.findOne({ coupenCode: code });
+
+        if (coupon.minPurchase > (order.totalAmount - actualRefundAmount)) {
+          // Coupon no longer valid after refund
+          order.totalAmount -= actualRefundAmount;
+          console.log('now total amount is ',order.totalAmount);
+          
+          refundAmount -= order.coupenDiscountAmount; // Reduce refund
+          order.finalAmount -= refundAmount;
+           console.log('now final amount is ',order.finalAmount);
+          // Remove coupon
+         
+           console.log('now final amount is ',order.finalAmount);
+          order.coupenDiscountAmount = 0;
+          order.isCouponApplied = false;
+        } else {
+          order.totalAmount -= actualRefundAmount;
+          order.finalAmount -= refundAmount;
+        }
+
+      } else {
+        // No coupon applied, normal refund
+        order.totalAmount -= actualRefundAmount;
+        order.finalAmount -= refundAmount;
+      }
     }
 
-    if (order.items.length == 1 && order.isCouponApplied) {
-      refundAmount = refundAmount - order.coupenDiscountAmount
-    }
-    order.totalAmount -= refundAmount
-    order.finalAmount -= refundAmount
+    // Final checks
     if (order.finalAmount < 0) {
-      order.finalAmount = 0
+      order.finalAmount = 0;
     }
 
-    //check all items are cancelled or not
+    // Check if all items cancelled
     const allItemsCancelled = order.items.every(item => item.status === 'cancelled');
     if (allItemsCancelled) {
       order.status = 'cancelled';
     }
-    await order.save()
+
+    await order.save();
+
+
     const userId = req.session.user._id
     if (!userId) {
       console.log('User not registered');
