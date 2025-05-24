@@ -632,9 +632,14 @@ const getProductList = async (req, res) => {
       //console.log('userId', userId);
 
       const wishList = await WishList.findOne({ userId: req.session.user._id })
-      //console.log('wishlist', wishList);
+      console.log('wishlist', wishList);
 
-      wishlistIds = wishList.items.map(item => item.toString())
+      if (wishList) {
+        wishlistIds = wishList.items.map(item => item.toString());
+      } else {
+        console.log('Wishlist not found for user:', userId);
+        wishlistIds = []; // fallback to empty
+      }
       //console.log('wishlist ids', wishlistIds);
 
       const cart = await Cart.findOne({ userId })
@@ -716,7 +721,7 @@ const getProductList = async (req, res) => {
     });
 
   } catch (error) {
-    console.log('error in fetching products: ' + error);
+    console.log('error in fetching products: ', error);
     return res.redirect('/user/home');
   }
 }
@@ -1149,11 +1154,17 @@ const addToCart = async (req, res) => {
 
     //remove the product from wishlist
     const wishList = await WishList.findOne({ userId })
-    const wishListItem = wishList.items.find(item => item.toString() == productId)
-    if (wishListItem) {
-      wishList.items.pull(productId);
-      await wishList.save();
-    }
+
+    if (wishList) {
+  const wishListItem = wishList.items.find(item => item.toString() == productId);
+  if (wishListItem) {
+    wishList.items.pull(productId);
+    await wishList.save();
+  }
+} else {
+  console.log('No wishlist found for user:', userId);
+  // Optional: you could create a new wishlist document if needed
+}
     // Response after successfully adding to cart
     res.json({ success: true, message: "Product added to cart!" });
 
@@ -1390,11 +1401,11 @@ const placeOrder = async (req, res) => {
 
     const userId = req.session.user._id
     const cart = await Cart.findOne({ userId })
-    console.log('cart is ', cart);
+    //console.log('cart is ', cart);
     if (cart.items.length < 1) {
       return res.json({ success: false, message: 'No items found' })
     }
-    console.log('Cart items are ', cart.items);
+    //console.log('Cart items are ', cart.items);
 
     if (!cart) {
       return res.json({ success: false, message: "Cart  is not found" })
@@ -1402,14 +1413,14 @@ const placeOrder = async (req, res) => {
 
 
     if (addressId == '' || paymentMethod == '' || totalAmount == '') {
-      console.log('missing reuired fileds', addressId, paymentMethod, paymentDetails, totalAmount);
+      // console.log('missing reuired fileds', addressId, paymentMethod, paymentDetails, totalAmount);
 
       return res.status(400).send('Missing required fields');
     }
-    console.log("address id ", addressId, ' type ', typeof (addressId));
+    // console.log("address id ", addressId, ' type ', typeof (addressId));
     addressId = new mongoose.Types.ObjectId(addressId)
-    console.log("address id ", addressId, 'new type ', typeof (addressId));
-    console.log('paymentDetails', paymentDetails);
+    // console.log("address id ", addressId, 'new type ', typeof (addressId));
+    // console.log('paymentDetails', paymentDetails);
     let { upiId, cardNumber, expiry, cvv, cardName } = paymentDetails
     if (paymentMethod == 'Credit Card') {
       if (cardNumber == '' || expiry == '' || cvv == '' || cardName == '') {
@@ -1535,6 +1546,83 @@ const placeOrder = async (req, res) => {
 
       return res.json({ success: true, message: "Order Placed Succesfully", paymentMethod, orderId })
     }
+
+    //////
+    let orderItems = await Promise.all(cart.items.map(async (item) => {
+      const product = await Product.findById(item.productId);
+      console.log('product is ', product);
+
+      const offers = await Offer.find({ status: 'active' })
+      // Simulate logic for getting final offer (you should already have this logic)
+      let finalOffer = null;
+      let offerDiscount = 0;
+
+      const productOffer = offers.find(offer => offer.applicableTo == 'product' && offer.productId?.toString() == product._id?.toString())
+      const categoryOffer = offers.find(offer => offer.applicableTo == 'category' && offer.categoryId?.toString() == product.categoryId.toString())
+
+
+      console.log('categoryOffer', categoryOffer);
+
+      // const productOffer = await Offer.findOne({ productId: product._id, isActive: true });
+      console.log('productOffer', productOffer);
+
+      if (productOffer && categoryOffer) {
+        let productDiscountAmount = 0
+        let categoryDiscountAmount = 0
+        if (productOffer.discountType == 'amount') {
+          productDiscountAmount = productOffer.discountValue
+          console.log('productDiscountAmount amount ', productDiscountAmount);
+
+        } else if (productOffer.discountType == 'percentage') {
+          productDiscountAmount = (product.price * productOffer.discountValue) / 100
+          console.log('productDiscountAmount percentage ', productDiscountAmount);
+
+        }
+
+        //category
+        if (categoryOffer.discountType == 'amount') {
+          categoryDiscountAmount = categoryOffer.discountValue
+          console.log('categoryDiscountAmount amount ', categoryDiscountAmount);
+
+        } else if (categoryOffer.discountType == 'percentage') {
+          categoryDiscountAmount = (product.price * categoryOffer.discountValue) / 100
+          console.log('categoryDiscountAmount percentage ', categoryDiscountAmount);
+
+        }
+
+        finalOffer = (productDiscountAmount > categoryDiscountAmount) ? productOffer : categoryOffer;
+        console.log('finalOffer', finalOffer);
+
+      } else if (productOffer) {
+        finalOffer = productOffer;
+        console.log('only product offer exist');
+
+      } else if (categoryOffer) {
+        finalOffer = categoryOffer;
+        console.log('only category offer exist');
+      }
+
+      if (finalOffer) {
+        if (finalOffer.discountType == 'amount') {
+          offerDiscount = item.quantity * finalOffer.discountValue
+        } else if (finalOffer.discountType == 'percentage') {
+          offerDiscount = (item.quantity * product.price * finalOffer.discountValue) / 100;
+        }
+        console.log('final discount amount for this item is ', offerDiscount);
+
+      }
+
+      return {
+        productId: item.productId,
+        quantity: item.quantity,
+        offerId: finalOffer ? finalOffer._id : null,
+        offerApplied: finalOffer ? true : false,
+        offerDiscount: offerDiscount || 0,
+      };
+    }))
+
+
+
     //creating new order document
     req.session.tempOrder = {
       userId: req.session.user._id,
@@ -1561,7 +1649,7 @@ const placeOrder = async (req, res) => {
 
       } : null,
 
-      items: cart.items,
+      items: orderItems,
       createdAt,
       deliveryDate,
       useWallet
@@ -2119,6 +2207,17 @@ const cancelSingleProduct = async (req, res) => {
       order.isCouponApplied = false;
 
     } else {
+      //if offerapplied
+      if(order.isOfferApplied){
+        let cancelItem=order.items.find(item=>item.productId.toString()==product._id.toString())
+        if(cancelItem.offerApplied){
+          order.offerDiscountAmount = Math.max(0, order.offerDiscountAmount - cancelItem.offerDiscount);
+          if(order.offerDiscountAmount==0){
+            order.isOfferApplied=false
+          }
+          refundAmount-=cancelItem.offerDiscount
+        }
+      }
       // More than one item in the order
       if (order.isCouponApplied) {
         const code = order.couponCode;
@@ -2127,14 +2226,14 @@ const cancelSingleProduct = async (req, res) => {
         if (coupon.minPurchase > (order.totalAmount - actualRefundAmount)) {
           // Coupon no longer valid after refund
           order.totalAmount -= actualRefundAmount;
-          console.log('now total amount is ',order.totalAmount);
-          
+          console.log('now total amount is ', order.totalAmount);
+
           refundAmount -= order.coupenDiscountAmount; // Reduce refund
           order.finalAmount -= refundAmount;
-           console.log('now final amount is ',order.finalAmount);
+          console.log('now final amount is ', order.finalAmount);
           // Remove coupon
-         
-           console.log('now final amount is ',order.finalAmount);
+
+          console.log('now final amount is ', order.finalAmount);
           order.coupenDiscountAmount = 0;
           order.isCouponApplied = false;
         } else {

@@ -93,3 +93,42 @@ if (allItemsCancelled) {
 }
 
 await order.save();
+
+
+
+ let orderItems = await Promise.all(cart.items.map(async (item) => {
+      const product = await Product.findById(item.productId).populate('categoryId');
+
+      // Simulate logic for getting final offer (you should already have this logic)
+      let finalOffer = null;
+      let offerDiscount = 0;
+
+      const categoryOffer = await Offer.findOne({ categoryId: product.categoryId, isActive: true });
+      const productOffer = await Offer.findOne({ productId: product._id, isActive: true });
+
+      if (productOffer && categoryOffer) {
+        finalOffer = (productOffer.discount > categoryOffer.discount) ? productOffer : categoryOffer;
+      } else if (productOffer) {
+        finalOffer = productOffer;
+      } else if (categoryOffer) {
+        finalOffer = categoryOffer;
+      }
+
+      if (finalOffer) {
+         if(finalOffer.discountType=='amount'){
+          offerDiscount =item.quantity * finalOffer.discountValue
+
+         }else if(finalOffer.discountType=='percentage'){
+          offerDiscount=(product.price * finalOffer.discount * item.quantity) / 100;
+         }
+        
+      }
+
+      return {
+        productId: item.productId,
+        quantity: item.quantity,
+        offerId: finalOffer ? finalOffer._id : null,
+        offerApplied: finalOffer ? true : false,
+        offerDiscount: offerDiscount,
+      };
+    }))

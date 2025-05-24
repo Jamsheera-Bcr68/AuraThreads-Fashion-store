@@ -664,16 +664,16 @@ const editOffer = async (req, res) => {
     }
     const { offerName, offerDesc, discountType, discountValue, startDate, endDate, status, productId, categoryId, offerOn } = req.body
 
-    offer.offerName = offerName
-    offer.description = offerDesc,
+    offer.offerName = offerName||offer.offerName 
+    offer.description = offerDesc||offer.description,
       offer.discountType = discountType == 'percentage' ? 'percentage' : 'amount',
-      offer.discountValue = discountValue,
-      offer.startDate = startDate,
-      offer.endDate = endDate,
-      offer.status = status,
-      offer.productId = productId || null,
-      offer.categoryId = categoryId || null,
-      offer.applicableTo = offerOn,
+      offer.discountValue = discountValue||offer.discountValue,
+      offer.startDate = startDate||offer.startDate,
+      offer.endDate = endDate|| offer.endDate,
+      offer.status = status||offer.status,
+      offer.productId = productId || offer.productId,
+      offer.categoryId = categoryId ||offer.categoryId ,
+      offer.applicableTo = offerOn||offer.applicableTo,
       offer.updatedAt = new Date()
 
     await offer.save()
@@ -928,6 +928,19 @@ const approveReturn = async (req, res) => {
       order.isCouponApplied = false;
 
     } else { 
+      //if offerapplied
+      if(order.isOfferApplied){
+        let returnlItem=order.items.find(item=>item.productId.toString()==productId.toString())
+        console.log('returning item ',returnlItem);
+        
+        if(returnlItem.offerApplied){
+          order.offerDiscountAmount = Math.max(0, order.offerDiscountAmount - returnlItem.offerDiscount);
+          if(order.offerDiscountAmount==0){
+            order.isOfferApplied=false
+          }
+          refundAmount-=returnlItem.offerDiscount
+        }
+      }
       // More than one item in the order
       if (order.isCouponApplied) {
         const code = order.couponCode;
@@ -1003,7 +1016,7 @@ const approveReturn = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error in approveReturn:', error.message);
+    console.error('Error in approveReturn:', error.message,error);
     return res.status(400).json({ success: false, message: error.message });
   }
 };
