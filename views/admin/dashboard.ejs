@@ -1,53 +1,742 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css">
 </head>
+
 <body>
+    <style>
+        .note-boxes {
+            background: #f4efef
+        }
+    </style>
     <%- include('../partials/header.ejs') %>
-    <div class="d-flex" id="wrapper">
-        <%- include('../partials/sidebar') %>
-        <div class="container-fluid p-4">
-            <h1 class="mt-4">Admin Dashboard</h1>
-            <div class="row">
-                <div class="col-lg-3 col-md-6">
-                    <div class="card text-white bg-primary mb-3">
-                        <div class="card-body">
-                            <h5 class="card-title">Total Users</h5>
-                            <p class="card-text"><%= userCount %></p>
+        <div class="d-flex" id="wrapper">
+            <%- include('../partials/sidebar') %>
+                <div class="container-fluid p-4">
+                    <h3 class="mt-4"> Dashboard OverView</h3>
+                    <div class="row">
+                        <div class="col-lg-3 col-md-6">
+                            <div class="card text-center note-boxes mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title"><i style="color: #a77e20;" class="fas fa-users"></i> <span>
+                                            Total Users</span></h5>
+                                    <p class="card-text fw-bold">
+                                        <%= userCount %>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <div class="card note-boxes   text-center mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title"><i style=" font-weight: bold;color: #0d8328;"
+                                            class="fa-solid fa-chart-line"></i> Total Sales</h5>
+                                    <p class="card-text fw-bold"><i class="fa fa-inr"> </i>
+                                        <%= totalSalesAmount %>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <div class="card note-boxes  text-center  mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title"><i class="fa-solid fa-tags fa-flip-both"
+                                            style="color: #e2b513;"></i> Total Discount </h5>
+                                    <p class="card-text fw-bold">
+                                        <%= totalDiscount %>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <div class="card note-boxes  text-center mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title"><i class="fa-solid fa-cart-flatbed-suitcase"
+                                            style="color: #b7920d"></i> Total Orders</h5>
+                                    <p class="card-text fw-bold">
+                                        <%= orderCount %>
+                                    </p>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="col-lg-3 col-md-6">
-                    <div class="card text-white bg-success mb-3">
-                        <div class="card-body">
-                            <h5 class="card-title">Category</h5>
-                            <p class="card-text"><%= categoryCount %></p>
+                    <!--filters-->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <select class="form-select" id="reportType">
+                                <option value="daily">Daily</option>
+                                <option value="weekly">Weekly</option>
+                                <option value="monthly">Monthly</option>
+                                <option value="yearly">Yearly</option>
+                                <option value="custom">Custom Range</option>
+                            </select>
                         </div>
+                        <div class="col-md-3">
+                            <input id="startDate" style="display: none;" type="date">
+                        </div>
+                        <div class="col-md-3">
+                            <input id="endDate" style="display: none;" type="date">
+                        </div>
+                        <div class="col-md-3">
+                            <input id="createBtn" style="display: none;" type="button"
+                                style="background-color: green; color: white;font-weight: bold;" value="Create Report">
+                        </div>
+
+                    </div>
+
+
+                    <div class="row mt-4">
+                        <!--Chart-->
+                        <div class="row mt-4">
+                            <!--  Sales Chart -->
+                            <div class="col-lg-6">
+                                <div class="card mb-4">
+                                    <div class="card-body">
+                                        <div class="section-header d-flex justify-content-between align-items-center">
+                                            <h4>Sales Trend</h4>
+                                            <div>
+                                                <button id="downloadPdfBtn"
+                                                    class="btn btn-outline-secondary btn-sm">Download PDF</button>
+                                                <a id="downloadExcelBtn" class="btn btn-success btn-sm">Download
+                                                    Excel</a>
+                                            </div>
+                                        </div>
+                                        <canvas id="salesChart" height="150"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                            <div
+                                class="col-6 d-flex flex-column align-items-center justify-content-center text-center py-4">
+                                <!-- First card -->
+                                <div class="card note-boxes text-center mb-3" style="width: 60%;">
+                                    <div class="card-body">
+                                        <h5 class="card-title"><i style=" font-weight: bold;color: #0d8328;"
+                                                class="fa-solid fa-chart-line"></i> Total Sales</h5>
+                                        <p class="card-text fw-bold"><i class="fa fa-inr"> </i>
+                                            <%= totalSalesAmount %>
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Second card -->
+                                <div class="card note-boxes text-center mb-3" style="width: 60%;">
+                                    <div class="card-body">
+                                        <h5 class="card-title"><i class="fa-solid fa-tags fa-flip-both"
+                                                style="color: #e2b513;"></i> Total Discount </h5>
+                                        <p class="card-text fw-bold">
+                                            <%= totalDiscount %>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                        <!-- 🟢 Top Selling Products -->
+                        <div class="col-lg-6">
+                            <div class="card mb-4">
+                                <div class="card-body">
+                                    <h4>Top Selling Products</h4>
+                                    <% topProducts.forEach(product=> { %>
+                                        <div class="d-flex align-items-center gap-3 border-bottom py-2">
+                                            <img src="<%= product.images[0] %>" width="50" height="50"
+                                                alt="<%= product.productName %>">
+                                            <div>
+                                                <h6 class="mb-0">
+                                                    <%= product.productName %>
+                                                </h6>
+                                                <small>Sold: <%= product.totalSold %> units</small>
+                                            </div>
+                                        </div>
+                                        <% }) %>
+                                </div>
+                            </div>
+
+                        </div>
+                        <!-- 🟣 Top Categories -->
+                        <div class="col-lg-6">
+                            <div class="card mb-4">
+                                <div class="card-body">
+                                    <h4>Top Categories</h4>
+                                    <% topCategories.forEach(category=> { %>
+                                        <div class="d-flex justify-content-between border-bottom py-2">
+                                            <span>
+                                                <%= category.name %>
+                                            </span>
+                                            <span>
+                                                <%= category.totalSold %> sold
+                                            </span>
+                                        </div>
+                                        <% }) %>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+
+
+                            <!-- 🔵 Top Brands -->
+                            <div class="col-lg-6">
+                                <div class="card mb-4">
+                                    <div class="card-body">
+                                        <h4>Top Brands</h4>
+                                        <% topBrands.forEach(brand=> { %>
+                                            <div class="d-flex justify-content-between border-bottom py-2">
+                                                <span>
+                                                    <%= brand.name %>
+                                                </span>
+                                                <span>
+                                                    <%= brand.totalSold %> sold
+                                                </span>
+                                            </div>
+                                            <% }) %>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-6">
+                                <div class="card mb-4">
+                                    <div class="card-body">
+                                        <h4>Recent 5 Orders</h4>
+                                        <table class="table table-bordered mt-3">
+                                            <thead>
+                                                <tr>
+                                                    <th>Order ID</th>
+                                                    <th>Amount</th>
+                                                    <th>Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <% recentOrders.forEach(order=> { %>
+                                                    <tr>
+                                                        <td>
+                                                            <%= order.id %>
+                                                        </td>
+
+                                                        <td>₹ <%= order.finalAmount %>
+                                                        </td>
+                                                        <td>
+                                                            <%= order.status %>
+                                                        </td>
+                                                    </tr>
+                                                    <% }) %>
+                                            </tbody>
+                                        </table>%>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <!--top selling items-->
+
                     </div>
                 </div>
-                <div class="col-lg-3 col-md-6">
-                    <div class="card text-white bg-warning mb-3">
-                        <div class="card-body">
-                            <h5 class="card-title">Total Products</h5>
-                            <p class="card-text"><%= productCount %></p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-6">
-                    <div class="card text-white bg-danger mb-3">
-                        <div class="card-body">
-                            <h5 class="card-title">Total Orders</h5>
-                            <p class="card-text"><%= orderCount %></p>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
-    </div>
-    <%- include('../partials/footer') %>
+
+
+
+        <%- include('../partials/footer') %>
+            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+            <script>
+                const salesDates = <%- JSON.stringify(salesDates) %>;
+                const totalSales = <%- JSON.stringify(salesData.map(item => item.totalSales)) %>;
+                let chartInstance;
+
+                function updateChart(data) {
+                    const ctx = document.getElementById('salesChart').getContext('2d');
+                    if (chartInstance) {
+                        chartInstance.destroy();
+                    }
+                    chartInstance = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: data.salesDates,
+                            datasets: [{
+                                label: 'Sales',
+                                data: data.totalSales,
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                borderWidth: 1,
+                                backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                                tension: 0.3,
+                                fill: true,
+                                pointRadius: 3,
+                                barThickness: 10,
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            scales: {
+                                x: { beginAtZero: true },
+                                y: { beginAtZero: true }
+                            }
+                        }
+                    });
+                }
+
+                updateChart({ salesDates, totalSales });
+
+
+
+                document.getElementById('reportType').addEventListener('change', function () {
+                    const reportType = this.value;
+                    console.log('reportType ', reportType);
+
+                    const startDateInput = document.getElementById('startDate');
+                    const endDateInput = document.getElementById('endDate');
+                    const createBtn = document.getElementById('createBtn');
+
+                    if (reportType === 'custom') {
+                        startDateInput.style.display = 'inline-block';
+                        endDateInput.style.display = 'inline-block';
+                        createBtn.style.display = 'inline-block';
+                    } else {
+                        startDateInput.style.display = 'none';
+                        endDateInput.style.display = 'none';
+                        createBtn.style.display = 'none';
+
+                        const url = `/admin/updateReport?reportType=${reportType}`;
+                        fetch(url)
+                            .then(res => res.json())
+                            .then(data => {
+                                console.log('Report data:', data);
+                                updateChart(data);
+                                //updateTable(data.salesData);
+                            })
+                            .catch(err => console.error('Error:', err));
+                    }
+                });
+
+                //custom create
+                document.getElementById('createBtn').addEventListener('click', function () {
+                    const startDate = document.getElementById('startDate').value;
+                    const endDate = document.getElementById('endDate').value;
+
+                    if (!startDate || !endDate) {
+                        Swal.fire("Please select both start and end dates.");
+                        return;
+                    }
+
+                    if (startDate >= endDate) {
+                        Swal.fire("Start Date Cannot be greater than end Date");
+                        return;
+                    }
+
+                    const today = new Date();
+                    const start = new Date(startDate);
+                    const end = new Date(endDate);
+
+                    if (start > today || end > today) {
+                        Swal.fire("Cannot use future dates");
+                        return;
+                    }
+
+                    const url = `/admin/updateReport?reportType=custom&startDate=${startDate}&endDate=${endDate}`;
+                    fetch(url)
+                        .then(res => res.json())
+                        .then(data => {
+                            console.log('Custom report data:', data);
+                            updateChart(data);
+                            updateTable(data.salesData || data); // smart handling
+                        })
+                        .catch(err => console.error('Error:', err));
+                });
+
+                //report downloading as excel
+                const downloadExcelBtn = document.getElementById('downloadExcelBtn');
+                downloadExcelBtn.addEventListener('click', function () {
+                    console.log('downloadExcelBtn clicked');
+
+                    const reportType = document.getElementById('reportType').value;
+                    const startDate = document.getElementById('startDate').value;
+                    const endDate = document.getElementById('endDate').value;
+                    window.location.href = `/admin/downloadSaleReportExcel?reportType=${reportType}&startDate=${startDate}&endDate=${endDate}`;
+                });
+
+
+                const downloadPdfBtn = document.getElementById('downloadPdfBtn')
+                downloadPdfBtn.addEventListener('click', function () {
+
+
+                    const reportType = document.getElementById('reportType').value;
+                    const startDateInput = document.getElementById('startDate');
+                    const endDateInput = document.getElementById('endDate');
+
+                    const startDate = reportType === 'custom' ? startDateInput.value : null;
+                    const endDate = reportType === 'custom' ? endDateInput.value : null;
+
+                    fetch('/admin/downloadSaleReportpdf', {
+                        method: "POST",
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+
+                            startDate, endDate, reportType
+                        })
+                    }).then(res => res.blob())
+                        .then(blob => {
+                            const url = window.URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = 'SalesReport.pdf';
+                            a.click()
+                        })
+                })
+
+
+            </script>
+            <!-- <script>
+                
+
+                
+                 //update Chart
+                document.getElementById('reportType').addEventListener('change', function () {
+                    const reportType = this.value;
+                    console.log('reportType ',reportType);
+                    
+                    const startDateInput = document.getElementById('startDate');
+                    const endDateInput = document.getElementById('endDate');
+                    const createBtn = document.getElementById('createBtn');
+
+                    if (reportType === 'custom') {
+                        startDateInput.style.display = 'inline-block';
+                        endDateInput.style.display = 'inline-block';
+                        createBtn.style.display = 'inline-block';
+                    } else {
+                        startDateInput.style.display = 'none';
+                        endDateInput.style.display = 'none';
+                        createBtn.style.display = 'none';
+
+                        const url = `/admin/updateReport?reportType=${reportType}`;
+                        fetch(url)
+                            .then(res => res.json())
+                            .then(data => {
+                                console.log('Report data:', data);
+                                updateReport(data);
+                                //updateTable(data.salesData);
+                            })
+                            .catch(err => console.error('Error:', err));
+                    }
+                });
+
+                 // Chart.js - Initialize the chart (Optional: can be removed if using updateReport directly)
+                const ctx = document.getElementById('salesChart').getContext('2d');
+
+// If you want to render initially from global variables (optional)
+updateReport({ salesDates, totalSales });
+
+let chartInstance;
+
+// Function to update chart with new data
+function updateReport(data) {
+    const ctx = document.getElementById('salesChart').getContext('2d');
+
+    // Destroy the existing chart instance before creating a new one
+    if (chartInstance) {
+        chartInstance.destroy();
+    }
+
+    chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: data.salesDates,
+            datasets: [{
+                label: 'Sales',
+                data: data.totalSales,
+                borderColor: 'rgba(75, 192, 192, 1)',
+                backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                tension: 0.3,
+                fill: true,
+                pointRadius: 3
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: true
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+            </script> -->
+
+            <!-- <script>
+                const salesDates = <% - JSON.stringify(salesDates) %>;
+                const totalSales = <% - JSON.stringify(salesData.map(item => item.totalSales)) %>;
+                // Chart.js - Initialize the chart (Optional: can be removed if using updateReport directly)
+                const ctx = document.getElementById('salesChart').getContext('2d');
+
+                // If you want to render initially from global variables (optional)
+                updateReport({ salesDates, totalSales });
+
+                let chartInstance;
+
+                // Function to update chart with new data
+                function updateReport(data) {
+                    const ctx = document.getElementById('salesChart').getContext('2d');
+
+                    // Destroy the existing chart instance before creating a new one
+                    if (chartInstance) {
+                        chartInstance.destroy();
+                    }
+
+                    chartInstance = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: data.salesDates,
+                            datasets: [{
+                                label: 'Sales',
+                                data: data.totalSales,
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                                tension: 0.3,
+                                fill: true,
+                                pointRadius: 3
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: {
+                                    display: true
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+                }
+
+                // Event listener for report type dropdown
+                document.getElementById('reportType').addEventListener('change', function () {
+                    const reportType = this.value;
+                    console.log('reportType:', reportType);
+
+                    const startDateInput = document.getElementById('startDate');
+                    const endDateInput = document.getElementById('endDate');
+                    const createBtn = document.getElementById('createBtn');
+
+                    if (reportType === 'custom') {
+                        // Show date inputs and button for custom report
+                        startDateInput.style.display = 'inline-block';
+                        endDateInput.style.display = 'inline-block';
+                        createBtn.style.display = 'inline-block';
+                    } else {
+                        // Hide custom inputs and fetch report
+                        startDateInput.style.display = 'none';
+                        endDateInput.style.display = 'none';
+                        createBtn.style.display = 'none';
+
+                        const url = `/admin/updateReport?reportType=${reportType}`;
+
+                        fetch(url)
+                            .then(res => res.json())
+                            .then(data => {
+                                console.log('Report data:', data);
+                                updateReport(data);
+                                // Optionally update other elements like tables
+                                // updateTable(data.salesData);
+                            })
+                            .catch(err => console.error('Error:', err));
+                    }
+                });
+
+            </script> -->
+
+            <!-- <script>
+                const salesDates = <%- JSON.stringify(salesDates) %>;
+                const totalSales = <%- JSON.stringify(salesData.map(item => item.totalSales)) %>;
+
+              //  function updateTable(data) {
+                    const dataTable = document.getElementById('salesReportTable');
+                    const tableBody = dataTable.querySelector('tbody') || dataTable;
+
+                    // Clear previous rows (except header if present)
+                    const rows = dataTable.querySelectorAll("tr");
+                    rows.forEach((row, index) => {
+                        if (index !== 0) row.remove(); // keep header row
+                    });
+
+                    // 🟡 If data is array (detailed report)
+                    if (Array.isArray(data)) {
+                        data.forEach((sale, index) => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${sale._id}</td>
+          <td>${sale.orderCount}</td>
+          <td>${sale.totalSales}</td>
+          <td>${sale.offerDeduction}</td>
+          <td>${sale.couponDeduction}</td>
+          <td>${sale.offerDeduction + sale.couponDeduction}</td>
+        `;
+                            dataTable.appendChild(row);
+                        });
+                    } else if (data.salesDates && data.totalSales) {
+                        // ✅ If data contains simple date and totalSales arrays
+                        data.salesDates.forEach((date, index) => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${date}</td>
+          <td>₹${data.totalSales[index]}</td>
+        `;
+                            tableBody.appendChild(row);
+                        });
+                    }
+                }
+
+                let chartInstance;
+                function updateReport(data) {
+                    const ctx = document.getElementById('salesChart').getContext('2d');
+                    if (chartInstance) {
+                        chartInstance.destroy();
+                    }
+                    chartInstance = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: data.salesDates,
+                            datasets: [{
+                                label: 'Sales',
+                                data: data.totalSales,
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                tension: 0.3
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            scales: {
+                                y: { beginAtZero: true }
+                            }
+                        }
+                    });
+                }
+
+
+                updateReport({ salesDates, totalSales });
+
+                document.getElementById('reportType').addEventListener('change', function () {
+                    const reportType = this.value;
+                    const startDateInput = document.getElementById('startDate');
+                    const endDateInput = document.getElementById('endDate');
+                    const createBtn = document.getElementById('createBtn');
+
+                    if (reportType === 'custom') {
+                        startDateInput.style.display = 'inline-block';
+                        endDateInput.style.display = 'inline-block';
+                        createBtn.style.display = 'inline-block';
+                    } else {
+                        startDateInput.style.display = 'none';
+                        endDateInput.style.display = 'none';
+                        createBtn.style.display = 'none';
+
+                        const url = `/admin/updateReport?reportType=${reportType}`;
+                        fetch(url)
+                            .then(res => res.json())
+                            .then(data => {
+                                console.log('Report data:', data);
+                                updateReport(data);
+                                //updateTable(data.salesData);
+                            })
+                            .catch(err => console.error('Error:', err));
+                    }
+                });
+
+                document.getElementById('createBtn').addEventListener('click', function () {
+                    const startDate = document.getElementById('startDate').value;
+                    const endDate = document.getElementById('endDate').value;
+
+                    if (!startDate || !endDate) {
+                        Swal.fire("Please select both start and end dates.");
+                        return;
+                    }
+
+                    if (startDate >= endDate) {
+                        Swal.fire("Start Date Cannot be greater than end Date");
+                        return;
+                    }
+
+                    const today = new Date();
+                    const start = new Date(startDate);
+                    const end = new Date(endDate);
+
+                    if (start > today || end > today) {
+                        Swal.fire("Cannot use future dates");
+                        return;
+                    }
+
+                    const url = `/admin/updateReport?reportType=custom&startDate=${startDate}&endDate=${endDate}`;
+                    fetch(url)
+                        .then(res => res.json())
+                        .then(data => {
+                            console.log('Custom report data:', data);
+                            updateReport(data);
+                            updateTable(data.salesData || data); // smart handling
+                        })
+                        .catch(err => console.error('Error:', err));
+                });
+
+                //report download as pdf
+                // function getChartBase64() {
+                //     const chartCanvas = document.getElementById('salesChart');
+                //     return chartCanvas.toDataURL('image/png'); // Base64 image
+                // }
+
+                const downloadPdfBtn = document.getElementById('downloadPdfBtn')
+
+                downloadPdfBtn.addEventListener('click', function () {
+                    const chartImage = getChartBase64()
+
+                    const reportType = document.getElementById('reportType').value;
+                    const startDateInput = document.getElementById('startDate');
+                    const endDateInput = document.getElementById('endDate');
+
+                    const startDate = reportType === 'custom' ? startDateInput.value : null;
+                    const endDate = reportType === 'custom' ? endDateInput.value : null;
+
+                    fetch('/admin/downloadSaleReportpdf', {
+                        method: "POST",
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            chartImage,
+                            startDate, endDate, reportType
+                        })
+                    }).then(res => res.blob())
+                        .then(blob => {
+                            const url = window.URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = 'SalesReport.pdf';
+                            a.click()
+                        })
+                })
+
+                const downloadExcelBtn = document.getElementById('downloadExcelBtn');
+
+                downloadExcelBtn.addEventListener('click', function () {
+                    console.log('downloadExcelBtn clicked');
+
+                    const reportType = document.getElementById('reportType').value;
+                    const startDate = document.getElementById('startDate').value;
+                    const endDate = document.getElementById('endDate').value;
+                    window.location.href = `/admin/downloadSaleReportExcel?reportType=${reportType}&startDate=${startDate}&endDate=${endDate}`;
+                });
+
+            </script> -->
 </body>
+
 </html>

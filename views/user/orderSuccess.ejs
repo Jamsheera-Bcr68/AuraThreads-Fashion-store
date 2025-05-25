@@ -65,7 +65,7 @@
               </div>
               <div class="col-sm-6 mb-3">
                 <h6 class="text-muted mb-1">Total Amount</h6>
-                <p class="mb-0 fw-bold">₹ <%= order.finalAmount %></p>
+                <p class="mb-0 fw-bold">₹ <%= order.orderTotal %></p>
                
               </div>
               <div class="col-sm-6 mb-3">
@@ -122,12 +122,27 @@
                 </div>
                 <span class="fw-bold">₹ <%= order.offerDiscountAmount %></span>
               </div>
+              
               <div class="item-row d-flex justify-content-between align-items-center">
                 <div>
                   <p class="mb-0 fw-medium">Final Amount</p>
                   
                 </div>
                 <span class="fw-bold">₹ <%= order.finalAmount %></span>
+              </div>
+              <div class="item-row d-flex justify-content-between align-items-center">
+                <div>
+                  <p class="mb-0 fw-medium">Shipping Charge </p>
+                  
+                </div>
+                <span class="fw-bold">₹ <%= order.shippingCharge %></span>
+              </div>
+              <div class="item-row d-flex justify-content-between align-items-center">
+                <div>
+                  <p class="mb-0 fw-medium">Net order Total </p>
+                  
+                </div>
+                <span class="fw-bold">₹ <%= order.orderTotal %></span>
               </div>
             </div>
           </div>

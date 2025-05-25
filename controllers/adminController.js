@@ -195,12 +195,20 @@ const getOrder = async (req, res) => {
     const totalOrders = await Order.countDocuments()
     const totalPages = Math.ceil(totalOrders / limit)
 
-    // const pagination = {
-    //   currentPage: 1,
-    //   totalPages: 3
-    // };
+
 
     const orders = await Order.find().populate('userId').sort({ createdAt: -1 }).skip(skip).limit(limit)
+    const activeOrders = await Order.find({ status: { $nin: ['cancelled', 'returned'] } })
+    for (const order of activeOrders) {
+      if (order.deliveryDate <= new Date()) {
+        order.status = 'Delivered';
+        await order.save();
+      }
+    }
+
+
+    console.log('activeOrders ', activeOrders);
+
     console.log('orders are ', orders);
     return res.render('admin/orders', {
       title: "Admin Orders",
@@ -664,16 +672,16 @@ const editOffer = async (req, res) => {
     }
     const { offerName, offerDesc, discountType, discountValue, startDate, endDate, status, productId, categoryId, offerOn } = req.body
 
-    offer.offerName = offerName||offer.offerName 
-    offer.description = offerDesc||offer.description,
+    offer.offerName = offerName || offer.offerName
+    offer.description = offerDesc || offer.description,
       offer.discountType = discountType == 'percentage' ? 'percentage' : 'amount',
-      offer.discountValue = discountValue||offer.discountValue,
-      offer.startDate = startDate||offer.startDate,
-      offer.endDate = endDate|| offer.endDate,
-      offer.status = status||offer.status,
+      offer.discountValue = discountValue || offer.discountValue,
+      offer.startDate = startDate || offer.startDate,
+      offer.endDate = endDate || offer.endDate,
+      offer.status = status || offer.status,
       offer.productId = productId || offer.productId,
-      offer.categoryId = categoryId ||offer.categoryId ,
-      offer.applicableTo = offerOn||offer.applicableTo,
+      offer.categoryId = categoryId || offer.categoryId,
+      offer.applicableTo = offerOn || offer.applicableTo,
       offer.updatedAt = new Date()
 
     await offer.save()
@@ -927,18 +935,18 @@ const approveReturn = async (req, res) => {
       order.coupenDiscountAmount = 0;
       order.isCouponApplied = false;
 
-    } else { 
+    } else {
       //if offerapplied
-      if(order.isOfferApplied){
-        let returnlItem=order.items.find(item=>item.productId.toString()==productId.toString())
-        console.log('returning item ',returnlItem);
-        
-        if(returnlItem.offerApplied){
+      if (order.isOfferApplied) {
+        let returnlItem = order.items.find(item => item.productId.toString() == productId.toString())
+        console.log('returning item ', returnlItem);
+
+        if (returnlItem.offerApplied) {
           order.offerDiscountAmount = Math.max(0, order.offerDiscountAmount - returnlItem.offerDiscount);
-          if(order.offerDiscountAmount==0){
-            order.isOfferApplied=false
+          if (order.offerDiscountAmount == 0) {
+            order.isOfferApplied = false
           }
-          refundAmount-=returnlItem.offerDiscount
+          refundAmount -= returnlItem.offerDiscount
         }
       }
       // More than one item in the order
@@ -1007,7 +1015,7 @@ const approveReturn = async (req, res) => {
 
     console.log('Wallet refunded with:', refundAmount);
 
-   
+
     await order.save()
 
     return res.json({
@@ -1016,7 +1024,7 @@ const approveReturn = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error in approveReturn:', error.message,error);
+    console.error('Error in approveReturn:', error.message, error);
     return res.status(400).json({ success: false, message: error.message });
   }
 };
@@ -1073,8 +1081,9 @@ const getSalesReport = async (req, res, next) => {
     const reportType = req.query.reportType || '';
     console.log('reportType', reportType);
 
-    let matchStage = { $match: { status: { $ne: 'cancelled' } } };
-    let groupStage, sortStage;
+    let matchStage = { $match: { status: { $eq: 'Delivered' } } };
+    let groupStage, 
+     sortStage;
 
 
     if (reportType === 'weekly') {
@@ -1241,7 +1250,7 @@ const getSalesReport = async (req, res, next) => {
     console.log('total discont', totalDiscount);
 
     //top products
-    let topProductMatchStage = { status: { $ne: 'cancelled' } };
+    let topProductMatchStage = { status: { $eq: 'Delivered' } };
 
 
     const topProducts = await Order.aggregate([
@@ -1263,9 +1272,11 @@ const getSalesReport = async (req, res, next) => {
     // console.log('top products ', topProducts);
 
     //recent orders
-    const recentOrders = await Order.find({ status: { $ne: 'cancelled' } })
+    const recentOrders = await Order.find({
+      status: { $nin: ['cancelled', 'returned'] }
+    })
       .sort({ createdAt: -1 })
-      .limit(3);
+      .limit(5);
 
     const salesDatas = [
       // {
@@ -1336,7 +1347,7 @@ const updateSaleReport = async (req, res, next) => {
     const reportType = req.query.reportType || '';
     console.log('reportType', reportType);
     //////
-    let matchStage = { $match: { status: { $ne: 'cancelled' } } };
+    let matchStage = { $match: { status: { $eq: 'Delivered' } } };
     let groupStage, sortStage;
 
 
@@ -1610,22 +1621,90 @@ const downloadSaleReportpdf = async (req, res, next) => {
   console.log('downloadSaleReportpdf');
   try {
 
-    const { chartImage, startDate, endDate, reportType } = req.body
+    const {chartImage, startDate, endDate, reportType } = req.body
     // console.log('chartImage,startDate,endDate,reportType',chartImage,startDate,endDate,reportType);
     //getiing salesdata
     console.log('reportType', reportType);
     //////
-    let matchStage = { $match: { status: { $ne: 'cancelled' } } };
+    let matchStage = { $match: { status: { $eq: 'Delivered' } } };
     let groupStage, sortStage;
 
 
-    if (reportType === 'weekly') {
+    // if (reportType === 'weekly') {
+    //   groupStage = {
+    //     $group: {
+    //       _id: { $isoWeek: '$createdAt' },
+    //       totalSales: { $sum: '$finalAmount' },
+    //       offerDeduction: { $sum: '$offerDiscountAmount' },
+    //       couponDeduction: { $sum: '$coupenDiscountAmount' },
+    //       orderCount: { $sum: 1 }
+    //     }
+    //   };
+    //   sortStage = { $sort: { '_id': 1 } };
+    // } else if (reportType === 'monthly') {
+    //   groupStage = {
+    //     $group: {
+    //       _id: { $month: '$createdAt' },
+    //       totalSales: { $sum: '$finalAmount' },
+    //       offerDeduction: { $sum: '$offerDiscountAmount' },
+    //       couponDeduction: { $sum: '$coupenDiscountAmount' },
+    //       orderCount: { $sum: 1 }
+    //     }
+    //   };
+    //   sortStage = { $sort: { '_id': 1 } };
+    // } else if (reportType === 'yearly') {
+    //   groupStage = {
+    //     $group: {
+    //       _id: { $year: '$createdAt' },
+    //       totalSales: { $sum: '$finalAmount' },
+    //       offerDeduction: { $sum: '$offerDiscountAmount' },
+    //       couponDeduction: { $sum: '$coupenDiscountAmount' },
+    //       orderCount: { $sum: 1 }
+    //     }
+    //   };
+    //   sortStage = { $sort: { '_id': 1 } };
+    // } else if (reportType === 'custom') {
+
+    //   matchStage = {
+    //     $match: {
+    //       createdAt: {
+    //         $gte: new Date(startDate),
+    //         $lte: new Date(endDate)
+    //       },
+    //       status: { $ne: 'cancelled' }
+    //     }
+    //   };
+    //   groupStage = {
+    //     $group: {
+    //       _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+    //       totalSales: { $sum: '$finalAmount' },
+    //       offerDeduction: { $sum: '$offerDiscountAmount' },
+    //       couponDeduction: { $sum: '$coupenDiscountAmount' },
+    //       orderCount: { $sum: 1 }
+    //     }
+    //   };
+    //   sortStage = { $sort: { '_id': 1 } };
+    // } else {
+    //   groupStage = {
+    //     $group: {
+    //       _id: { $dayOfMonth: '$createdAt' },
+    //       totalSales: { $sum: '$finalAmount' },
+    //       offerDeduction: { $sum: '$offerDiscountAmount' },
+    //       couponDeduction: { $sum: '$coupenDiscountAmount' },
+    //       orderCount: { $sum: 1 }
+    //     },
+    //   }
+    //   sortStage = { $sort: { '_id': 1 } }
+    // }
+ if (reportType === 'weekly') {
       groupStage = {
         $group: {
-          _id: { $isoWeek: '$createdAt' },
-          totalSales: { $sum: '$finalAmount' },
-          offerDeduction: { $sum: '$offerDiscountAmount' },
-          couponDeduction: { $sum: '$coupenDiscountAmount' },
+          _id: {
+            $dateToString: { format: "%G-W%V", date: "$createdAt" } // ISO week year and week
+          },
+          totalSales: { $sum: "$finalAmount" },
+          offerDeduction: { $sum: "$offerDiscountAmount" },
+          couponDeduction: { $sum: "$coupenDiscountAmount" },
           orderCount: { $sum: 1 }
         }
       };
@@ -1633,24 +1712,30 @@ const downloadSaleReportpdf = async (req, res, next) => {
     } else if (reportType === 'monthly') {
       groupStage = {
         $group: {
-          _id: { $month: '$createdAt' },
-          totalSales: { $sum: '$finalAmount' },
-          offerDeduction: { $sum: '$offerDiscountAmount' },
-          couponDeduction: { $sum: '$coupenDiscountAmount' },
+          _id: {
+            $dateToString: { format: "%B %Y", date: "$createdAt" } // e.g., "May 2025"
+          },
+          totalSales: { $sum: "$finalAmount" },
+          offerDeduction: { $sum: "$offerDiscountAmount" },
+          couponDeduction: { $sum: "$coupenDiscountAmount" },
           orderCount: { $sum: 1 }
         }
       };
+
       sortStage = { $sort: { '_id': 1 } };
     } else if (reportType === 'yearly') {
       groupStage = {
         $group: {
-          _id: { $year: '$createdAt' },
-          totalSales: { $sum: '$finalAmount' },
-          offerDeduction: { $sum: '$offerDiscountAmount' },
-          couponDeduction: { $sum: '$coupenDiscountAmount' },
+          _id: {
+            $dateToString: { format: "%Y", date: "$createdAt" }
+          },
+          totalSales: { $sum: "$finalAmount" },
+          offerDeduction: { $sum: "$offerDiscountAmount" },
+          couponDeduction: { $sum: "$coupenDiscountAmount" },
           orderCount: { $sum: 1 }
         }
       };
+
       sortStage = { $sort: { '_id': 1 } };
     } else if (reportType === 'custom') {
 
@@ -1676,15 +1761,18 @@ const downloadSaleReportpdf = async (req, res, next) => {
     } else {
       groupStage = {
         $group: {
-          _id: { $dayOfMonth: '$createdAt' },
-          totalSales: { $sum: '$finalAmount' },
-          offerDeduction: { $sum: '$offerDiscountAmount' },
-          couponDeduction: { $sum: '$coupenDiscountAmount' },
+          _id: {
+            $dateToString: { format: "%d %b %G", date: "$createdAt" }
+          },
+          totalSales: { $sum: "$finalAmount" },
+          offerDeduction: { $sum: "$offerDiscountAmount" },
+          couponDeduction: { $sum: "$coupenDiscountAmount" },
           orderCount: { $sum: 1 }
-        },
-      }
+        }
+      };
       sortStage = { $sort: { '_id': 1 } }
     }
+
 
 
     const salesData = await Order.aggregate([
@@ -1697,7 +1785,7 @@ const downloadSaleReportpdf = async (req, res, next) => {
     const htmlContent = await ejs.renderFile(
       path.join(__dirname, '..', 'views', 'admin', 'salesReportPdf.ejs'),
       {
-        chartImage,
+       chartImage,
         salesData,
         reportType,
         startDate: startDate || null,
@@ -1742,16 +1830,18 @@ const downloadSaleReportExcel = async (req, res, next) => {
     //getiing salesdata
     console.log('reportType', reportType);
     //////
-    let matchStage = { $match: { status: { $ne: 'cancelled' } } };
+    let matchStage = { $match: { status: { $eq: 'Delivered' } } };
     let groupStage, sortStage;
 
     if (reportType === 'weekly') {
       groupStage = {
         $group: {
-          _id: { $isoWeek: '$createdAt' },
-          totalSales: { $sum: '$finalAmount' },
-          offerDeduction: { $sum: '$offerDiscountAmount' },
-          couponDeduction: { $sum: '$coupenDiscountAmount' },
+          _id: {
+            $dateToString: { format: "%G-W%V", date: "$createdAt" } // ISO week year and week
+          },
+          totalSales: { $sum: "$finalAmount" },
+          offerDeduction: { $sum: "$offerDiscountAmount" },
+          couponDeduction: { $sum: "$coupenDiscountAmount" },
           orderCount: { $sum: 1 }
         }
       };
@@ -1759,24 +1849,30 @@ const downloadSaleReportExcel = async (req, res, next) => {
     } else if (reportType === 'monthly') {
       groupStage = {
         $group: {
-          _id: { $month: '$createdAt' },
-          totalSales: { $sum: '$finalAmount' },
-          offerDeduction: { $sum: '$offerDiscountAmount' },
-          couponDeduction: { $sum: '$coupenDiscountAmount' },
+          _id: {
+            $dateToString: { format: "%B %Y", date: "$createdAt" } // e.g., "May 2025"
+          },
+          totalSales: { $sum: "$finalAmount" },
+          offerDeduction: { $sum: "$offerDiscountAmount" },
+          couponDeduction: { $sum: "$coupenDiscountAmount" },
           orderCount: { $sum: 1 }
         }
       };
+
       sortStage = { $sort: { '_id': 1 } };
     } else if (reportType === 'yearly') {
       groupStage = {
         $group: {
-          _id: { $year: '$createdAt' },
-          totalSales: { $sum: '$finalAmount' },
-          offerDeduction: { $sum: '$offerDiscountAmount' },
-          couponDeduction: { $sum: '$coupenDiscountAmount' },
+          _id: {
+            $dateToString: { format: "%Y", date: "$createdAt" }
+          },
+          totalSales: { $sum: "$finalAmount" },
+          offerDeduction: { $sum: "$offerDiscountAmount" },
+          couponDeduction: { $sum: "$coupenDiscountAmount" },
           orderCount: { $sum: 1 }
         }
       };
+
       sortStage = { $sort: { '_id': 1 } };
     } else if (reportType === 'custom') {
 
@@ -1802,13 +1898,15 @@ const downloadSaleReportExcel = async (req, res, next) => {
     } else {
       groupStage = {
         $group: {
-          _id: { $dayOfMonth: '$createdAt' },
-          totalSales: { $sum: '$finalAmount' },
-          offerDeduction: { $sum: '$offerDiscountAmount' },
-          couponDeduction: { $sum: '$coupenDiscountAmount' },
+          _id: {
+            $dateToString: { format: "%d %b %G", date: "$createdAt" }
+          },
+          totalSales: { $sum: "$finalAmount" },
+          offerDeduction: { $sum: "$offerDiscountAmount" },
+          couponDeduction: { $sum: "$coupenDiscountAmount" },
           orderCount: { $sum: 1 }
-        },
-      }
+        }
+      };
       sortStage = { $sort: { '_id': 1 } }
     }
 

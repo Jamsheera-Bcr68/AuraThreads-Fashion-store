@@ -27,48 +27,192 @@ router.get("/dashboard", async (req, res) => {
   const productCount = await product.countDocuments({ isDeleted: false });
   const categoryCount = await category.countDocuments({ isDeleted: false });
   const orderCount = await Order.countDocuments({});
-  console.log(
-    userCount +
-    " userCount , " +
-    productCount +
-    " productCount , " +
-    categoryCount +
-    "category counts"
-  );
+  const orders = await Order.find({ status: 'Delivered' })
+  //console.log(orders);
+  const totalSalesAmount = orders.reduce((acc, order) => acc + order.finalAmount, 0)
+  totalDiscount = orders.reduce((acc, order) => acc + (order.offerDiscountAmount + order.coupenDiscountAmount), 0)
+  // console.log('total discount ', totalDiscount);
 
+  let matchStage = { $match: { status: { $eq: 'Delivered' }, createdAt: { $lte: new Date() } } };
+
+
+  let groupStage = {
+    $group: {
+      _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+      totalSales: { $sum: '$finalAmount' },
+      offerDeduction: { $sum: '$offerDiscountAmount' },
+      couponDeduction: { $sum: '$coupenDiscountAmount' },
+      orderCount: { $sum: 1 }
+    },
+  }
+  let sortStage = { $sort: { '_id': 1 } }
+
+  const salesData = await Order.aggregate([
+    matchStage,
+    groupStage,
+    sortStage
+  ]);
+
+  let salesDates = salesData.map(data => data._id)
+  //console.log('salesData',salesData);
+  //console.log('salesDates ',salesDates);
+
+  const topProducts = await Order.aggregate([
+    matchStage,
+    { $unwind: '$items' },
+    {
+      $lookup: {
+        from: 'products',
+        localField: 'items.productId',
+        foreignField: '_id',
+        as: 'productDetails'
+      }
+    },
+    { $unwind: '$productDetails' },
+    { $group: { _id: '$items.productId', totalSold: { $sum: '$items.quantity' }, productName: { $first: '$productDetails.productName' }, images: { $first: '$productDetails.images' } } },
+    { $sort: { totalSold: -1 } },
+    { $limit: 5 }
+  ])
+  //    console.log('topProduct ',topProducts);
+
+ const topCategories = await Order.aggregate([
+  matchStage,
+
+  { $unwind: '$items' },
+
+  // Step 1: Lookup product details based on items.productId
+  {
+    $lookup: {
+      from: 'products',
+      localField: 'items.productId',
+      foreignField: '_id',
+      as: 'productDetails'
+    }
+  },
+
+  { $unwind: '$productDetails' },
+
+  // Step 2: Lookup category using productDetails.categoryId
+  {
+    $lookup: {
+      from: 'categories',
+      localField: 'productDetails.categoryId',
+      foreignField: '_id',
+      as: 'categoryDetails'
+    }
+  },
+
+  { $unwind: '$categoryDetails' },
+
+  // Step 3: Group by category
+  {
+    $group: {
+      _id: '$productDetails.categoryId',
+      totalSold: { $sum: '$items.quantity' },
+      name: { $first: '$categoryDetails.categoryName' }
+    }
+  },
+
+  // Step 4: Sort and limit
+  { $sort: { totalSold: -1 } },
+  { $limit: 5 },
+
+  // Optional: Clean output
+  {
+    $project: {
+      _id: 0,
+      categoryId: '$_id',
+      name: 1,
+      totalSold: 1
+    }
+  }
+]);
+
+ // console.log('topCategory ', topCategory);
+const topBrands = await Order.aggregate([
+  matchStage, // optional date filter
+
+  { $unwind: '$items' },
+
+  {
+    $lookup: {
+      from: 'products',
+      localField: 'items.productId',
+      foreignField: '_id',
+      as: 'productDetails'
+    }
+  },
+
+  { $unwind: '$productDetails' },
+
+  {
+    $group: {
+      _id: '$productDetails.brand', // group by brand name
+      totalSold: { $sum: '$items.quantity' }
+    }
+  },
+
+  { $sort: { totalSold: -1 } },
+  { $limit: 5 },
+
+  {
+    $project: {
+      _id: 0,
+      name: '$_id',
+      totalSold: 1
+    }
+  }
+]);
+
+//console.log('topBrands ',topBrands);
+
+//recent orders
+ const recentOrders = await Order.find({
+  status: { $nin: ['cancelled', 'returned'] }
+})
+.sort({ createdAt: -1 })
+.limit(5);
+ 
   res.render("../views/admin/dashboard", {
     title: "Dashboard",
     userCount,
     productCount,
-    categoryCount,
-    orderCount
+    totalDiscount,
+    totalSalesAmount,
+    orderCount,
+    topProducts,
+    topCategories,
+    topBrands,
+    salesData,
+    salesDates,
+    recentOrders
   });
 });
 
 //get categoryManagement
 router.get("/category", async (req, res) => {
   try {
-    const query=req.query.query || ''
+    const query = req.query.query || ''
     const page = parseInt(req.query.page) || 1
     const limit = parseInt(req.query.limit) || 5
     const skip = (page - 1) * limit
- console.log('Query is' ,query);
- let searchQuery={isDeleted:false}
+    console.log('Query is', query);
+    let searchQuery = { isDeleted: false }
 
- if(query.trim()){
-  searchQuery = {
-    $and: [
-      {
-        $or: [
-          { categoryName: { $regex: query, $options: "i" } },
-          { description: { $regex: query, $options: "i" } },
+    if (query.trim()) {
+      searchQuery = {
+        $and: [
+          {
+            $or: [
+              { categoryName: { $regex: query, $options: "i" } },
+              { description: { $regex: query, $options: "i" } },
+            ],
+          },
+          { isDeleted: false },
         ],
-      },
-      { isDeleted: false },
-    ],
-  };
- }
- 
+      };
+    }
+
     const categories = await category.find(searchQuery).sort({ createdAt: -1 })
       .skip(skip).limit(limit)
     console.log(`from category page is ${page} lmit is ${limit}`);
@@ -184,7 +328,7 @@ router.post("/category/edit/:id", async (req, res) => {
 
     req.flash('successMessage', 'Category Updated Successfully')
     res.redirect('/admin/category')
-    
+
   } catch (error) {
     console.log(error);
     req.flash('errorMessage', 'Error While Adding Caterory')
@@ -193,8 +337,8 @@ router.post("/category/edit/:id", async (req, res) => {
 
 router.delete("/category/delete/:id", async (req, res) => {
   const { id } = req.params;
- console.log('from delete routes');
- 
+  console.log('from delete routes');
+
   try {
     const softDeleteCategory = await category.findByIdAndUpdate(
       id,
@@ -203,31 +347,32 @@ router.delete("/category/delete/:id", async (req, res) => {
     );
     if (!softDeleteCategory) {
       console.log('Category not found');
-      
-     return res.json({success:false,message:"Category not found"})
+
+      return res.json({ success: false, message: "Category not found" })
     } else {
       console.log('Category Deleted successfully');
       console.log("soft deleted category " + softDeleteCategory);
-     return res.json({success:true,message:"Category Deleted successfully"})
-    
-  } }catch (error) {
+      return res.json({ success: true, message: "Category Deleted successfully" })
+
+    }
+  } catch (error) {
     console.log("error on deleting category", error);
-    return res.json({success:false,message:"Error in delting category"})
+    return res.json({ success: false, message: "Error in delting category" })
   }
 })
 
 //get usermangement
 router.get('/users', async (req, res) => {
   try {
-    const query=req.query.query ||''
+    const query = req.query.query || ''
     const page = parseInt(req.query.page) || 1
     const limit = parseInt(req.query.limit) || 5
     const skip = (page - 1) * limit
 
-    console.log('query',query);
-    
-    let searchQuery={}
-    if(query.trim()){
+    console.log('query', query);
+
+    let searchQuery = {}
+    if (query.trim()) {
       searchQuery = {
         $or: [
           { name: { $regex: query, $options: "i" } },
@@ -298,7 +443,7 @@ router.delete('/deleteOrder/:orderId', adminController.deleteOrder)
 router.post('/logout', adminController.postLogout)
 
 //admin coupenMangement
-router.get('/coupens',adminController.getCoupenPage)
+router.get('/coupens', adminController.getCoupenPage)
 
 //admin add coupen 
 router.post('/addCoupon', adminController.addCoupen)
@@ -325,43 +470,43 @@ router.post('/addOffer', adminController.addOffer)
 router.delete('/offer/delete/:offerId', adminController.deleteOffer)
 
 //edit offer
-router.get('/getSingleOffer/:offerId',adminController.getSingleOffer)
+router.get('/getSingleOffer/:offerId', adminController.getSingleOffer)
 
 //edit offer
-router.put('/editOffer/:offerId',adminController.editOffer)
+router.put('/editOffer/:offerId', adminController.editOffer)
 
 //add refferal offer
-router.post('/addrefferalOffer',adminController.addrefferalOffer)
+router.post('/addrefferalOffer', adminController.addrefferalOffer)
 
 //get referal offer
-router.get('/referalOffers',adminController.referalOffers)
+router.get('/referalOffers', adminController.referalOffers)
 
 //delete referal offer
-router.delete('/refferalOffer/delete/:offerId',adminController.deleteReferalOffers)
+router.delete('/refferalOffer/delete/:offerId', adminController.deleteReferalOffers)
 
 //get single refferal
-router.get('/getSinglerefferal/:offerId',adminController.getSinglerefferal)
+router.get('/getSinglerefferal/:offerId', adminController.getSinglerefferal)
 
 //edit referal offer
-router.post('/editReferralForm/:offerId',adminController.editReffferalOffer)
+router.post('/editReferralForm/:offerId', adminController.editReffferalOffer)
 
 // get approval page
-router.get('/pendings',adminController.getPendings)
+router.get('/pendings', adminController.getPendings)
 
 //admin return approval
-router.post('/returns/approve',adminController.approveReturn)
+router.post('/returns/approve', adminController.approveReturn)
 
 //admin reject return
-router.post('/returns/reject',adminController.rejectReturn)
+router.post('/returns/reject', adminController.rejectReturn)
 
 //admin report get
-router.get('/reports',adminController.getSalesReport)
+router.get('/reports', adminController.getSalesReport)
 
-router.get('/updateReport',adminController.updateSaleReport)
+router.get('/updateReport', adminController.updateSaleReport)
 
 // get salesreport pdf
-router.post('/downloadSaleReportpdf',adminController.downloadSaleReportpdf)
+router.post('/downloadSaleReportpdf', adminController.downloadSaleReportpdf)
 
 //downloadSaleReportExcel
-router.get('/downloadSaleReportExcel',adminController.downloadSaleReportExcel)
+router.get('/downloadSaleReportExcel', adminController.downloadSaleReportExcel)
 module.exports = router;

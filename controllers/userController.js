@@ -1339,7 +1339,7 @@ const getCheckout = async (req, res) => {
 
 
 
-  const shippingCharge = 0.00
+  const shippingCharge = 50.00
   const taxAmount = 0.00
   let totalAmount = 0;
   let subTotal = 0
@@ -1366,6 +1366,7 @@ const getCheckout = async (req, res) => {
   }
   const offerDiscountAmount = req.session.totalDiscount
   console.log('offerDiscountAmount', offerDiscountAmount);
+  
 
   //getting available coupons
   const coupons = await Coupon.find({ isActive: true, expiryDate: { $gte: new Date() } });
@@ -1381,6 +1382,7 @@ const getCheckout = async (req, res) => {
     cartItems,
     shippingCharge,
     taxAmount,
+  
     couponDiscountAmount: req.session.discountAmount || 0,
     offerDiscountAmount: req.session.totalDiscount || 0,
     totalAmount,
@@ -1394,6 +1396,8 @@ const placeOrder = async (req, res) => {
 
   try {
     let { paymentMethod, paymentDetails, totalAmount } = req.body
+    console.log('total amount ',totalAmount);
+    
     let addressId = req.body.addressId?.trim();
     //validatiing essential fields
     const useWallet = req.body.useWallet
@@ -1475,77 +1479,33 @@ const placeOrder = async (req, res) => {
 
     const finalAmount = totalAmount - coupenDiscountAmount - offerDiscountAmount
     console.log('final amount discount amount ', finalAmount);
+
+    const shippingCarge=50.00
+    const orderTotal=finalAmount+shippingCarge
+    console.log('orderTotal ',orderTotal);
+    
+    
     const isCouponApplied = req.session.code ? true : false
     const couponCode = req.session.code || ''
 
     const isOfferApplied = req.session.offer ? true : false
-    // check for wallet 
-    const wallet = await Wallet.findOne({ userId })
-    if (useWallet == true) {
-
-      if (!wallet) {
-        return res.json({ success: false, message: "Wallet not found" })
-      }
-      if (wallet.balance < finalAmount) {
-        console.log('insufficient balance');
-        return res.json({ success: false, message: "Insufficient balance" })
-      }
-      paymentMethod = 'wallet'
+ 
+    //order above 1000 not allow to py COD
+    if(finalAmount>1000 && paymentMethod=='COD'){
+      console.log('Order above 1000 cannot use COD');
+      
+      return res.json({success:false,message:'Order above 1000 cannot use COD'})
     }
-
     // razorpay id
 
-    const options = {
-      amount: finalAmount * 100,
-      currency: 'INR',
-      receipt: "receipt_" + Date.now()
-    }
-    const razorpayOrder = await razorpay.orders.create(options);
+    // const options = {
+    //   amount: finalAmount * 100,
+    //   currency: 'INR',
+    //   receipt: "receipt_" + Date.now()
+    // }
+    // const razorpayOrder = await razorpay.orders.create(options);
 
-    if (paymentMethod == 'COD') {
-      const newOrder = new Order({
-        userId: req.session.user._id,
-        address,
-        coupenDiscountAmount,
-        offerDiscountAmount,
-        isCouponApplied,
-        isOfferApplied,
-        couponCode,
-        finalAmount,
-        paymentMethod,
-        totalAmount,
-        status: 'Pending',
-        items: cart.items,
-        createdAt,
-        deliveryDate,
-        useWallet
-      })
-      await newOrder.save()
-
-      //update stock
-      for (let item of cart.items) {
-        await Product.findByIdAndUpdate(item.productId, {
-          $inc: { stock: -item.quantity }
-        });
-      }
-
-      //making cart empty
-
-      // making cart empty
-      await Cart.updateOne({ userId }, { $set: { items: [] } });
-      req.session.discountAmount = 0
-      req.session.finalAmount = 0
-      req.session.code = ''
-      req.session.appliedCoupon = null
-      req.session.offer = null
-      req.session.cartTotal = 0
-      req.session.netAmount = 0
-      req.session.totalDiscount = 0
-
-      let orderId = newOrder._id
-
-      return res.json({ success: true, message: "Order Placed Succesfully", paymentMethod, orderId })
-    }
+   
 
     //////
     let orderItems = await Promise.all(cart.items.map(async (item) => {
@@ -1621,9 +1581,75 @@ const placeOrder = async (req, res) => {
       };
     }))
 
+    // if payment method is COD
+     if (paymentMethod == 'COD') {
+      const newOrder = new Order({
+        userId: req.session.user._id,
+        address,
+        coupenDiscountAmount,
+        offerDiscountAmount,
+        isCouponApplied,
+        isOfferApplied,
+        couponCode,
+        finalAmount,
+        paymentMethod,
+        totalAmount,
+        status: 'Pending',
+        items: orderItems,
+        createdAt,
+        deliveryDate,
+        orderTotal,
+        shippingCarge,
+        useWallet
+      })
+      await newOrder.save()
 
+      //update stock
+      for (let item of cart.items) {
+        await Product.findByIdAndUpdate(item.productId, {
+          $inc: { stock: -item.quantity }
+        });
+      }
 
-    //creating new order document
+      //making cart empty
+
+      // making cart empty
+      await Cart.updateOne({ userId }, { $set: { items: [] } });
+      req.session.discountAmount = 0
+      req.session.finalAmount = 0
+      req.session.code = ''
+      req.session.appliedCoupon = null
+      req.session.offer = null
+      req.session.cartTotal = 0
+      req.session.netAmount = 0
+      req.session.totalDiscount = 0
+
+      let orderId = newOrder._id
+
+      return res.json({ success: true, message: "Order Placed Succesfully", paymentMethod, orderId })
+    }else{
+
+      const options = {
+      amount: orderTotal * 100,
+      currency: 'INR',
+      receipt: "receipt_" + Date.now()
+    }
+    const razorpayOrder = await razorpay.orders.create(options);
+
+      // check for wallet 
+    const wallet = await Wallet.findOne({ userId })
+         if (useWallet == true) {
+
+      if (!wallet) {
+        return res.json({ success: false, message: "Wallet not found" })
+      }
+      if (wallet.balance < orderTotal) {
+        console.log('insufficient balance');
+        return res.json({ success: false, message: "Insufficient balance" })
+      }
+      paymentMethod = 'wallet'
+          }
+           //creating new order document
     req.session.tempOrder = {
       userId: req.session.user._id,
       address,
@@ -1633,6 +1659,7 @@ const placeOrder = async (req, res) => {
       isOfferApplied,
       couponCode,
       finalAmount,
+      shippingCarge,orderTotal,
       paymentMethod,
       totalAmount,
 
@@ -1654,9 +1681,6 @@ const placeOrder = async (req, res) => {
       deliveryDate,
       useWallet
     }
-
-
-
     return res.json({
       success: true,
       message: "Order completed successfully",
@@ -1670,6 +1694,10 @@ const placeOrder = async (req, res) => {
       user: req.session.user
     });
 
+    }
+    
+  
+////////////////
 
   } catch (error) {
     console.log('error in placing order', error);
@@ -1736,7 +1764,15 @@ const getOrders = async (req, res) => {
       console.log('cart not fount');
 
     }
-
+    // order status updating
+     const activeOrders = await Order.find({ status: { $nin: ['cancelled', 'returned'] } })
+        for (const order of activeOrders) {
+          if (order.deliveryDate <= new Date()) {
+            order.status = 'Delivered';
+            await order.save();
+          }
+        }
+        
     res.render('user/userOrders', {
       title: "See Your All-Orders",
       orders,

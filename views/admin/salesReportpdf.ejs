@@ -28,7 +28,9 @@
   <p>From <%= startDate %> to <%= endDate %>
   </p>
 
-  <img src="<%= chartImage %>" alt="Sales Chart" />
+  <% if(chartImage){ %>
+    <img src="<%= chartImage %>" alt="Sales Chart" />
+ <% } %>
 
   <h3>Sales Table</h3>
   <table>
