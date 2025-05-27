@@ -1082,8 +1082,8 @@ const getSalesReport = async (req, res, next) => {
     console.log('reportType', reportType);
 
     let matchStage = { $match: { status: { $eq: 'Delivered' } } };
-    let groupStage, 
-     sortStage;
+    let groupStage,
+      sortStage;
 
 
     if (reportType === 'weekly') {
@@ -1621,7 +1621,7 @@ const downloadSaleReportpdf = async (req, res, next) => {
   console.log('downloadSaleReportpdf');
   try {
 
-    const {chartImage, startDate, endDate, reportType } = req.body
+    const { chartImage, startDate, endDate, reportType } = req.body
     // console.log('chartImage,startDate,endDate,reportType',chartImage,startDate,endDate,reportType);
     //getiing salesdata
     console.log('reportType', reportType);
@@ -1630,73 +1630,8 @@ const downloadSaleReportpdf = async (req, res, next) => {
     let groupStage, sortStage;
 
 
-    // if (reportType === 'weekly') {
-    //   groupStage = {
-    //     $group: {
-    //       _id: { $isoWeek: '$createdAt' },
-    //       totalSales: { $sum: '$finalAmount' },
-    //       offerDeduction: { $sum: '$offerDiscountAmount' },
-    //       couponDeduction: { $sum: '$coupenDiscountAmount' },
-    //       orderCount: { $sum: 1 }
-    //     }
-    //   };
-    //   sortStage = { $sort: { '_id': 1 } };
-    // } else if (reportType === 'monthly') {
-    //   groupStage = {
-    //     $group: {
-    //       _id: { $month: '$createdAt' },
-    //       totalSales: { $sum: '$finalAmount' },
-    //       offerDeduction: { $sum: '$offerDiscountAmount' },
-    //       couponDeduction: { $sum: '$coupenDiscountAmount' },
-    //       orderCount: { $sum: 1 }
-    //     }
-    //   };
-    //   sortStage = { $sort: { '_id': 1 } };
-    // } else if (reportType === 'yearly') {
-    //   groupStage = {
-    //     $group: {
-    //       _id: { $year: '$createdAt' },
-    //       totalSales: { $sum: '$finalAmount' },
-    //       offerDeduction: { $sum: '$offerDiscountAmount' },
-    //       couponDeduction: { $sum: '$coupenDiscountAmount' },
-    //       orderCount: { $sum: 1 }
-    //     }
-    //   };
-    //   sortStage = { $sort: { '_id': 1 } };
-    // } else if (reportType === 'custom') {
 
-    //   matchStage = {
-    //     $match: {
-    //       createdAt: {
-    //         $gte: new Date(startDate),
-    //         $lte: new Date(endDate)
-    //       },
-    //       status: { $ne: 'cancelled' }
-    //     }
-    //   };
-    //   groupStage = {
-    //     $group: {
-    //       _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
-    //       totalSales: { $sum: '$finalAmount' },
-    //       offerDeduction: { $sum: '$offerDiscountAmount' },
-    //       couponDeduction: { $sum: '$coupenDiscountAmount' },
-    //       orderCount: { $sum: 1 }
-    //     }
-    //   };
-    //   sortStage = { $sort: { '_id': 1 } };
-    // } else {
-    //   groupStage = {
-    //     $group: {
-    //       _id: { $dayOfMonth: '$createdAt' },
-    //       totalSales: { $sum: '$finalAmount' },
-    //       offerDeduction: { $sum: '$offerDiscountAmount' },
-    //       couponDeduction: { $sum: '$coupenDiscountAmount' },
-    //       orderCount: { $sum: 1 }
-    //     },
-    //   }
-    //   sortStage = { $sort: { '_id': 1 } }
-    // }
- if (reportType === 'weekly') {
+    if (reportType === 'weekly') {
       groupStage = {
         $group: {
           _id: {
@@ -1782,10 +1717,12 @@ const downloadSaleReportpdf = async (req, res, next) => {
     ]);
 
     console.log('sale Dta', salesData);
+    console.log('sales data', salesData);
+
     const htmlContent = await ejs.renderFile(
       path.join(__dirname, '..', 'views', 'admin', 'salesReportPdf.ejs'),
       {
-       chartImage,
+        chartImage,
         salesData,
         reportType,
         startDate: startDate || null,
@@ -1911,17 +1848,30 @@ const downloadSaleReportExcel = async (req, res, next) => {
     }
 
 
+
     const salesData = await Order.aggregate([
       matchStage,
       groupStage,
       sortStage
     ]);
 
+    console.log('sale Dta', salesData);
+    console.log('sales data', salesData);
+
     console.log('sale Data from excel', salesData);
 
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Sales Report')
-
+    // let th = 'Date'
+    // if (reportType == 'daily') {
+    //   th = 'Date'
+    // } else if (reportType == 'weekly') {
+    //   th = 'Week'
+    // } else if (reportType == 'yearly') {
+    //   th = 'Year'
+    // } else if (reportType == 'monthly') {
+    //   th = 'Month'
+    // }
     // Define columns
     worksheet.columns = [
       {
@@ -1936,23 +1886,18 @@ const downloadSaleReportExcel = async (req, res, next) => {
         key: 'date',
         width: 20,
       },
-      { header: 'Total Sales', key: 'total', width: 15 },
-      { header: 'Coupon Discount', key: 'couponDeduction', width: 15 },
-      { header: 'Offer Discount', key: 'offerDeduction', width: 15 },
       { header: 'Total Discount', key: 'totalDiscount', width: 15 },
       { header: 'Order Count', key: 'orderCount', width: 15 },
+      { header: 'Total Sales', key: 'total', width: 15 }
     ];
 
     // Add data rows
     salesData.forEach((entry) => {
       worksheet.addRow({
         date: entry._id,
-        total: entry.totalSales,
-
-        couponDeduction: entry.couponDeduction,
-        offerDeduction: entry.offerDeduction,
-        totalDiscount: Number(entry.offerDeduction || 0) + Number(entry.couponDeduction || 0),
-        orderCount: entry.orderCount
+         totalDiscount: (Number(entry.offerDeduction || 0) + Number(entry.couponDeduction|| 0)).toFixed(2),
+        orderCount: entry.orderCount,
+        total: entry.totalSales.toFixed(2),
       });
     })
 

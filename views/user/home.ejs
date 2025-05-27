@@ -37,7 +37,7 @@
           <div class="intro-text">
             <p class="mb-4 fw-bold">Discover trendy and elegant dresses for every occasion. Shop the latest styles with comfort and confidence!</p>
             <p>
-              <a href="/user/productList" class="btn btn-sm btn-primary">Shop Now</a>
+              <a href="/user/productList" style="background-color: #7971ea;color: white;" class="btn btn-sm">Shop Now</a>
             </p>
           </div>
         </div>
@@ -132,7 +132,7 @@
                         <i class="fa <%= i <= Math.floor(product.rating) ? 'fa-star' : (i - product.rating < 1 ? 'fa-star-half-o' : 'fa-star-o') %>"></i>
                       <% } %>
                     </p>
-                    <p class="text-success fw-bold mb-1" style="font-size: 12px;">Free Delivery</p>
+                    <!-- <p class="text-success fw-bold mb-1" style="font-size: 12px;">Free Delivery</p> -->
                     <p class="text-primary font-weight-bold mb-0" style="font-size: 14px;"><%= product.price %></p>
                   </div>
                 </div>
@@ -163,7 +163,7 @@
                 <div class="item">
                   <div class="block-4 text-center p-3" style="background: #fff; border-radius: 10px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);">
                     <figure class="block-4-image">
-                      <a href="/product/products/<%= product._id %>">
+                      <a href="/user/products/<%= product._id %>">
                         <img src="<%= product.images[0] %>" 
                       alt="Image placeholder"
                       style="border-radius: 8px; height: 250px; width: 100%; object-fit: cover;">
@@ -178,7 +178,7 @@
                           <i class="fa <%= i <= Math.floor(product.rating) ? 'fa-star' : (i - product.rating < 1 ? 'fa-star-half-o' : 'fa-star-o') %>"></i>
                         <% } %>
                       </p>
-                      <p class="text-success fw-bold mb-1" style="font-size: 12px;">Free Delivery</p>
+                      <!-- <p class="text-success fw-bold mb-1" style="font-size: 12px;">Free Delivery</p> -->
                       <p class="text-primary font-weight-bold mb-0" style="font-size: 14px;"><%= product.price %></p>
                     </div>
                   </div>
@@ -228,7 +228,7 @@
                           <i class="fa <%= i <= Math.floor(product.rating) ? 'fa-star' : (i - product.rating < 1 ? 'fa-star-half-o' : 'fa-star-o') %>"></i>
                         <% } %>
                       </p>
-                      <p class="text-success fw-bold mb-1" style="font-size: 12px;">Free Delivery</p>
+                      <!-- <p class="text-success fw-bold mb-1" style="font-size: 12px;">Free Delivery</p> -->
                       <p class="text-primary font-weight-bold mb-0" style="font-size: 14px;"><%= product.price %></p>
                     </div>
                   </div>
@@ -260,7 +260,7 @@
           <a href="#"><img src="/images/blog_1.jpg" alt="Image placeholder" class="img-fluid rounded"></a>
         </div>
         <div class="col-md-12 col-lg-5 text-center pl-md-5">
-          <h2><a href="#">50% less in all items</a></h2>
+          <h2><a href="#">Special Offer on Kids Products</a></h2>
           <p class="post-meta mb-4">By <a href="#">Carl Smith</a> <span class="block-8-sep">&bullet;</span> September 3, 2018</p>
           <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
           <p><a href="#" class="btn btn-primary btn-sm">Shop Now</a></p>

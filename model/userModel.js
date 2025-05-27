@@ -23,6 +23,7 @@ const userShema=mongoose.Schema({
     profilePicture:{type:String},
    refferalCode:{type:String,unique: true},
    referredBy:{type:String},
-
+    resetToken: String,
+   resetTokenExpiry: Date,
 })
 module.exports=mongoose.model('User',userShema)

@@ -3,63 +3,132 @@
 
 <head>
   <title>Sales Report</title>
+
   <style>
-    /* Print-friendly styles here */
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f9f9f9;
+      padding: 40px;
+    }
+
+    h2,
+    h3 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .table-container {
+      max-width: 1000px;
+      margin: 0 auto;
+      overflow-x: auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
+      min-width: 600px;
     }
 
-    td,
-    th {
-      border: 1px solid #999;
-      padding: 6px;
+    th,
+    td {
+      padding: 14px 18px;
       text-align: center;
+      border-bottom: 1px solid #e0e0e0;
     }
 
-    img {
-      max-width: 100%;
+    th {
+      background-color: #4a90e2;
+      color: white;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    tr:hover {
+      background-color: #f1f7ff;
+    }
+
+    @media (max-width: 768px) {
+      table {
+        font-size: 14px;
+      }
     }
   </style>
 </head>
 
 <body>
+
   <h2>Sales Report</h2>
-  <p>From <%= startDate %> to <%= endDate %>
-  </p>
+  <h3>
+    <%= reportType %> Sales Report
+  </h3>
+  <div class="table-container">
+    <% let totalOrders=0; let totalDiscount=0; let totalAmount=0; salesData.forEach(sale=> {
+      totalOrders += sale.orderCount;
+      totalDiscount += (sale.offerDeduction + sale.couponDeduction);
+      totalAmount += sale.totalSales;
+      });
+      %>
+      <table>
+        <thead>
+          <tr>
+            <th>Sl No</th>
+            <th>
+              <%= reportType==='daily' || reportType==='custom' ? 'Date' : reportType==='weekly' ? 'Week' :
+                reportType==='monthly' ? 'Month' : 'Year' %>
+            </th>
+            <th>Order Count</th>
+            <th>Discount Given</th>
+            <th>Total Amount</th>
 
-  <% if(chartImage){ %>
-    <img src="<%= chartImage %>" alt="Sales Chart" />
- <% } %>
 
-  <h3>Sales Table</h3>
-  <table>
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>
-          <%= reportType==='daily' || reportType==='custom' ? 'Date' : reportType==='weekly' ? 'Week' :
-            reportType==='monthly' ? 'Month' : 'Year' %>
-        </th>
-
-        <th>Total Sales</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% salesData.forEach((sale, index)=> { %>
+          </tr>
+        </thead>
+        <tbody>
+          <% salesData.forEach((sale, index)=> { %>
+            <tr>
+              <td>
+                <%= index + 1 %>
+              </td>
+              <td>
+                <%= sale._id %>
+              </td>
+              <td>
+                <%= sale.orderCount %>
+              </td>
+              <td>₹ <%= (sale.offerDeduction+sale.couponDeduction).toFixed(2) %>
+              </td>
+              <td>₹ <%= sale.totalSales.toFixed(2) %>
+              </td>
+            </tr>
+            <% }) %>
+              <tr>
+                <th colspan="2" style="text-align: right;">Total</th>
+                <th>
+                  <%= totalOrders %>
+                </th>
+                <th>₹ <%= totalDiscount.toFixed(2) %>
+                </th>
+                <th>₹ <%= totalAmount.toFixed(2) %>
+                </th>
+              </tr>
+        </tbody>
+        <!-- <tbody>
         <tr>
-          <td>
-            <%= index + 1 %>
-          </td>
-          <td>
-            <%= sale._id %>
-          </td>
-          <td>₹<%= sale.totalSales %>
-          </td>
+          <td>1</td>
+          <td>2025-05-25</td>
+          <td>ORD12345</td>
+          <td>$250.00</td>
+          <td>$25.00</td>
+          <td>3</td>
         </tr>
-        <% }) %>
-    </tbody>
-  </table>
+        <!-- Add more rows as needed -->
+        <!-- </tbody> -->
+      </table>
+  </div>
+
 </body>
 
 </html>

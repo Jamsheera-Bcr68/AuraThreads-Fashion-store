@@ -329,52 +329,7 @@ jQuery(document).ready(function($) {
           });
         });
 
-        // // Stock status demo - you would typically update this based on product data
-        // const updateStockStatus = (status) => {
-        //   document.getElementById("inStock").style.display = "none";
-        //   document.getElementById("lowStock").style.display = "none";
-        //   document.getElementById("soldOut").style.display = "none";
-        //   document.getElementById("errorBanner").style.display = "none";
-
-        //   const addToCartBtn = document.getElementById("addToCartBtn");
-        //   const buyNowBtn = document.getElementById("buyNowBtn");
-
-        //   switch (status) {
-        //     case "in-stock":
-        //       document.getElementById("inStock").style.display = "block";
-        //       addToCartBtn.disabled = false;
-        //       buyNowBtn.disabled = false;
-        //       break;
-        //     case "low-stock":
-        //       document.getElementById("lowStock").style.display = "block";
-        //       addToCartBtn.disabled = false;
-        //       buyNowBtn.disabled = false;
-        //       break;
-        //     case "sold-out":
-        //       document.getElementById("soldOut").style.display = "block";
-        //       document.getElementById("errorBanner").style.display = "block";
-        //       addToCartBtn.disabled = true;
-        //       buyNowBtn.disabled = true;
-        //       break;
-        //   }
-        // };
-
-        // // Demo: Change stock status - you can remove this in production
-        // Simulating stock status changes every few seconds for demo purposes
-        // let demoStockIndex = 0;
-        // const demoStockStatuses = ["in-stock", "low-stock", "sold-out"];
-
-        // For demonstration, uncomment the following line to cycle through stock statuses
-        // setInterval(() => {
-        //     updateStockStatus(demoStockStatuses[demoStockIndex]);
-        //     demoStockIndex = (demoStockIndex + 1) % demoStockStatuses.length;
-        // }, 5000);
-
-        // Initialize with in-stock status
-        //updateStockStatus("in-stock");
-
-        // Add to cart functionality (demo)
-        // Add to cart functionality
+        
         document.getElementById("addToCartBtn").addEventListener("click", function () {
           const productId = this.getAttribute("data-id");
           const quantity = parseInt(document.getElementById("quantity").value) || 1;
@@ -385,8 +340,8 @@ jQuery(document).ready(function($) {
 
           fetch("/user/cart/add", {
             method: "POST",
-            headers: { "Content-Type": "application/json",
-				'CSRF-Token': csrfToken
+             headers: { "Content-Type": "application/json",
+				    'CSRF-Token': csrfToken
              },
             body: JSON.stringify({ productId, quantity }),
           })

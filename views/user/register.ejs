@@ -7,6 +7,7 @@
   <meta name="csrf-token" content="<%= csrfToken %>">
   <title>User Signup</title>
   <!-- Bootstrap CSS -->
+   <link rel="stylesheet" href="/css/register.css">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     body {
@@ -95,7 +96,7 @@
               </div>
               
               <div class="mb-3">
-                <label for="referalCode" class="form-label">Use Referal code and get rs.20 to wallet </label>
+                <label for="referalCode" class="form-label">Use Referal code and get <span style="color: green;" ><b>Rs.50.00</b></span> to wallet </label>
                 <input type="text" name="referredBy" class="form-control" id="referalCode" placeholder="Enter Referal Code" />
               </div>
               <button type="submit" class="btn btn-primary w-100 mb-3">
@@ -135,11 +136,19 @@
       var password = document.getElementById("password").value.trim();
       var referredBy=document.getElementById('referalCode').value.trim()
       var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // Regex for email format
+       const letterRegex = /[a-zA-Z]/;
 
       if (email === "" || password === "") {
 
         Swal.fire("All fields are required");
         return false;
+      }else if(password.length<4){
+         Swal.fire("Password should at least 4 charectors");
+
+        return false;
+      }else if(password.length>8){
+        Swal.fire("Password should not more than 8 charectors");
+        return false
       } else if (!emailPattern.test(email)) {
         Swal.fire("Enter a valid email address");
 
@@ -148,6 +157,8 @@
         Swal.fire("Phone Number Cannot be Empty");
 
         return false;
+      }else if(letterRegex.test(phone)){
+        Swal.fire("Phone number should not contain letters.");
       } else if (confirm_password === '') {
         Swal.fire("confirm password is mandatory");
 
@@ -155,8 +166,9 @@
       }
       else if (password !== confirm_password) {
         Swal.fire("Password is not matching");
-
         return false;
+      }else if(phone.length<10){
+        Swal.fire('Invalid mobile number')
       } else {
        fetch("/user/register", {
           method: "POST",

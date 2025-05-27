@@ -114,7 +114,7 @@ a {
 
 .site-section-heading {
   font-size: 30px;
-  color: #f2090d;
+  color: #7971ea;;
   font-weight: bold;
   position: relative; }
 .site-section-heading:before {
@@ -782,7 +782,7 @@ font-size: 20px;
   border-radius: 50%;
   margin-bottom: 20px; }
 .showMore{
-  background: rgb(203 182 173);
+  background: rgb(244, 242, 241);
   font-size: 30;
   font-weight: bold;
   
@@ -790,5 +790,6 @@ font-size: 20px;
   border-radius: 17px;
 }
 .showMore a{
-  color: #f2090d; 
+  color:#7971ea;
+  text-decoration: none;
 }

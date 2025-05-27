@@ -22,7 +22,7 @@
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
 
- 
+
 </head>
 
 <body>
@@ -83,20 +83,23 @@
             <div class="col-6 col-md-4 order-3 order-md-3 text-right">
               <div class="site-top-icons">
                 <ul>
-                
+
                   <li>
                   <li>
                     <a href="/user/account?userId=<%= user ? user._id : '' %>">
-                      <span class="icon icon-person"></span>
+                      <span style="color: rgb(132, 76, 185);" class="icon icon-person"></span>
                     </a>
                   </li>
 
-                  <li><a href="/user/wishList"><span class="icon icon-heart-o"></span></a></li>
-                  <li><a href="/user/wallet"><span class="fas fa-wallet"></span></a></li>
-                  <li><a href="/user/orders"><i class="fa-solid fa-bag-shopping"></i></a></li>
+                  <li><a href="/user/wishList"><span style="color: rgb(132, 76, 185);"
+                        class="icon icon-heart-o"></span></a></li>
+                  <li><a href="/user/wallet"><span style="color: rgb(132, 76, 185);" class="fas fa-wallet"></span></a>
+                  </li>
+                  <li><a href="/user/orders"><i style="color: rgb(132, 76, 185);"
+                        class="fa-solid fa-bag-shopping"></i></a></li>
                   <li>
                     <a href="/user/cart" class="site-cart">
-                      <span class="icon icon-shopping_cart"></span>
+                      <span style="color: rgb(132, 76, 185);" class="icon icon-shopping_cart"></span>
                       <% if (cartCount && cartCount> 0) { %>
                         <span class="count">
                           <%= cartCount %>
@@ -116,35 +119,17 @@
       <nav class="site-navigation text-right text-md-center" role="navigation">
         <div class="container">
           <ul class="site-menu js-clone-nav d-none d-md-block">
-            <li class="has-children active">
+            <li class="nav-text active">
               <a class="nav-text" href="/user/home">Home</a>
-              <ul class="dropdown">
-                <li><a href="#">Menu One</a></li>
-                <li><a href="#">Menu Two</a></li>
-                <li><a href="#">Menu Three</a></li>
-                <li class="has-children">
-                  <a href="#">Sub Menu</a>
-                  <ul class="dropdown">
-                    <li><a href="#">Menu One</a></li>
-                    <li><a href="#">Menu Two</a></li>
-                    <li><a href="#">Menu Three</a></li>
-                  </ul>
-                </li>
-              </ul>
             </li>
-            <li class="has-children">
-              <a class="nav-text" href="about.html">About</a>
-              <ul class="dropdown">
-                <li><a href="#">Menu One</a></li>
-                <li><a href="#">Menu Two</a></li>
-                <li><a href="#">Menu Three</a></li>
-              </ul>
+            <li class="nav-text active">
+              <a class="nav-text " href="about.html">About</a>
             </li>
-            <li><a class="nav-text" href="/user/productList">Shop</a></li>
-            <li><a class="nav-text" href="#">Catalogue</a></li>
-            <li><a class="nav-text" href="#">New Arrivals</a></li>
-            <li><a class="nav-text" href="contact.html">Contact</a></li>
-            <li><a class="nav-text" href="/user/login">Login</a></li>
+            <li class="nav-text active"><a class="nav-text active" href="/user/productList">Shop</a></li>
+            <!-- <li class="nav-text active"><a class="nav-text active" href="#">Catalogue</a></li> -->
+            <!-- <li class="nav-text active"><a class="nav-text active" href="#">New Arrivals</a></li> -->
+            <li class="nav-text active"><a class="nav-text active" href="contact.html">Contact</a></li>
+            <li class="nav-text active"><a class="nav-text active" href="/user/login">Login</a></li>
           </ul>
         </div>
       </nav>
@@ -161,20 +146,20 @@
       loginBtn.addEventListener('click', function () {
         console.log("login button clicked");
 
-        fetch('/user/test',{
-          method:"POST"
-        }).then(res=>res.json())
-        .then(data =>{
-          if(data && data.success){
-            Swal.fire(data.message)
-          }else{
-            Swal.fire(data.message)
-          }
-        }).catch(error=>{
-          Swal.fire('server error')
-          console.log("error ",error);
-          
-        })
+        fetch('/user/test', {
+          method: "POST"
+        }).then(res => res.json())
+          .then(data => {
+            if (data && data.success) {
+              Swal.fire(data.message)
+            } else {
+              Swal.fire(data.message)
+            }
+          }).catch(error => {
+            Swal.fire('server error')
+            console.log("error ", error);
+
+          })
       });
 
     </script>

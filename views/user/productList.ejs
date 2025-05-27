@@ -29,35 +29,36 @@
                         <form action="/user/productList" method="get">
                             <h5>Filter Collection</h5>
                             <hr>
-                            <!-- Hidden Inputs to Preserve categoryId and priceRange -->
                             <input type="hidden" name="sort" value="<%= sort %>">
                             <input type="hidden" name="query" value="<%= query %>">
 
-                            <!--categories-->
+                            <!-- Categories -->
                             <div class="mb-4">
                                 <h6 class="filter-title">Categories</h6>
-
                                 <% categories.forEach(category=> { %>
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" id="<%= category._id %>"
-                                            name="categoryId" value="<%= category._id %>">
+                                            name="categoryId" value="<%= category._id %>"
+                                            <%= Array.isArray(selectedCategories) &&
+                                            selectedCategories.includes(category._id.toString()) ? 'checked' : '' %> >
                                         <label class="form-check-label" for="<%= category._id %>">
                                             <%= category.categoryName %>
                                         </label>
                                     </div>
                                     <% }) %>
                             </div>
-                            <!--price ranges-->
+
+                            <!-- Price Ranges -->
                             <div class="mb-4">
                                 <h6 class="filter-title">Price Range</h6>
-
-                                <% const priceRanges=["0-200", "200-400" , "400-600" , "600-800" , "800-1000"
+                                <% const priceRanges=["","0-200", "200-400" , "400-600" , "600-800" , "800-1000"
                                     , "1000-2000" ]; %>
-
                                     <% priceRanges.forEach((range, index)=> { %>
+                                       
                                         <div class="form-check">
                                             <input class="form-check-input" type="radio" name="priceRange"
-                                                value="<%= range %>" id="price<%= index %>">
+                                                id="price<%= index %>" value="<%= range %>"
+                                                <%= selectedPriceRange===range ? 'checked' : '' %> >
                                             <label class="form-check-label" for="price<%= index %>">
                                                 ₹<%= range.replace("-", " - Rs." ) %>
                                             </label>
@@ -65,44 +66,9 @@
                                         <% }) %>
                             </div>
 
-                            <!--
-                    <div class="mb-4">
-                        <h6 class="filter-title">Size</h6>
-                        <div class="d-flex flex-wrap gap-2 mb-2">
-                            <button class="btn btn-sm btn-outline-secondary">XS</button>
-                            <button class="btn btn-sm btn-outline-secondary">S</button>
-                            <button class="btn btn-sm btn-outline-secondary">M</button>
-                            <button class="btn btn-sm btn-outline-secondary">L</button>
-                            <button class="btn btn-sm btn-outline-secondary">XL</button>
-                            <button class="btn btn-sm btn-outline-secondary">XXL</button>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-4">
-                        <h6 class="filter-title">Colors</h6>
-                        <div>
-                            <span class="color-option" style="background-color: #000000;"></span>
-                            <span class="color-option" style="background-color: #FFFFFF;"></span>
-                            <span class="color-option" style="background-color: #FF0000;"></span>
-                            <span class="color-option" style="background-color: #0000FF;"></span>
-                            <span class="color-option" style="background-color: #FFC0CB;"></span>
-                            <span class="color-option" style="background-color: #008000;"></span>
-                            <span class="color-option" style="background-color: #808080;"></span>
-                            <span class="color-option" style="background-color: #FFFF00;"></span>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-4">
-                        <h6 class="filter-title">Price Range</h6>
-                        <input type="range" class="form-range" min="0" max="500" id="priceRange">
-                        <div class="d-flex justify-content-between">
-                            <span>$0</span>
-                            <span>$500</span>
-                        </div>
-                    </div>
-                    -->
-                            <button type="submit" class="  btn btn-dark w-100">Apply Filters</button>
+                            <button type="submit" class="btn btn-dark w-100">Apply Filters</button>
                         </form>
+
                     </div>
                 </div>
 
@@ -113,21 +79,36 @@
                             </span> dresses</p>
                         <form action="/user/productList" method="get">
                             <div class="d-flex gap-2">
-                                <!-- Hidden Inputs to Preserve categoryId and priceRange -->
-                                <input type="hidden" name="categoryId" value="<%= categoryId %>">
-                                <input type="hidden" name="query" value="<%= query %>">
-                                <input type="hidden" name="priceRange" value="<%= priceRange %>">
-                                <select class="form-select form-select-sm" name="sort" id="sortSelect"
-                                    style="width: auto;">
-                                    <option value="">Sort By </option>
-                                    <option value="newest">Newest First</option>
-                                    <option value="lowToHigh">Price: Low to High</option>
-                                    <option value="highToLow" %>>Price: High to Low</option>
-                                    <option value="az">A - Z</option>
-                                    <option value="za">Z - A</option>
-                                </select>
+                                <!-- Hidden Inputs to Preserve Filters -->
+                                <% if (Array.isArray(selectedCategories)) { %>
+                                    <% selectedCategories.forEach(cat=> { %>
+                                        <input type="hidden" name="categoryId" value="<%= cat %>">
+                                        <% }) %>
+                                            <% } else if (categoryId) { %>
+                                                <input type="hidden" name="categoryId" value="<%= categoryId %>">
+                                                <% } %>
+
+                                                    <input type="hidden" name="query" value="<%= query %>">
+                                                    <input type="hidden" name="priceRange" value="<%= priceRange %>">
+
+                                                    <select class="form-select form-select-sm" name="sort"
+                                                        id="sortSelect" style="width: auto;"
+                                                        onchange="this.form.submit()">
+                                                        <option value="" <%=!sort ? 'selected' : '' %>>Sort By</option>
+                                                        <option value="newest" <%=sort==='newest' ? 'selected' : '' %>
+                                                            >Newest First</option>
+                                                        <option value="lowToHigh" <%=sort==='lowToHigh' ? 'selected'
+                                                            : '' %>>Price: Low to High</option>
+                                                        <option value="highToLow" <%=sort==='highToLow' ? 'selected'
+                                                            : '' %>>Price: High to Low</option>
+                                                        <option value="az" <%=sort==='az' ? 'selected' : '' %>>A - Z
+                                                        </option>
+                                                        <option value="za" <%=sort==='za' ? 'selected' : '' %>>Z - A
+                                                        </option>
+                                                    </select>
                             </div>
                         </form>
+
 
 
                     </div>
@@ -190,7 +171,7 @@
                                             <%= product.description.substring(0, 60) %>...
                                         </p>
                                         <div class="mt-2 mb-3">
-                                            <small class="text-muted">Available sizes: S,M,L,XL</small>
+                                            <!-- <small class="text-muted">Available sizes: S,M,L,XL</small> -->
                                         </div>
                                     </div>
                                     <div class="card-footer bg-transparent border-top-0">
@@ -353,7 +334,7 @@
                     wishlistIcons.forEach(icon => {
                         icon.addEventListener('click', function () {
                             console.log('wishlist icon clicked');
-                            
+
                             const heart = this.querySelector('i');
                             const productId = heart.getAttribute('data-id');
 
@@ -361,7 +342,7 @@
 
                             if (isNotInWishlist) {
                                 console.log('Item not in wishlist');
-                                
+
                                 // Add to wishlist
                                 fetch('/user/wishList/add', {
                                     method: 'POST',
@@ -385,7 +366,7 @@
                             } else {
                                 console.log('item is in wishlist');
                                 console.log(productId);
-                                
+
                                 // Remove from wishlist
                                 fetch(`/user/wishList/delete/${productId}`, {
                                     method: 'DELETE',

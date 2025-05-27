@@ -10,6 +10,9 @@ const Address=require('../model/addressModel')
 const multer=require('multer')
 const upload=multer({dest:'uploads/'})
 const csrfProtection=require('../middleweres/csrf')
+const crypto = require('crypto');
+const transporter = require("../config/nodeMailer");
+
 
 router.use(csrfProtection)
 
@@ -56,7 +59,7 @@ router.post('/google/callback',userController.postRegister)
 //googleuser set password
 router.get('/setPassword',userController.getSetPassword)
 
-//post user passwrd
+//post google user passwrd
 router.post('/setPassword',userController.postSetPassword)
 
 //get all prooducts page
@@ -87,8 +90,29 @@ router.post('/forgot-password',async (req,res)=>{
       res.render('../views/user/register',{errorMessage:'User Not found.Register Now'})
      }else{
       console.log('User found');
-      
-      res.render('../views/user/succesforgotpassword')
+       const token = crypto.randomBytes(32).toString('hex')
+       userExist.resetToken = token;
+        userExist.resetTokenExpiry = Date.now() + 3600000; // 1 hour
+        await userExist.save();
+      //create reset link with token
+        const resetLink = `http://localhost:3000/user/reset-password/${token}`;
+
+        // reset password message
+        const mailOptions = {
+      from:  process.env.EMAIL_USER,
+      to: email,
+      subject: 'Password Reset Link',
+      html: `
+        <p>Hello,</p>
+        <p>You requested a password reset. Click the link below to reset it:</p>
+        <a href="${resetLink}">${resetLink}</a>
+        <p>This link will expire in 1 hour.</p>
+      `
+    };
+
+   // sending email
+   await transporter.sendMail(mailOptions);
+     res.render('../views/user/succesforgotpassword')
      }
 
     
@@ -100,6 +124,11 @@ router.post('/forgot-password',async (req,res)=>{
   
 })
 
+//reset forgot password
+router.get('/reset-password/:token',userController.getResetPassword)
+
+//reset post
+router.post('/reset-password',userController.postResetPassword)
 //shop
 router.get('/shop',async (req,res)=>{
   const products=await Product.find({isDeleted:false})
@@ -199,6 +228,7 @@ router.post('/varifyPayment',userController.varifyPayment)
 
 //payment failure
 router.get('/order-failure',userController.getPaymentFailure)
+
 
 
 module.exports = router;

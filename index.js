@@ -89,30 +89,7 @@ app.get("/google/callback",
   }
 );
 
-// app.get('/google/callback', passport.authenticate('google', { failureRedirect: '/register' }),
-//   async (req, res) => {
-//     console.log('from google callback');
-    
-//     if (!req.user._id) {
-//       console.log('User is not registered yet');
-      
-//       // User is not registered yet
-//       req.session.tempUser = req.user;
-      
-//       // ✅ Optional: Send OTP here
-//       const otp = Math.floor(100000 + Math.random() * 900000); // 6-digit OTP
-//       req.session.otp = otp;
-//       console.log("OTP is", otp); // or send via nodemailer/twilio
 
-//       return res.redirect('/user/otp'); // OTP verification page
-//     } else {
-//       // User exists
-//       console.log('User exists');
-      
-//       return res.redirect('/user/login');
-//     }
-//   }
-// );
 app.use('/product',productRoute)
 app.use('/search',searchRoute)
 app.use(errorHandler);

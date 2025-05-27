@@ -66,35 +66,24 @@
                   <!-- Price -->
                   <div class="price-container">
                     <span class="price">₹ <%= singleProduct.discountPrice %></span>
-                    
-                      <span class="original-price text-muted text-decoration-line-through">₹ <%= singleProduct.price %></span>
-                   
-                    <span class="discount-badge">Save <%= singleProduct.discount %>  <%= singleProduct.discountType === 'amount'  ? '₹' : '%' %></span>
+                    <% if (finalOffer) { %>
+  <span class="original-price text-muted text-decoration-line-through">
+    ₹ <%= singleProduct.price %>
+  </span>
+
+  <span class="discount-badge">
+    Save <%= singleProduct.discount %> <%= singleProduct.discountType === 'amount' ? '₹' : '%' %>
+  </span>
+<% } %>
                   </div>
 
-                  <!-- Coupon -->
-                  <!-- <div class="coupon">
-                    <p>
-                      Apply coupon <span class="coupon-code">TECH15</span> at checkout
-                      for an extra 15% off
-                    </p>
-                  </div> -->
+                  
 
                   <div class="stock <%= singleProduct.stock > 0 ? 'in-stock' : 'out-of-stock'%>">
                     <%= singleProduct.stock> 0 ? 'In Stock - Ships within 24 hours' :
                       'Out of stock ' %>
                   </div>
-                  <!--Stock Status (Toggle between these divs based on inventory)-->
-                  <!--  <div class="stock in-stock" id="inStock">
-            In Stock - Ships within 24 hours
-          </div>
-          <div class="stock low-stock" id="lowStock" style="display: none">
-            Low Stock - Only 2 left, order soon!
-          </div>
-          <div class="stock sold-out" id="soldOut" style="display: none">
-            <%= singleProduct.stock > 0 ? 'In Stok' : 'Out Of Stock' %>
-          </div>
-       
+                  
           <!-- Error Banner (show only when needed) -->
                   <div class="error-banner" id="errorBanner" style="display: none">
                     <span class="icon">⚠️</span>
@@ -117,7 +106,7 @@
                       <%=singleProduct.stock===0 ? 'disabled' : '' %>>
                       <%= singleProduct.stock===0 ? 'Out of Stock' : 'Add to Cart' %>
                     </button>
-                    <button class="buy-now" id="buyNowBtn" <%=singleProduct.stock===0 ? 'disabled' : '' %> ><a style="text-decoration: none; color: white;" href="/user/checkout">By Now</a></button>
+                    <!-- <button class="buy-now" id="buyNowBtn" <%=singleProduct.stock===0 ? 'disabled' : '' %> ><a style="text-decoration: none; color: white;" href="/user/checkout">By Now</a></button> -->
                     <button class="btn btn-outline-danger" type="button"  onclick="addToWishlist('<%= singleProduct._id %>')">
                       <span style="font-size: 1.5rem;">♥</span>  Wishlist
                     </button>

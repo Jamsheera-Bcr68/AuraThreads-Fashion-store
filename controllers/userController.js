@@ -18,7 +18,7 @@ const Offer = require('../model/offerModel')
 const razorpay = require('../config/razorPay');
 const crypto = require('crypto');
 const { title } = require("process");
-const messages = require("dote/src/messages");
+
 
 //get Register
 const getRegister = async (req, res) => {
@@ -39,11 +39,15 @@ const postRegister = async (req, res) => {
     let { email, password, phone, referredBy } = req.body;
 
     console.log(`emil is${email} password is ${password} and phone is ${phone} userReferalCode ${referredBy}`);
-
-    const referalExist = await User.findOne({ refferalCode: referredBy })
-    if (!referalExist) {
+    if(referredBy){
+      const referalExist = await User.findOne({ refferalCode: referredBy })
+      console.log('referalExist',referalExist);
+      
+      if (!referalExist) {
       return res.json({ success: false, message: "Refferal code not exist" })
     }
+    }
+    
     let hashedPassword = await bcrypt.hash(password, 10);
     console.log('hashed pwd' + hashedPassword);
 
@@ -358,6 +362,64 @@ const postLogin = async (req, res) => {
     console.log(error);
   }
 };
+
+// reset forgot password
+
+const getResetPassword=async (req,res)=>{
+  console.log('resetPassword');
+  try {
+    
+    
+    let token=req.params.token
+    console.log('token params',token);
+
+    const user=await User.findOne({resetToken:token,resetTokenExpiry: { $gt: Date.now() } // not expired
+    })
+
+    if(!user){
+       return res.render('reset-expired', { message: 'Token expired or invalid.' });
+    }
+     res.render('user/resetPasswordForm', { token }); // pass token to form
+    
+  } catch (error) {
+    console.log(error);
+    res.render('user/login',{errorMessage:'error resetting password'})
+  }
+  
+}
+
+const postResetPassword=async(req,res)=>{
+  try {
+    console.log('from postResetPassword form');
+    const {password,confirmPassword,token}=req.body
+    console.log('password,confirmPassword',password,confirmPassword);
+    if(password==='' || confirmPassword===''){
+      return res.json({success:false,message:'Both fields are required'})
+    }else if(password!==confirmPassword){
+      return res.json({success:false,message:'Password not matching'})
+    }
+    if(password.length<4){
+      return res.json({success:false,message:"Password should be at least 4 charectors"})
+    }else if(password.length>8){
+      return res.json({success:false,message:"Password should not exeed 8 charectors"})
+    }
+   const user=await User.findOne({resetToken:token,resetTokenExpiry: { $gt: Date.now() }})
+    if(!user){
+       return res.render('reset-expired', { message: 'Token expired or invalid.' });
+    }
+    const hashedPassword = await bcrypt.hash(password, 10);
+    user.password=hashedPassword,
+    user.resetToken=undefined,
+    user.resetTokenExpiry =undefined,
+    await user.save()
+    
+    return res.json({success:false,message:"Password updated successfully"})
+  } catch (error) {
+    console.log('postResetPassword ');
+    return res.json({success:false,message:"Error in setting password"})
+  }
+}
+
 
 const getHome = async (req, res) => {
   const categories = await category.find({ isDeleted: false, categoryName: { $in: ['Mens', 'Womens', 'Kids'] } }).limit(3)
@@ -1339,7 +1401,7 @@ const getCheckout = async (req, res) => {
 
 
 
-  const shippingCharge = 50.00
+  const shippingCharge = cart.items.length>0?50.00:0
   const taxAmount = 0.00
   let totalAmount = 0;
   let subTotal = 0
@@ -1364,7 +1426,7 @@ const getCheckout = async (req, res) => {
   if (!addresses) {
     return res.json({ success: false, message: "You dont have any saved address" })
   }
-  const offerDiscountAmount = req.session.totalDiscount
+  const offerDiscountAmount =req.session.totalDiscount
   console.log('offerDiscountAmount', offerDiscountAmount);
   
 
@@ -1757,6 +1819,7 @@ const getOrders = async (req, res) => {
 
     //get cart count
     const cart = await Cart.findOne({ userId }).populate('items.productId')
+    let cartCount=0
     if (cart) {
       cartCount = cart.items.length
       //  console.log('cart count is ', cartCount);
@@ -1962,13 +2025,22 @@ const getWishList = async (req, res) => {
     }
     const wishList = await WishList.findOne({ userId }).populate('items');
 
-
+   let cartCount=0
+  
     const cart = await Cart.findOne({ userId })
-    const cartCount = cart.items.length || 0
+    console.log('cart',cart);
+    if(cart){
+      cartCount = cart.items.length || 0
+    }
+     
 
 
     const offers = await Offer.find({ status: 'active' });
-    const products = wishList.items
+    let products=[]
+    if(wishList){
+       products = wishList.items
+    }
+    
     products.forEach(product => {
       const productOffer = offers.find(offer =>
         offer.applicableTo === 'product' && offer.productId?.toString() === product._id.toString()
@@ -2014,7 +2086,7 @@ const getWishList = async (req, res) => {
 
     res.render('user/wishList', {
       wishList,
-      products: wishList.items,
+      products,
       categoryId: null,
       priceRange: null,
       cartCount: cartCount || 0,
@@ -2537,6 +2609,8 @@ module.exports = {
   sendOTP,
   varifyOtp,
   resendOtp,
+  getResetPassword,
+  postResetPassword,
   getAccount,
   getCart,
   addToCart,
