@@ -60,7 +60,7 @@
                 <% users.forEach((user, index) => { %>
                 <tr>
                   <td><%= index + 1 %></td>
-                  <td><%= user.userName %></td>
+                  <td><%= user.fullName %></td>
                   <td><%= user.email %></td>
                   <td><%= user.phone %></td>
                   <td><%= user.role %></td>
@@ -194,8 +194,8 @@
 
           if (response.ok) {
             console.log("Status updated successfully!");
-
-            // Update UI without reloading (Best Approach)
+           
+            
             const button = document.getElementById(`status-btn-${userId}`);
             if (button) {
               button.textContent = newStatus ? "Block" : "UnBlock";
@@ -227,6 +227,7 @@
               timer: 2000,
               showConfirmButton: false,
             });
+            
           }
         } catch (error) {
           console.log(error);

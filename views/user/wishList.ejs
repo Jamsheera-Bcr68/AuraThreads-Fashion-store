@@ -137,6 +137,7 @@
             .then(data => {
               if (data && data.success) {
                 Swal.fire(data.message)
+                  location.reload();
               } else {
                 Swal.fire(data.message)
               }
@@ -156,6 +157,7 @@ function remove(productId){
   .then(data=>{
     if(data && data.success){
       Swal.fire(data.message)
+        location.reload();
     }else{
       Swal.fire(data.message)
     }

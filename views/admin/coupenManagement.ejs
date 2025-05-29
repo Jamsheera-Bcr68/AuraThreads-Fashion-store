@@ -174,7 +174,7 @@
                                     <select id="discountType" name="discountType">
                                         <option value="percentage">Percentage</option>
                                         <option value="fixed">Fixed Amount</option>
-                                        <option value="shipping">Free Shipping</option>
+                                     
                                     </select>
                                 </div>
                                 <div class="form-group">
@@ -288,7 +288,7 @@
                 const method = couponId ? 'PUT' : 'POST';
 
                 console.log('Coupon data:', formData);
-                // Here you would typically send this data to your backend
+                //  send this data to backend
                 fetch(url, {
                     method,
                     headers: { "Content-Type": "application/json",
@@ -299,6 +299,7 @@
                     .then(data => {
                         if (data && data.success) {
                             Swal.fire(data.message)
+                            location.reload()
                         } else {
                             Swal.fire(data.message)
                         }
@@ -391,6 +392,7 @@
                                         text: "Your Coupen has been Removed.",
                                         icon: "success"
                                     });
+                                    location.reload()
                                 } else {
                                     Swal.fire(data.message)
                                 }
@@ -428,6 +430,7 @@
                                         text: "Your Coupen has been Applied.",
                                         icon: "success"
                                     });
+                                       location.reload()
                                 } else {
                                     Swal.fire(data.message)
                                 }

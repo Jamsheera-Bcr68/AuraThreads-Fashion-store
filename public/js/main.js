@@ -350,7 +350,7 @@ jQuery(document).ready(function($) {
               if (data && data.success) {
                 Swal.fire(`Added ${quantity} item(s) to cart!`);
               } else {
-                Swal.fire("Error adding to cart");
+                Swal.fire(data.message);
               }
             })
             .catch((error) => {
@@ -422,6 +422,7 @@ const removeBtns = document.querySelectorAll('.js-remove-item')
             .then(data => {
               if (data && data.success) {
                 Swal.fire("Removed!", "The item has been removed.", "success");
+                  location.reload();
               } else {
                 Swal.fire("Error!", "Failed to remove the item.", "error");
               }

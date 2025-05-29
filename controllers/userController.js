@@ -39,15 +39,15 @@ const postRegister = async (req, res) => {
     let { email, password, phone, referredBy } = req.body;
 
     console.log(`emil is${email} password is ${password} and phone is ${phone} userReferalCode ${referredBy}`);
-    if(referredBy){
+    if (referredBy) {
       const referalExist = await User.findOne({ refferalCode: referredBy })
-      console.log('referalExist',referalExist);
-      
+      console.log('referalExist', referalExist);
+
       if (!referalExist) {
-      return res.json({ success: false, message: "Refferal code not exist" })
+        return res.json({ success: false, message: "Refferal code not exist" })
+      }
     }
-    }
-    
+
     let hashedPassword = await bcrypt.hash(password, 10);
     console.log('hashed pwd' + hashedPassword);
 
@@ -365,58 +365,59 @@ const postLogin = async (req, res) => {
 
 // reset forgot password
 
-const getResetPassword=async (req,res)=>{
+const getResetPassword = async (req, res) => {
   console.log('resetPassword');
   try {
-    
-    
-    let token=req.params.token
-    console.log('token params',token);
 
-    const user=await User.findOne({resetToken:token,resetTokenExpiry: { $gt: Date.now() } // not expired
+
+    let token = req.params.token
+    console.log('token params', token);
+
+    const user = await User.findOne({
+      resetToken: token, resetTokenExpiry: { $gt: Date.now() } // not expired
     })
 
-    if(!user){
-       return res.render('reset-expired', { message: 'Token expired or invalid.' });
+    if (!user) {
+      return res.render('reset-expired', { message: 'Token expired or invalid.' });
     }
-     res.render('user/resetPasswordForm', { token }); // pass token to form
-    
+    res.render('user/resetPasswordForm', { token }); // pass token to form
+
   } catch (error) {
     console.log(error);
-    res.render('user/login',{errorMessage:'error resetting password'})
+    res.render('user/login', { errorMessage: 'error resetting password' })
   }
-  
+
 }
 
-const postResetPassword=async(req,res)=>{
+const postResetPassword = async (req, res) => {
   try {
     console.log('from postResetPassword form');
-    const {password,confirmPassword,token}=req.body
-    console.log('password,confirmPassword',password,confirmPassword);
-    if(password==='' || confirmPassword===''){
-      return res.json({success:false,message:'Both fields are required'})
-    }else if(password!==confirmPassword){
-      return res.json({success:false,message:'Password not matching'})
+    const { password, confirmPassword, token } = req.body
+    console.log('password,confirmPassword', password, confirmPassword);
+    if (password === '' || confirmPassword === '') {
+      return res.json({ success: false, message: 'Both fields are required' })
+    } else if (password !== confirmPassword) {
+      return res.json({ success: false, message: 'Password not matching' })
     }
-    if(password.length<4){
-      return res.json({success:false,message:"Password should be at least 4 charectors"})
-    }else if(password.length>8){
-      return res.json({success:false,message:"Password should not exeed 8 charectors"})
+    if (password.length < 4) {
+      return res.json({ success: false, message: "Password should be at least 4 charectors" })
+    } else if (password.length > 8) {
+      return res.json({ success: false, message: "Password should not exeed 8 charectors" })
     }
-   const user=await User.findOne({resetToken:token,resetTokenExpiry: { $gt: Date.now() }})
-    if(!user){
-       return res.render('reset-expired', { message: 'Token expired or invalid.' });
+    const user = await User.findOne({ resetToken: token, resetTokenExpiry: { $gt: Date.now() } })
+    if (!user) {
+      return res.render('reset-expired', { message: 'Token expired or invalid.' });
     }
     const hashedPassword = await bcrypt.hash(password, 10);
-    user.password=hashedPassword,
-    user.resetToken=undefined,
-    user.resetTokenExpiry =undefined,
-    await user.save()
-    
-    return res.json({success:false,message:"Password updated successfully"})
+    user.password = hashedPassword,
+      user.resetToken = undefined,
+      user.resetTokenExpiry = undefined,
+      await user.save()
+
+    return res.json({ success: false, message: "Password updated successfully" })
   } catch (error) {
     console.log('postResetPassword ');
-    return res.json({success:false,message:"Error in setting password"})
+    return res.json({ success: false, message: "Error in setting password" })
   }
 }
 
@@ -433,10 +434,6 @@ const getHome = async (req, res) => {
   const womenCategory = await category.findOne({ isDeleted: false, categoryName: 'Womens' }, { _id: 1 })
   //console.log('womenCategory is'+womenCategory.id);
   const womenProducts = await Product.find({ isDeleted: false, categoryId: womenCategory.id });
-  //   womenProducts.forEach(product => {
-  //   product.images = product.images.map(image => image.replace(/\\/g, '/'));
-  //  });
-  // console.log(womenProducts[0].images[0])
 
   const mensCategory = await category.findOne({ isDeleted: false, categoryName: 'Mens' }, { _id: 1 })
 
@@ -449,8 +446,7 @@ const getHome = async (req, res) => {
   const kidsCategory = await category.findOne({ isDeleted: false, categoryName: 'Kids' }, { _id: 1 })
   // console.log('kids category id is' + kidsCategory.id);
   const kidsProducts = await Product.find({ isDeleted: false, categoryId: kidsCategory.id }).limit(3)
-  //console.log('kids products are ' + kidsProducts);
-  // console.log('kids images are ', kidsProducts[0].images);
+
 
   console.log('user found', req.session.user);
   let cartCount = 0
@@ -465,10 +461,143 @@ const getHome = async (req, res) => {
 
 
   }
+  //const products=await Product.find({isDeleted:false})
+  //fetching for orders
+  let offers = []
+  offers = await Offer.find({ status: 'active' })
+  kidsProducts.forEach(product => {
+    const productOffer = offers.find(offer =>
+      offer.applicableTo === 'product' && offer.productId?.toString() === product._id.toString()
+    );
+    const categoryOffer = offers.find(offer =>
+      offer.applicableTo === 'category' && offer.categoryId?.toString() === product.categoryId?.toString()
+    );
+
+    let finalOffer = null;
+    let discountAmount = 0;
+
+    if (productOffer && categoryOffer) {
+      const productDiscountAmount = productOffer.discountType === 'amount'
+        ? productOffer.discountValue
+        : (product.price * productOffer.discountValue) / 100;
+
+      const categoryDiscountAmount = categoryOffer.discountType === 'amount'
+        ? categoryOffer.discountValue
+        : (product.price * categoryOffer.discountValue) / 100;
+
+      finalOffer = productDiscountAmount > categoryDiscountAmount ? productOffer : categoryOffer;
+      discountAmount = Math.max(productDiscountAmount, categoryDiscountAmount);
+    } else if (productOffer || categoryOffer) {
+      finalOffer = productOffer || categoryOffer;
+
+      // Checking finalOffer before using its properties
+      if (finalOffer) {
+        discountAmount = finalOffer.discountType === 'amount'
+          ? finalOffer.discountValue
+          : (product.price * finalOffer.discountValue) / 100;
+      }
+    }
+
+    if (finalOffer) {
+      product.discountPrice = Math.round(product.price - discountAmount);
+      product.discountAmount = discountAmount;
+      product.finalDiscount = finalOffer.discountValue;
+      product.discountType = finalOffer.discountType;
+    } else {
+      product.discountPrice = product.price;
+    }
+  });
+
+  mensProducts.forEach(product => {
+    const productOffer = offers.find(offer =>
+      offer.applicableTo === 'product' && offer.productId?.toString() === product._id.toString()
+    );
+    const categoryOffer = offers.find(offer =>
+      offer.applicableTo === 'category' && offer.categoryId?.toString() === product.categoryId?.toString()
+    );
+
+    let finalOffer = null;
+    let discountAmount = 0;
+
+    if (productOffer && categoryOffer) {
+      const productDiscountAmount = productOffer.discountType === 'amount'
+        ? productOffer.discountValue
+        : (product.price * productOffer.discountValue) / 100;
+
+      const categoryDiscountAmount = categoryOffer.discountType === 'amount'
+        ? categoryOffer.discountValue
+        : (product.price * categoryOffer.discountValue) / 100;
+
+      finalOffer = productDiscountAmount > categoryDiscountAmount ? productOffer : categoryOffer;
+      discountAmount = Math.max(productDiscountAmount, categoryDiscountAmount);
+    } else if (productOffer || categoryOffer) {
+      finalOffer = productOffer || categoryOffer;
+
+      // Checking finalOffer before using its properties
+      if (finalOffer) {
+        discountAmount = finalOffer.discountType === 'amount'
+          ? finalOffer.discountValue
+          : (product.price * finalOffer.discountValue) / 100;
+      }
+    }
+
+    if (finalOffer) {
+      product.discountPrice = Math.round(product.price - discountAmount);
+      product.discountAmount = discountAmount;
+      product.finalDiscount = finalOffer.discountValue;
+      product.discountType = finalOffer.discountType;
+    } else {
+      product.discountPrice = product.price;
+    }
+  });
+
+  womenProducts.forEach(product => {
+    const productOffer = offers.find(offer =>
+      offer.applicableTo === 'product' && offer.productId?.toString() === product._id.toString()
+    );
+    const categoryOffer = offers.find(offer =>
+      offer.applicableTo === 'category' && offer.categoryId?.toString() === product.categoryId?.toString()
+    );
+
+    let finalOffer = null;
+    let discountAmount = 0;
+
+    if (productOffer && categoryOffer) {
+      const productDiscountAmount = productOffer.discountType === 'amount'
+        ? productOffer.discountValue
+        : (product.price * productOffer.discountValue) / 100;
+
+      const categoryDiscountAmount = categoryOffer.discountType === 'amount'
+        ? categoryOffer.discountValue
+        : (product.price * categoryOffer.discountValue) / 100;
+
+      finalOffer = productDiscountAmount > categoryDiscountAmount ? productOffer : categoryOffer;
+      discountAmount = Math.max(productDiscountAmount, categoryDiscountAmount);
+    } else if (productOffer || categoryOffer) {
+      finalOffer = productOffer || categoryOffer;
+
+      // Checking finalOffer before using its properties
+      if (finalOffer) {
+        discountAmount = finalOffer.discountType === 'amount'
+          ? finalOffer.discountValue
+          : (product.price * finalOffer.discountValue) / 100;
+      }
+    }
+
+    if (finalOffer) {
+      product.discountPrice = Math.round(product.price - discountAmount);
+      product.discountAmount = discountAmount;
+      product.finalDiscount = finalOffer.discountValue;
+      product.discountType = finalOffer.discountType;
+    } else {
+      product.discountPrice = product.price;
+    }
+  });
 
   res.render("user/home", {
     errorMessage: null, cartCount: 2,
     page: "home",
+
     cartCount: cartCount || '',
     categoryId: null, priceRange: null, sort: null, query: null,
     user: req.session.user || '',
@@ -1008,6 +1137,38 @@ const addProfileImage = async (req, res) => {
 
 }
 
+const addAddresses = async (req, res) => {
+  const { label, line1, line2, city, state, zip, country, phone } = req.body
+  console.log(` label is ${label} line1 is ${line1} line2 is ${line2} city is ${city} state is ${state} zip is ${zip} country is ${country} phone is ${phone}`);
+  const isDefault = req.body.isDefault || false
+  console.log(`is defsult is ${isDefault}`);
+
+  try {
+    const userId = req.session.user._id
+    console.log('user is ', userId);
+
+    // If isDefault is true, update all other addresses to false for the same user
+    if (isDefault) {
+      await Address.updateMany({ userId }, { isDefault: false });
+      const newAddress = new Address({ userId, line1, line2, phone, city, state, zip, country, isDefault })
+      await newAddress.save()
+      console.log('adress saved as default');
+      res.redirect('/user/checkout')
+
+
+    } else {
+      const newAddress = new Address({ userId, line1, line2, phone, city, state, zip, country, isDefault })
+      await newAddress.save()
+      console.log('adress is saves as not default');
+      res.redirect('/user/checkout')
+
+    }
+
+  } catch (error) {
+    console.log('error in fetching adress', error);
+    res.redirect('/user/checkout')
+  }
+}
 //removeProfileImage
 const removeProfileImage = async (req, res) => {
   console.log('from removeProfileImage');
@@ -1218,15 +1379,15 @@ const addToCart = async (req, res) => {
     const wishList = await WishList.findOne({ userId })
 
     if (wishList) {
-  const wishListItem = wishList.items.find(item => item.toString() == productId);
-  if (wishListItem) {
-    wishList.items.pull(productId);
-    await wishList.save();
-  }
-} else {
-  console.log('No wishlist found for user:', userId);
-  // Optional: you could create a new wishlist document if needed
-}
+      const wishListItem = wishList.items.find(item => item.toString() == productId);
+      if (wishListItem) {
+        wishList.items.pull(productId);
+        await wishList.save();
+      }
+    } else {
+      console.log('No wishlist found for user:', userId);
+      // Optional: you could create a new wishlist document if needed
+    }
     // Response after successfully adding to cart
     res.json({ success: true, message: "Product added to cart!" });
 
@@ -1401,7 +1562,7 @@ const getCheckout = async (req, res) => {
 
 
 
-  const shippingCharge = cart.items.length>0?50.00:0
+  const shippingCharge = cart.items.length > 0 ? 50.00 : 0
   const taxAmount = 0.00
   let totalAmount = 0;
   let subTotal = 0
@@ -1426,9 +1587,9 @@ const getCheckout = async (req, res) => {
   if (!addresses) {
     return res.json({ success: false, message: "You dont have any saved address" })
   }
-  const offerDiscountAmount =req.session.totalDiscount
+  const offerDiscountAmount = req.session.totalDiscount
   console.log('offerDiscountAmount', offerDiscountAmount);
-  
+
 
   //getting available coupons
   const coupons = await Coupon.find({ isActive: true, expiryDate: { $gte: new Date() } });
@@ -1444,7 +1605,7 @@ const getCheckout = async (req, res) => {
     cartItems,
     shippingCharge,
     taxAmount,
-  
+
     couponDiscountAmount: req.session.discountAmount || 0,
     offerDiscountAmount: req.session.totalDiscount || 0,
     totalAmount,
@@ -1458,8 +1619,8 @@ const placeOrder = async (req, res) => {
 
   try {
     let { paymentMethod, paymentDetails, totalAmount } = req.body
-    console.log('total amount ',totalAmount);
-    
+    console.log('total amount ', totalAmount);
+
     let addressId = req.body.addressId?.trim();
     //validatiing essential fields
     const useWallet = req.body.useWallet
@@ -1542,21 +1703,21 @@ const placeOrder = async (req, res) => {
     const finalAmount = totalAmount - coupenDiscountAmount - offerDiscountAmount
     console.log('final amount discount amount ', finalAmount);
 
-    const shippingCarge=50.00
-    const orderTotal=finalAmount+shippingCarge
-    console.log('orderTotal ',orderTotal);
-    
-    
+    const shippingCharge = 50.00
+    const orderTotal = finalAmount + shippingCharge
+    console.log('orderTotal ', orderTotal);
+
+
     const isCouponApplied = req.session.code ? true : false
     const couponCode = req.session.code || ''
 
     const isOfferApplied = req.session.offer ? true : false
- 
+
     //order above 1000 not allow to py COD
-    if(finalAmount>1000 && paymentMethod=='COD'){
+    if (finalAmount > 1000 && paymentMethod == 'COD') {
       console.log('Order above 1000 cannot use COD');
-      
-      return res.json({success:false,message:'Order above 1000 cannot use COD'})
+
+      return res.json({ success: false, message: 'Order above 1000 cannot use COD' })
     }
     // razorpay id
 
@@ -1567,7 +1728,7 @@ const placeOrder = async (req, res) => {
     // }
     // const razorpayOrder = await razorpay.orders.create(options);
 
-   
+
 
     //////
     let orderItems = await Promise.all(cart.items.map(async (item) => {
@@ -1644,7 +1805,7 @@ const placeOrder = async (req, res) => {
     }))
 
     // if payment method is COD
-     if (paymentMethod == 'COD') {
+    if (paymentMethod == 'COD') {
       const newOrder = new Order({
         userId: req.session.user._id,
         address,
@@ -1661,7 +1822,7 @@ const placeOrder = async (req, res) => {
         createdAt,
         deliveryDate,
         orderTotal,
-        shippingCarge,
+        shippingCharge,
         useWallet
       })
       await newOrder.save()
@@ -1689,77 +1850,77 @@ const placeOrder = async (req, res) => {
       let orderId = newOrder._id
 
       return res.json({ success: true, message: "Order Placed Succesfully", paymentMethod, orderId })
-    }else{
+    } else {
 
       const options = {
-      amount: orderTotal * 100,
-      currency: 'INR',
-      receipt: "receipt_" + Date.now()
-    }
-    const razorpayOrder = await razorpay.orders.create(options);
+        amount: orderTotal * 100,
+        currency: 'INR',
+        receipt: "receipt_" + Date.now()
+      }
+      const razorpayOrder = await razorpay.orders.create(options);
 
       // check for wallet 
-    const wallet = await Wallet.findOne({ userId })
-         if (useWallet == true) {
+      const wallet = await Wallet.findOne({ userId })
+      if (useWallet == true) {
 
-      if (!wallet) {
-        return res.json({ success: false, message: "Wallet not found" })
+        if (!wallet) {
+          return res.json({ success: false, message: "Wallet not found" })
+        }
+        if (wallet.balance < orderTotal) {
+          console.log('insufficient balance');
+          return res.json({ success: false, message: "Insufficient balance" })
+        }
+        paymentMethod = 'wallet'
       }
-      if (wallet.balance < orderTotal) {
-        console.log('insufficient balance');
-        return res.json({ success: false, message: "Insufficient balance" })
+      //creating new order document
+      req.session.tempOrder = {
+        userId: req.session.user._id,
+        address,
+        coupenDiscountAmount,
+        offerDiscountAmount,
+        isCouponApplied,
+        isOfferApplied,
+        couponCode,
+        finalAmount,
+        shippingCharge, orderTotal,
+        paymentMethod,
+        totalAmount,
+
+        status: paymentMethod === 'COD' ? 'Pending' : 'Processing',
+        paymentDetails: paymentMethod == 'Credit Card' ? {
+          cardNumber,
+          expiry,
+          cvv,
+          cardName
+        } : paymentMethod == 'UPI' ? {
+          upiId
+        } : paymentMethod == 'wallet' ? {
+          razorpayOrderId: razorpayOrder.id,
+
+        } : null,
+
+        items: orderItems,
+        createdAt,
+        deliveryDate,
+        useWallet
       }
-      paymentMethod = 'wallet'
-          }
-           //creating new order document
-    req.session.tempOrder = {
-      userId: req.session.user._id,
-      address,
-      coupenDiscountAmount,
-      offerDiscountAmount,
-      isCouponApplied,
-      isOfferApplied,
-      couponCode,
-      finalAmount,
-      shippingCarge,orderTotal,
-      paymentMethod,
-      totalAmount,
+      return res.json({
+        success: true,
+        message: "Order completed successfully",
 
-      status: paymentMethod === 'COD' ? 'Pending' : 'Processing',
-      paymentDetails: paymentMethod == 'Credit Card' ? {
-        cardNumber,
-        expiry,
-        cvv,
-        cardName
-      } : paymentMethod == 'UPI' ? {
-        upiId
-      } : paymentMethod == 'wallet' ? {
-        razorpayOrderId: razorpayOrder.id,
+        paymentMethod,
+        razorpayOrderId: razorpayOrder.id,// sending razor pay datas to front end
+        amount: razorpayOrder.amount,
+        currency: razorpayOrder.currency,
 
-      } : null,
-
-      items: orderItems,
-      createdAt,
-      deliveryDate,
-      useWallet
-    }
-    return res.json({
-      success: true,
-      message: "Order completed successfully",
-
-      paymentMethod,
-      razorpayOrderId: razorpayOrder.id,// sending razor pay datas to front end
-      amount: razorpayOrder.amount,
-      currency: razorpayOrder.currency,
-
-      key_id: process.env.RAZORPAY_KEY_ID,
-      user: req.session.user
-    });
+        key_id: process.env.RAZORPAY_KEY_ID,
+        user: req.session.user
+      });
 
     }
-    
-  
-////////////////
+
+
+    ////////////////
 
   } catch (error) {
     console.log('error in placing order', error);
@@ -1811,7 +1972,7 @@ const getOrders = async (req, res) => {
     }
     // console.log('your orders are ', orders);
 
-    const totalOrders = await Order.countDocuments()
+    const totalOrders = orders.length
     // console.log('total orders', totalOrders);
 
     const totalPages = Math.ceil(totalOrders / limit)
@@ -1819,7 +1980,7 @@ const getOrders = async (req, res) => {
 
     //get cart count
     const cart = await Cart.findOne({ userId }).populate('items.productId')
-    let cartCount=0
+    let cartCount = 0
     if (cart) {
       cartCount = cart.items.length
       //  console.log('cart count is ', cartCount);
@@ -1828,14 +1989,14 @@ const getOrders = async (req, res) => {
 
     }
     // order status updating
-     const activeOrders = await Order.find({ status: { $nin: ['cancelled', 'returned'] } })
-        for (const order of activeOrders) {
-          if (order.deliveryDate <= new Date()) {
-            order.status = 'Delivered';
-            await order.save();
-          }
-        }
-        
+    const activeOrders = await Order.find({ status: { $nin: ['cancelled', 'returned'] } })
+    for (const order of activeOrders) {
+      if (order.deliveryDate <= new Date()) {
+        order.status = 'Delivered';
+        await order.save();
+      }
+    }
+
     res.render('user/userOrders', {
       title: "See Your All-Orders",
       orders,
@@ -2025,22 +2186,22 @@ const getWishList = async (req, res) => {
     }
     const wishList = await WishList.findOne({ userId }).populate('items');
 
-   let cartCount=0
-  
+    let cartCount = 0
+
     const cart = await Cart.findOne({ userId })
-    console.log('cart',cart);
-    if(cart){
+    console.log('cart', cart);
+    if (cart) {
       cartCount = cart.items.length || 0
     }
-     
+
 
 
     const offers = await Offer.find({ status: 'active' });
-    let products=[]
-    if(wishList){
-       products = wishList.items
+    let products = []
+    if (wishList) {
+      products = wishList.items
     }
-    
+
     products.forEach(product => {
       const productOffer = offers.find(offer =>
         offer.applicableTo === 'product' && offer.productId?.toString() === product._id.toString()
@@ -2316,14 +2477,14 @@ const cancelSingleProduct = async (req, res) => {
 
     } else {
       //if offerapplied
-      if(order.isOfferApplied){
-        let cancelItem=order.items.find(item=>item.productId.toString()==product._id.toString())
-        if(cancelItem.offerApplied){
+      if (order.isOfferApplied) {
+        let cancelItem = order.items.find(item => item.productId.toString() == product._id.toString())
+        if (cancelItem.offerApplied) {
           order.offerDiscountAmount = Math.max(0, order.offerDiscountAmount - cancelItem.offerDiscount);
-          if(order.offerDiscountAmount==0){
-            order.isOfferApplied=false
+          if (order.offerDiscountAmount == 0) {
+            order.isOfferApplied = false
           }
-          refundAmount-=cancelItem.offerDiscount
+          refundAmount -= cancelItem.offerDiscount
         }
       }
       // More than one item in the order
@@ -2600,6 +2761,17 @@ const removeCoupon = async (req, res, next) => {
   }
 }
 
+const getContact=(req,res)=>{
+  res.render('user/about',{
+    categoryId: null,
+      priceRange: null,
+      cartCount:0,
+      sort: '',
+      query: '',
+      user:req.session.user||'',
+      title: 'About Us',
+  })
+}
 module.exports = {
   getLogin,
   postLogin,
@@ -2642,10 +2814,12 @@ module.exports = {
   addProfileImage,
   removeProfileImage,
   usertest,
+  addAddresses,
   getProductList,
   getSingleProduct,
   getAllCoupons,
   varifyPayment,
   getPaymentFailure,
-  removeCoupon
+  removeCoupon,
+  getContact
 }

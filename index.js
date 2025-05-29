@@ -24,7 +24,7 @@ app.use(cookieParser())
 
 
 
-//app.set('view options', { compileDebug: true, debug: true });
+
 
 app.use("/uploads", express.static("uploads"));
 

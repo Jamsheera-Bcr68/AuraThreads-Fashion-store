@@ -339,7 +339,16 @@
                       <button class="btn-sm bg-success" onclick="showOrderDetails('<%= order._id %>')">
                         View Details
                       </button>
-                      <% if (order && order.status !=='cancelled' ) { %>
+                      <% if(order && order.status=='Delivered'){ %>
+                        <button class="btn-sm btn-secondary" disabled>
+                            Cancell
+                          </button>
+                          <% } else if(order && order.status=='returned'){ %>
+                            <button class="btn-sm btn-secondary" disabled>
+                            Returned
+                          </button>
+                         <% }else if(order && order.status !=='cancelled' ) { %>
+                     
                         <button class="btn-sm cancel-btn" onclick="cancelOrder('<%= order._id %>', this)">
                           Cancel Order
                         </button>

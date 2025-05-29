@@ -86,15 +86,18 @@
                                 <td>
                                     <%= tx.description %>
                                 </td>
-                                <td><span
-                                        style="background-color: <%= tx.type === 'debit' ? 'red' : 'green' %>; color: white;%>"
+                                <td>
+                                    <span
+                                        style="background-color: <%= tx.type === 'debit' ? 'red' : 'green' %>; color: white;">
                                         <%= tx.type %>
-                                    </span></td>
+                                    </span>
+                                </td>
                                 <td class="<%= tx.type === 'debit' ? 'amount-debit' : 'amount-credit' %>">
                                     <%= tx.amount %>
                                 </td>
                             </tr>
                             <% }) %>
+
                     </tbody>
                 </table>
             </div>
@@ -103,19 +106,6 @@
             <div class="tab-content" id="transactions">
                 <h3 class="section-header">Transaction History</h3>
 
-                <!-- <div class="filter-section">
-                <select class="filter-dropdown">
-                    <option value="all">All Transactions</option>
-                    <option value="purchases">Purchases</option>
-                    <option value="credits">Credits & Refunds</option>
-                    <option value="rewards">Rewards</option>
-                </select>
-                <div class="date-filter">
-                    <input type="date" class="date-input" placeholder="From">
-                    <input type="date" class="date-input" placeholder="To">
-                    <button class="filter-btn">Apply</button>
-                </div>
-            </div>
      -->
                 <table class="table">
                     <thead style="font-weight: bold;">
@@ -134,7 +124,10 @@
                                     <%= tr.date.toLocaleDateString() %>
                                 </td>
                                 <td>
-                                    <%= tr.type %>
+                                   <span
+                                        style="background-color: <%= tr.type === 'debit' ? 'red' : 'green' %>; color: white;">
+                                        <%= tr.type %>
+                                    </span>
                                 </td>
                                 <td>
                                     <%= tr.description %>
@@ -249,7 +242,7 @@
                             if (data && data.success) {
                                 Swal.fire(data.message)
                                 document.getElementById('amount').value = ''
-
+                                
                             } else {
                                 Swal.fire(data.message)
                             }

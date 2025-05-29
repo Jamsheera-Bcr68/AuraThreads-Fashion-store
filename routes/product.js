@@ -71,7 +71,7 @@ router.get("/products", async (req, res) => {
 // Add Product Page
 router.get("/products/add", async (req, res) => {
   const categories = await category.find({ isDeleted: false });
-  res.render("../views/admin/addProduct", {
+  res.render("admin/addProduct", {
     title: " Add Product",
     categories,
   });

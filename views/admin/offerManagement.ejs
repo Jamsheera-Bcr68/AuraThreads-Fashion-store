@@ -83,7 +83,7 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <% offers.forEach(function(offer,index) { %>
+                                        <% populatedOffers.forEach(function(offer,index) { %>
                                             <tr>
                                                 <td>
                                                     <%= index+1 %>
@@ -94,7 +94,7 @@
                                                     <%= offer.offerName %>
                                                 </td>
                                                 <td>
-                                                    <%= offer.applicableTo %>
+                                                    <%= offer.applicableName %>
                                                 </td>
                                                 <td>
                                                     <%= offer.discountValue %>

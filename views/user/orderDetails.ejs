@@ -39,6 +39,7 @@
                             <p><strong>Discount Thruogh Coupon:</strong>₹ <%= order.coupenDiscountAmount.toFixed(2) %>
                                     <p><strong>Discount Thruogh Offer:</strong>₹ <%=
                                             order.offerDiscountAmount.toFixed(2) %>
+                                            <p><strong>Shipping Charge :</strong>₹ <%= order.shippingCharge ||50.00 %></p>
                                             <p><strong>Net Total :</strong>₹ <%= order.finalAmount.toFixed(2) %>
                                             </p>
         </div>
@@ -83,11 +84,15 @@
                             <td>₹ <%= (item.quantity * item.productId.price).toFixed(2) %>
                             </td>
                             <td>
+                                
                                 <% if (item.status==='cancelled' ) { %>
                                     <button class="" style="background-color: grey; color: white;"
-                                        disabled>Cancel</button>
-                                    <button class="" style="background-color: grey; color: white;"
-                                        disabled>Return</button>
+                                        disabled>Cancelled</button>
+                                    <!-- <button class="" style="background-color: grey; color: white;"
+                                        disabled>Return</button> -->
+                                        <% } else if(item.status==='returned') {%>
+                                            <button class="" style="background-color: grey; color: white;"
+                                        disabled>Returned</button>
                                     <% } else { %>
                                         <button
                                             onclick="cancelSingleProduct('<%= item.productId._id %>', '<%= order._id %>')"
@@ -170,6 +175,7 @@
                                     text: "This Product Cancelled.",
                                     icon: "success"
                                 });
+                             
                             } else {
                                 Swal.fire(data.message)
                             }
@@ -199,13 +205,7 @@
             orderId = this.getAttribute('data-orderid');
             returnModal.style.display = 'block';
         }))
-        // returnBtn.onclick = function () {
-        //     console.log('retun btn clicked');
-
-        //     productId = this.getAttribute('data-productid');
-        //     orderId = this.getAttribute('data-orderid');
-        //     returnModal.style.display = 'block';
-        // }
+        
 
         // Close Modal
         closeBtn.onclick = function () {
@@ -222,7 +222,7 @@
         // Submit Reason
         submitBtn.onclick = async function () {
             console.log('reason submitted');
-
+             returnModal.style.display = 'none';
             const reason = document.getElementById('returnReason').value.trim();
             console.log('reason ', reason);
 

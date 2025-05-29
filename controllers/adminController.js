@@ -563,6 +563,19 @@ const getOffers = async (req, res) => {
       }
     }
 
+ const populatedOffers = await Promise.all(
+      offers.map(async (offer) => {
+        if (offer.applicableTo === 'product' && offer.productId) {
+          const product = await Product.findById(offer.productId).select('productName');
+          offer.applicableName = product ? product.productName : 'Unknown Product';
+        } else if (offer.applicableTo === 'category' && offer.categoryId) {
+          const category = await Category.findById(offer.categoryId).select('categoryName');
+          offer.applicableName = category ? category.categoryName : 'Unknown Category';
+        }
+        return offer;
+      })
+    );
+
     res.render('admin/offerManagement', {
       title: "Offer Management",
       currentPage: page || 1,
@@ -570,6 +583,7 @@ const getOffers = async (req, res) => {
       skip,
       totalPages,
       totalOffers,
+      populatedOffers,
       stats,
       refferalOffers,
       offers, products, categories
@@ -1318,10 +1332,12 @@ const getSalesReport = async (req, res, next) => {
 
       //summary
     ]
+
+    const orders=await Order.find({status:'Delivered'})
     let summary = {
       offerDiscountAmount: totalDiscount.reduce((acc, val) => acc + val.totalDiscountAmount, 0),
       couponDiscount: totalDiscount.reduce((acc, val) => acc + val.couponDiscount, 0),
-      totalOrders: salesData.length,
+      totalOrders: orders.length,
       totalRevenue: totalSales.reduce((acc, val) => acc + val, 0),
     }
     res.render('admin/report', {

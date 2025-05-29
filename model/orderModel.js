@@ -36,7 +36,7 @@ const orderSchema=mongoose.Schema({
     offerDiscountAmount:{type:Number},
     isOfferApplied:{type:Boolean,default:false},
     isCouponApplied:{type:Boolean,default:false},
-    shippingCarge:Number,
+    shippingCharge:Number,
     orderTotal:Number,
     couponCode:{type:String,default:''},
     useWallet:{type:Boolean,default:false},

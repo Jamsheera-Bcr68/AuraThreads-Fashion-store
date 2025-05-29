@@ -154,6 +154,7 @@ router.post('/profile/update',userController.updateUser)
 //user profile pic adding
 router.post('/addProfileImage',upload.single('profilePic'),userController.addProfileImage)
 
+router.post('/addres/add',userController.addAddresses)
 //removing profile image
 router.post('/removeProfileImage',userController.removeProfileImage)
 
@@ -167,7 +168,7 @@ router.delete('/address/delete/:addressId',userController.deleteAddress)
 router.get('/cart',userAuth,userController.getCart)
 
 //user add to cart
-router.post('/cart/add',userAuth,userController.addToCart)
+router.post('/cart/add',userController.addToCart)
 //user remove cart
 router.delete('/cart/remove/:productId',userController.deleteCart)
 
@@ -228,6 +229,9 @@ router.post('/varifyPayment',userController.varifyPayment)
 
 //payment failure
 router.get('/order-failure',userController.getPaymentFailure)
+
+//get contact page
+router.get('/contact',userController.getContact)
 
 
 

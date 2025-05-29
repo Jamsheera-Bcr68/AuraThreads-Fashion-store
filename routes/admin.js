@@ -491,7 +491,7 @@ router.get('/getSinglerefferal/:offerId', adminController.getSinglerefferal)
 router.post('/editReferralForm/:offerId', adminController.editReffferalOffer)
 
 // get approval page
-router.get('/pendings', adminController.getPendings)
+router.get('/pendings',adminAuth, adminController.getPendings)
 
 //admin return approval
 router.post('/returns/approve', adminController.approveReturn)

@@ -33,7 +33,9 @@
           <tr>
             <th>Product</th>
             <th>Qty</th>
-            <th>Price</th>
+            <th>Status</th>
+            <th>Price/Item</th>
+            <th>Discount/Item</th>
             <th>Subtotal</th>
           </tr>
         </thead>
@@ -42,8 +44,10 @@
             <tr>
               <td><%= item.productId.productName %></td>
               <td><%= item.quantity %></td>
+              <td><%= item.status %></td>
               <td>₹<%= item.productId.price %></td>
-              <td>₹<%= (item.quantity * item.productId.price).toFixed(2) %></td>
+              <td>₹ <%= item.offerDiscount ||0 %></td>
+              <td>₹<%= (item.quantity * item.productId.price-item.offerDiscount).toFixed(2) %></td>
             </tr>
           <% }) %>
         </tbody>
@@ -53,7 +57,7 @@
     <div class="section">
       <h3>Payment & Status</h3>
       <p><strong>Payment Method:</strong> <%= order.paymentMethod %></p>
-      <p><strong>Total Amount:</strong> ₹<%= order.totalAmount.toFixed(2) %></p>
+      <p><strong>Total Amount:</strong> ₹<%= order.finalAmount.toFixed(2) %></p>
       <p><strong>Order Status:</strong> <%= order.status %> </p>
        
     </div>
