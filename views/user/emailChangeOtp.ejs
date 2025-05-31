@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="csrf-token" content="<%= csrfToken %>">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>OTP Verification</title>
+  <link rel="stylesheet" href="/css/otp.css">
+  
+</head>
+<body>
+  <div class="otp-container">
+    <h2>Enter OTP</h2>
+    <span id="textSpan">An OTP is send to your email</span>
+    <p id="timer">01:00</p>
+
+    <form id="otpForm" action="/user/verifyOtp" method="POST">
+      <div class="otp-inputs">
+        <input class="otp-field" type="text" name="otp[]" maxlength="1" required />
+        <input class="otp-field" type="text" name="otp[]" maxlength="1" required />
+        <input class="otp-field" type="text" name="otp[]" maxlength="1" required />
+        <input class="otp-field" type="text" name="otp[]" maxlength="1" required />
+        <input class="otp-field" type="text" name="otp[]" maxlength="1" required />
+        <input class="otp-field" type="text" name="otp[]" maxlength="1" required />
+      </div>
+       <div class="text-center"><button type="submit">Verify</button>
+      <button id="resendBtn" onclick="callResendOtp()" disabled>Resend OTP</button></div>
+      
+    </form>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    const inputs = document.querySelectorAll('.otp-field');
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    // Auto-move & backspace navigation
+    inputs.forEach((input, index) => {
+      input.addEventListener('input', () => {
+        if (input.value.length === 1 && index < inputs.length - 1) {
+          inputs[index + 1].focus();
+        }
+      });
+  
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && !input.value && index > 0) {
+          inputs[index - 1].focus();
+        }
+      });
+    });
+
+    let countdownInterval;
+  let expiryTime;
+  function startOtpTimer(durationMs) {
+    const timerDisplay = document.getElementById('timer');
+    const resendBtn = document.getElementById('resendBtn');
+
+    // Reset state
+    resendBtn.disabled = true;
+    resendBtn.style.display = "none";
+    timerDisplay.textContent = "01:00";
+
+    expiryTime = Date.now() + durationMs;
+
+    countdownInterval = setInterval(() => {
+      const remaining = expiryTime - Date.now();
+
+      if (remaining > 0) {
+        const minutes = Math.floor(remaining / 60000).toString().padStart(2, '0');
+        const seconds = Math.floor((remaining % 60000) / 1000).toString().padStart(2, '0');
+        timerDisplay.textContent = `${minutes}:${seconds}`;
+      } else {
+        clearInterval(countdownInterval);
+        timerDisplay.textContent = "00:00";
+
+        // OTP expired
+        setTimeout(() => {
+          swal.fire("OTP expired");
+          resendBtn.disabled = false;
+          resendBtn.style.display = "block";
+        }, 5000); // Enable resend button after 5 seconds
+      }
+    }, 1000);
+  }
+
+  async function callResendOtp() {
+    console.log('resent button clicked');
+    
+    resendBtn.disabled = true;
+    try {
+      const res = await fetch('/user/emailChangeResendOtp', {
+        method: "POST",
+        headers:{ 'CSRF-Token': csrfToken}
+      });
+      const data = await res.json();
+      Swal.fire(data.message);
+
+      if (data.expiresAt) {
+        const duration = data.expiresAt - Date.now();
+        startOtpTimer(duration); // Start timer again with new OTP
+        inputs.forEach(input => input.value = '');
+inputs[0].focus();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  // Start timer initially when page loads
+  window.onload = () => {
+    startOtpTimer(60000); // 1 minute = 60000ms
+  };
+
+  // otp submit handling
+const otpForm=document.getElementById('otpForm')
+otpForm.addEventListener('submit',function(e){
+  e.preventDefault()
+  console.log('otp form submitted');
+
+  const otpInputs = document.querySelectorAll('.otp-field');
+const otp = Array.from(otpInputs).map(input => input.value).join('');
+  console.log('otp is',otp );
+  
+  fetch('/user/emailChangeOtpVerifyOtp',{
+    method:"POST",
+    headers: { "Content-Type": "application/json" ,
+    'CSRF-Token': csrfToken 
+    },
+    body:JSON.stringify({otp})
+  }).then(res=>res.json())
+  .then(data=>{
+    if(data && data.success){
+      Swal.fire(data.message)
+      window.location.href="/user/account"
+    }else{
+      Swal.fire(data.message)
+    }
+  }).catch(err=>{
+    console.log('error is ',err);
+    Swal.fire('some thing went wrong')
+  })
+})
+  </script>
+  
+</body>
+</html>

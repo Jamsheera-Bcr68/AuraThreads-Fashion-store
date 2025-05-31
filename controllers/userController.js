@@ -154,7 +154,7 @@ const sendOTP = async (req, res) => {
     if (!email) return res.status(400).json({ message: "Email is required" });
 
     const otp = generateOTP();
-    otpStore[email] = { otp, expiresAt: Date.now() + 1 * 60 * 1000 }; // 5-minute expiry
+    otpStore[email] = { otp, expiresAt: Date.now() + 1 * 60 * 1000 }; // 1-minute expiry
 
     // Send email with OTP
     await transporter.sendMail({
@@ -288,7 +288,7 @@ const resendOtp = async (req, res) => {
   console.log(req.session.userData);
 
   try {
-    const email = req.session.userData?.email;
+    const email = req.session.userData?.email 
     if (!email) return res.status(400).json({ message: "Email is required" });
     req.session.userData.otp = null
     const newOtp = generateOTP();
@@ -1082,6 +1082,7 @@ const deleteAddress = async (req, res) => {
 }
 //edit profile'
 
+
 const updateUser = async (req, res) => {
   console.log('from user update');
 
@@ -1098,13 +1099,37 @@ const updateUser = async (req, res) => {
       return res.json({ success: false, message: 'user not found' })
 
     } else {
+      if (email == user.email) { } else {
+        console.log('user want to update email');
+        const userExist = await User.findOne({ email: email })
+        if (userExist) {
+          return res.json({ success: false, message: "This email is already existing" })
+        }
+
+      }
       user.fullName = fullName
-      user.email = email
+
       user.phone = phone
       user.dob = dob
       user.save()
-      console.log('user saved succes fully');
-      return res.json({ success: true, message: "user profile updated" })
+      if (email == user.email) {
+        console.log('user saved succes fully');
+        return res.json({ success: true, message: "user profile updated" })
+      } else {
+        const otp = generateOTP()
+        otpStore[email] = { otp, expiresAt: Date.now() + 1 * 60 * 1000 }; // 1-minute expiry
+        req.session.user.newEmail=email
+        req.session.user.otp=otp
+
+        // Send email with OTP
+        await transporter.sendMail({
+          to: email,
+          subject: "Your OTP Code",
+          text: `Your OTP is ${otp}. It expires in 1 minutes.`,
+        });
+        return res.json({success:true,message:"A OTP send your new email ",newEmail:email})
+      }
+      
     }
 
   } catch (error) {
@@ -1114,7 +1139,91 @@ const updateUser = async (req, res) => {
   }
 }
 
+const getEmailChangeOtp=async(req,res,next)=>{
+  try {
+    res.render('user/emailChangeotp')
+  } catch (error) {
+    console.log(error);
+    throw Error({status:500,message:'server error'})
+  }
+}
 
+const emailChangeResendOtp=async (req, res) => {
+  console.log('from resent otp page');
+  console.log(req.session.userData);
+
+  try {
+    const email = req.session.user?.newEmail
+    console.log('newEmail is ',email);
+     
+    if (!email) return res.status(400).json({ message: "new Email is required" });
+    req.session.user.otp = null
+    const newOtp = generateOTP();
+    req.session.user.otp = newOtp;
+    otpStore[email] = { otp: newOtp, expiresAt: Date.now() + 60 * 1000 }; // 1 minute validity
+
+    await transporter.sendMail({
+      to: email,
+      subject: "Your New OTP Code",
+      text: `Your new OTP is ${newOtp}. It expires in 1 minute.`,
+    });
+    console.log('new otp send succesfully');
+
+    res.json({ message: "New OTP sent successfully", expiresAt: otpStore[email].expiresAt });
+  } catch (error) {
+    console.error("Error resending OTP:", error);
+    res.status(500).json({ message: "Failed to resend OTP" });
+  }
+};
+
+const emailChangeOtpVerifyOtp= async (req, res) => {
+  console.log('from email changevarify otp');
+
+  let { otp } = req.body;
+  console.log('req.body otp is ', otp);
+
+
+  console.log('session otp is ', req.session.user.otp);
+
+  try {
+    if (!req.session.user.otp || !req.session.user) {
+      return res.json({ success: false, message: "OTP expired. Please register again." });
+    }
+
+    console.log('type of session otp is ', typeof (req.session.user.otp));
+
+    console.log('otp is ', otp);
+    if (otp !== req.session.user.otp) {
+      console.log('Invalid otp');
+
+      return res.json({ success: false, message: "Invalid OTP" });
+    }
+    console.log('otp validated succesfully');
+    
+    const userId=req.session.user._id
+    const user=await User.findOne({_id:userId})
+    if(!user){
+      console.log('user not registered');
+      
+      throw new Error("user not registered")
+    }
+
+    user.email=req.session.user.newEmail
+    await user.save()
+
+    // Clear session
+    req.session.user.otp = null;
+    req.session.user.email=req.session.user.newEmail
+    req.session.user.newEmail=null
+
+    console.log('email updation succesfull');
+    return res.json({success:true,message:"Email updated successfully"})
+    
+  } catch (error) {
+    console.log('error happened', error);
+    return res.json({ success: false, message: 'some thing went wrong' })
+  }
+}
 //addProfileImage
 const addProfileImage = async (req, res) => {
   console.log('from addProfileImage');
@@ -1190,6 +1299,7 @@ const removeProfileImage = async (req, res) => {
   await user.save()
   return res.json({ success: true, message: "Profile image removed successfully" })
 }
+
 
 const getCart = async (req, res) => {
   let cartCount = 0
@@ -1446,8 +1556,12 @@ const updateCart = async (req, res) => {
 
     // Find cart and product
 
-    const product = await Product.findById(productId);
-    const cart = await Cart.findOne({ userId });
+    const product = await Product.findById(productId) 
+    const cart = await Cart.findOne({ userId }).populate({
+        path: 'items.productId',
+        model: 'Product',
+        select: 'productName price images stock categoryId'
+      })
     const price = product.price
     const subTotal = price * quantity
     if (!cart) {
@@ -1481,6 +1595,7 @@ const updateCart = async (req, res) => {
 
     // Save cart update
     await cart.save();
+   
     req.session.discountAmount = 0
     req.session.totalAmount = 0
     req.session.code = ''
@@ -1523,7 +1638,7 @@ const changePassword = async (req, res) => {
     await user.save()
     console.log('new Uswr is ', user);
 
-    return res.json({ success: false, message: 'Password updated successfully' })
+    return res.json({ success: true, message: 'Password updated successfully' })
 
   } catch (error) {
     console.log(error, "This is the error");
@@ -2761,15 +2876,15 @@ const removeCoupon = async (req, res, next) => {
   }
 }
 
-const getContact=(req,res)=>{
-  res.render('user/about',{
+const getContact = (req, res) => {
+  res.render('user/about', {
     categoryId: null,
-      priceRange: null,
-      cartCount:0,
-      sort: '',
-      query: '',
-      user:req.session.user||'',
-      title: 'About Us',
+    priceRange: null,
+    cartCount: 0,
+    sort: '',
+    query: '',
+    user: req.session.user || '',
+    title: 'About Us',
   })
 }
 module.exports = {
@@ -2821,5 +2936,8 @@ module.exports = {
   varifyPayment,
   getPaymentFailure,
   removeCoupon,
-  getContact
+  getContact,
+  emailChangeOtpVerifyOtp,
+  getEmailChangeOtp,
+  emailChangeResendOtp
 }

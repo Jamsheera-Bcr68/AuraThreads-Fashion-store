@@ -53,6 +53,7 @@
                       <th class="product-name">Product</th>
                       <th class="product-price">Price</th>
                       <th class="product-discount">Offer per quantity</th>
+                      <th>Final Price</th>
                       <th class="product-quantity">Quantity</th>
                       <th class="product-total">Total</th>
                       <th class="product-remove">Remove</th>
@@ -61,7 +62,7 @@
                   <tbody>
                     <% if (cart.items.length> 0) { %>
                       <% cart.items.forEach(item=> { %>
-                        <tr>
+                        <tr id="row-<%= item.productId._id %>">
                           <td class="product-thumbnail">
                             <img src="<%= item.productId.images[0] %>" alt="Image" class="img-fluid">
                           </td>
@@ -75,39 +76,39 @@
                           <td>
                             <% if(item.discountAmount) { %>
                               <span style="font-weight: bold;color: green;">
-                                <%= item.discountType === 'amount' ? `₹${item.discountAmount.toFixed(2)} off` : `${(item.discountAmount * 100 / item.productId.price).toFixed(0)}% off` %>
+                                <%= item.discountType==='amount' ? `₹${item.discountAmount.toFixed(2)} off` :
+                                  `${(item.discountAmount * 100 / item.productId.price).toFixed(0)}% off` %>
                               </span>
-                            <% } else { %>
-                              <span style="font-weight: bold;color: red;">No Offer</span>
-                            <% } %>
+                              <% } else { %>
+                                <span style="font-weight: bold;color: red;">No Offer</span>
+                                <% } %>
                           </td>
+                          <td style="font-weight: bold;color: green;">₹ <%= (item.productId.price-item.discountAmount) %></td>
                           <td>
                             <div class="input-group mb-3" style="max-width: 120px;">
                               <div class="input-group-prepend">
                                 <div class="input-group-append">
                                   <div class="input-group-append">
                                     <button class="btn btn-outline-primary js-btn-minus"
-                                      data-productId="<%= item.productId._id %>" data-id="<%= item.quantity %>"
+                                      data-productId="<%= item.productId._id %>"   data-finalPrice="<%= (item.productId.price-item.discountAmount) %>" data-id="<%= item.quantity %>"
                                       type="button">&minus;</button>
                                   </div>
                                   <input type="text" id="quantity" class="form-control text-center"
                                     value="<%= item.quantity %>" name="quantity-<%= item.id %>">
                                   <div class="input-group-append">
                                     <button class="btn btn-outline-primary js-btn-plus"
-                                      data-productId="<%= item.productId._id %>" data-max="<%= item.productId.stock %>"
+                                      data-productId="<%= item.productId._id %>" data-finalPrice="<%= (item.productId.price-item.discountAmount) %>" data-max="<%= item.productId.stock %>"
                                       data-id="<%= item.quantity %>" type="button">&plus;</button>
                                   </div>
                                 </div>
                           </td>
-                          <td style="font-weight: bold;">₹ <%= (item.discountPrice * item.quantity).toFixed(2) %>
+                          <td  style="font-weight: bold;">₹ <span id="col-<%= item.productId._id %>"><%= (item.discountPrice * item.quantity).toFixed(2) %></span>
                           </td>
                           <td>
-                            <button  data-id="<%= item.productId._id %>"  class="btn text-white btn-danger js-remove-item"  >X Remove</button>
+                            <button data-id="<%= item.productId._id %>"
+                              class="btn text-white btn-danger js-remove-item">X Remove</button>
 
-                            <!-- <button class="btn btn-danger text-white "
-                              data-id=>
-                              X Remove
-                            </button> -->
+                            
                           </td>
                         </tr>
                         <% }) %>
@@ -132,8 +133,8 @@
                   <a href="/user/productList" class="btn btn-outline-primary btn-sm btn-block">Continue Shopping</a>
                 </div>
               </div>
-              
-             
+
+
             </div>
             <div class="col-md-6 pl-5">
               <div class="row justify-content-end">
@@ -152,14 +153,16 @@
                           item.quantity), 0).toFixed(2) %></strong>
                     </div>
                   </div>
-                  
+
                   <div class="row mb-3">
                     <div class="col-md-6">
                       <span class="text-black">Dcount via Offer</span>
                     </div>
                     <div class="col-md-6 text-right">
-                      <strong class="text-black">₹ <%= cart.items.reduce((sum, item)=> sum + ((item.productId.price-item.discountPrice) *
-                          item.quantity), 0).toFixed(2) %></strong>
+                      <strong class="text-black">₹ <%= cart.items.reduce((sum, item)=> sum +
+                          ((item.productId.price-item.discountPrice) *
+                          item.quantity), 0).toFixed(2) %>
+                        </strong>
                     </div>
                   </div>
                   <div class="row mb-3">
@@ -168,14 +171,14 @@
                     </div>
                     <div class="col-md-6 text-right">
                       <strong class="text-black">
-  ₹
-  <span id="updatedCartTotal">
-    <%= (
-      cart.items.reduce((sum, item) => sum + item.productId.price * item.quantity, 0) -
-      cart.items.reduce((sum, item) => sum + (item.productId.price - item.discountPrice) * item.quantity, 0)
-    ).toFixed(2) %>
-  </span>
-</strong>
+                        ₹
+                        <span id="updatedCartTotal">
+                          <%= ( cart.items.reduce((sum, item)=> sum + item.productId.price * item.quantity, 0) -
+                            cart.items.reduce((sum, item) => sum + (item.productId.price - item.discountPrice) *
+                            item.quantity, 0)
+                            ).toFixed(2) %>
+                        </span>
+                      </strong>
 
                     </div>
                   </div>
@@ -208,78 +211,6 @@
   <script src="/js/main.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-  <script>
-   
-    // const removeBtns = document.querySelectorAll('.js-remove-item')
-    // removeBtns.forEach(btn => btn.addEventListener('click', function (e) {
-    //   e.preventDefault()
-    //   let productId = this.getAttribute('data-id')
-    //   console.log('prouct id is ', productId);
-
-    //   Swal.fire({
-    //     title: "Are you sure?",
-    //     text: "This item will be removed from your cart!",
-    //     icon: "warning",
-    //     showCancelButton: true,
-    //     confirmButtonText: "Yes, remove it!",
-    //     cancelButtonText: "Cancel"
-    //   }).then(result => {
-    //     if (result.isConfirmed) {
-    //       fetch(`/user/cart/remove/${productId}`,
-    //         {
-    //           method: 'delete',
-    //           headers: { "Content-Type": "application/json" },
-    //           'CSRF-Token': csrfToken
-    //         }
-    //       ).then(response => response.json())
-    //         .then(data => {
-    //           if (data && data.success) {
-    //             Swal.fire("Removed!", "The item has been removed.", "success");
-    //           } else {
-    //             Swal.fire("Error!", "Failed to remove the item.", "error");
-    //           }
-    //         }).catch(error => {
-    //           console.error("Error:", error)
-    //         })
-    //     }
-    //   })
-
-    // }))
-
-    // function applyCoupon(cartTotal) {
-    //   console.log('apply Coupon button clicked');
-    //   const inputCode = document.getElementById('coupon').value
-    //   console.log('cartTotal',cartTotal);
-      
-    //   console.log('inputCode', inputCode);
-    //   if (!inputCode) {
-    //     Swal.fire('Enter a Coupen code')
-    //   } else {
-    //     fetch(`/user/applyCoupon/${cartTotal}`, {
-    //       method: "POST",
-    //       headers: { "Content-Type": "application/json" ,
-    //         'CSRF-Token': csrfToken
-    //       },
-    //       body: JSON.stringify({ inputCode })
-    //     }).then(res => res.json())
-    //       .then(data => {
-    //         if (data && data.success) {
-    //           let newCartTotal=data.newCartTotal
-    //           console.log('new cart total is ',newCartTotal);
-    //           document.getElementById('discountAmount').textContent = data.discountAmount.toFixed(2);
-             
-    //           Swal.fire(data.message)
-    //         } else {
-    //           Swal.fire(data.message)
-    //         }
-    //       }).catch(error => {
-    //         console.log(error);
-    //         Swal.fire("Server error")
-    //       })
-    //   }
-
-    // }
-  </script>
 
 </body>
 

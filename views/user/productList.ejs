@@ -252,7 +252,21 @@
                     }).then(response => response.json())
                         .then(data => {
                             if (data && data.success) {
-                                Swal.fire(data.message)
+                                Swal.fire({
+                                    title: "Item Added to Cart!",
+                                    text: "You can continue shopping or view your cart.",
+                                    icon: "success",
+                                    showCancelButton: true,
+                                    confirmButtonText: "Show Cart",
+                                    cancelButtonText: "OK",
+                                    reverseButtons: true // optional: puts "OK" on the left
+                                }).then((result) => {
+                                    if (result.isConfirmed) {
+                                        // Navigate to the cart page
+                                        window.location.href = "/user/cart";
+                                    }
+                                    // else do nothing (OK just closes the alert)
+                                });
                             } else {
                                 Swal.fire(data.message)
                             }
@@ -357,7 +371,21 @@
                                         if (data && data.success) {
                                             heart.classList.remove('far');
                                             heart.classList.add('fas', 'wishlist-true'); // Make it filled and red
-                                            Swal.fire(data.message);
+                                            Swal.fire({
+                                                title: "Item Added to Wishlist!",
+                                                text: "You can continue shopping or view your wishList.",
+                                                icon: "success",
+                                                showCancelButton: true,
+                                                confirmButtonText: "Show wishlist",
+                                                cancelButtonText: "OK",
+                                                reverseButtons: true // optional: puts "OK" on the left
+                                            }).then((result) => {
+                                                if (result.isConfirmed) {
+                                                    // Navigate to the cart page
+                                                    window.location.href = "/user/wishlist";
+                                                }
+                                                // else do nothing (OK just closes the alert)
+                                            });
                                         } else {
                                             Swal.fire(data.message);
                                         }
@@ -398,7 +426,7 @@
                             const productCard = e.target.closest('.card');
                             const productName = productCard.querySelector('.card-title').textContent;
                             console.log(`Added ${productName} to bag`);
-                            // Here you would typically make an AJAX call to add to cart
+
                         });
                     });
                 });

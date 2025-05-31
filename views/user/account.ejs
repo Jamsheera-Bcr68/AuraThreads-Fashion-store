@@ -339,24 +339,24 @@
                       <button class="btn-sm bg-success" onclick="showOrderDetails('<%= order._id %>')">
                         View Details
                       </button>
-                      <% if(order && order.status=='Delivered'){ %>
+                      <% if(order && order.status=='Delivered' ){ %>
                         <button class="btn-sm btn-secondary" disabled>
-                            Cancell
-                          </button>
-                          <% } else if(order && order.status=='returned'){ %>
-                            <button class="btn-sm btn-secondary" disabled>
+                          Cancell
+                        </button>
+                        <% } else if(order && order.status=='returned' ){ %>
+                          <button class="btn-sm btn-secondary" disabled>
                             Returned
                           </button>
-                         <% }else if(order && order.status !=='cancelled' ) { %>
-                     
-                        <button class="btn-sm cancel-btn" onclick="cancelOrder('<%= order._id %>', this)">
-                          Cancel Order
-                        </button>
-                        <% } else if (order.status==='cancelled' ) { %>
-                          <button class="btn-sm btn-secondary" disabled>
-                            Cancelled
-                          </button>
-                          <% } %>
+                          <% }else if(order && order.status !=='cancelled' ) { %>
+
+                            <button class="btn-sm cancel-btn" onclick="cancelOrder('<%= order._id %>', this)">
+                              Cancel Order
+                            </button>
+                            <% } else if (order.status==='cancelled' ) { %>
+                              <button class="btn-sm btn-secondary" disabled>
+                                Cancelled
+                              </button>
+                              <% } %>
                     </div>
                   </div>
 
@@ -518,7 +518,7 @@
 
               try {
                 const response = await fetch('/user/profile/update', {
-                  method: "POST",
+                  method: "PATCH",
                   headers: {
                     "Content-Type": "application/json",
                     'CSRF-Token': csrfToken
@@ -529,7 +529,12 @@
                 const data = await response.json();
 
                 if (data && data.success) {
-                  Swal.fire('Profile updated Successfully');
+                  Swal.fire(data.message);
+                  if (data.newEmail) {
+                    console.log('new emial', data.newEmail);
+
+                    window.location.href = '/user/emailChangeOtp'
+                  }
                 } else {
                   Swal.fire(data.message);
                 }
@@ -740,15 +745,21 @@
               if (newPassword !== confirmPassword) {
                 console.log('passwords are not matching');
                 Swal.fire('Passwords are not matching')
+                return
               }
-              if (currentPassword == '' || newPassword == '' || confirmPassword == '') {
+              if (currentPassword === '' || newPassword === '' || confirmPassword === '') {
                 Swal.fire('All fields are required')
+                return
+              }
+              if (newPassword.length < 4 || newPassword.length > 8) {
+                Swal.fire("password should be beween 4 and 8 charectors")
+                return
               }
 
               fetch('/user/profile/change-password', {
                 method: "POST",
                 headers: {
-                  "content-Type": "application/json",
+                  "Content-Type": "application/json",
                   'CSRF-Token': csrfToken
                 },
                 body: JSON.stringify({ currentPassword, newPassword, confirmPassword })
@@ -756,6 +767,12 @@
                 .then(data => {
                   if (data && data.success) {
                     Swal.fire(data.message)
+                    console.log(data.message);
+                    
+                    document.getElementById('current-password').value = ''
+                    document.getElementById('new-password').value = ''
+                    document.getElementById('confirm-password').value = ''
+                    document.getElementById("forgot-password-modal").style.display = "none";
                   } else {
                     Swal.fire(data.message)
                   }

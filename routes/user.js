@@ -149,7 +149,13 @@ router.get('/account',userAuth,userController.getAccount)
 router.post('/address/add',userController.addAddress)
 
 //user Update
-router.post('/profile/update',userController.updateUser)
+router.patch('/profile/update',userController.updateUser)
+
+router.get('/emailChangeOtp',userController.getEmailChangeOtp)
+
+router.post('/emailChangeResendOtp',userController.emailChangeResendOtp)
+
+router.post('/emailChangeOtpVerifyOtp',userController.emailChangeOtpVerifyOtp)
 
 //user profile pic adding
 router.post('/addProfileImage',upload.single('profilePic'),userController.addProfileImage)
