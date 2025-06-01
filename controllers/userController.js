@@ -433,19 +433,30 @@ const getHome = async (req, res) => {
 
   const womenCategory = await category.findOne({ isDeleted: false, categoryName: 'Womens' }, { _id: 1 })
   //console.log('womenCategory is'+womenCategory.id);
-  const womenProducts = await Product.find({ isDeleted: false, categoryId: womenCategory.id });
+  let womenProducts=[]
+  if(womenCategory){
+     womenProducts = await Product.find({ isDeleted: false, categoryId: womenCategory.id });
 
+  }
+  
   const mensCategory = await category.findOne({ isDeleted: false, categoryName: 'Mens' }, { _id: 1 })
-
-  const mensProducts = await Product.find({ isDeleted: false, categoryId: mensCategory.id }).limit(3)
-  mensProducts.forEach(product => {
+  let mensProducts=[]
+ if(mensCategory){
+   mensProducts = await Product.find({ isDeleted: false, categoryId: mensCategory.id }).limit(3)
+   mensProducts.forEach(product => {
     product.images = product.images.map(image => image.replace(/\\/g, '/'));
   });
+ }
+  
+ 
 
 
   const kidsCategory = await category.findOne({ isDeleted: false, categoryName: 'Kids' }, { _id: 1 })
+  let kidsProducts=[]
   // console.log('kids category id is' + kidsCategory.id);
-  const kidsProducts = await Product.find({ isDeleted: false, categoryId: kidsCategory.id }).limit(3)
+  if(kidsCategory){
+     kidsProducts = await Product.find({ isDeleted: false, categoryId: kidsCategory.id }).limit(3)
+  }
 
 
   console.log('user found', req.session.user);
@@ -1573,9 +1584,13 @@ const updateCart = async (req, res) => {
     }
 
     const productStock = product.stock;
+    console.log('cart itmes ',cart.items);
+    
+    
+    
 
     // Find item in cart
-    const item = cart.items.find(item => item.productId.toString() === productId);
+    const item = cart.items.find(item => item.productId._id.toString() === productId);
 
     if (!item) {
       return res.json({ success: false, message: "Item not found in your cart" });

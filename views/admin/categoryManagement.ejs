@@ -32,10 +32,7 @@
         
         <div class="searchAddButtons">
           <div class="d-flex bg-info justify-content-end mb-3">
-            <!-- <div class="search-container">
-              <input type="text" id="searchInput" placeholder="Search for products..." />
-              <button class="searchbtn" onclick="searchProducts()">Search</button>
-          </div> -->
+           
               
           </div>
           <div class="d-flex justify-content-start mb-3">
@@ -285,6 +282,33 @@ aria-hidden="true"
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
 
+      // const categoryForm=document.getElementById('categoryForm')
+      // categoryForm.addEventListener('submit',function(e){
+      //   e.preventDefault()
+      //   console.log('categoryForm submitted');
+      //   const formData=new FormData(this)
+      //   let formObject=Object.fromEntries(formData)
+      //   fetch(`/admin/category/add`,{
+      //     method:'POST',
+      //     headers:{"Content-Type":"application/json"},
+      //     body:JSON.stringify({formObject})
+      //   })
+      // }).then(res=>res.json())
+      // .then(data=>{
+      //   if(data && data.success){
+      //     Swal.fire(data.message)
+      //      var addModal = new bootstrap.Modal(
+      //     document.getElementById("editCategoryModal")
+      //   );
+      //   editModal.show();
+      // }
+
+      //   }else{
+      //     Swal.fire(data.message)
+      //   }
+      // }).catch(err=>{
+      //   Swal.fire("server error")
+      // })
 
       function deleteCategory(id) {
         console.log("from delete cATEGORY SCRIPT" + id);

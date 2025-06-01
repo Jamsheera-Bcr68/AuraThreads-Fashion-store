@@ -157,7 +157,7 @@ jQuery(document).ready(function ($) {
     document.querySelectorAll('.js-btn-plus').forEach(button => {
       button.addEventListener('click', function (event) {
         event.preventDefault();
-        console.log('increse btn clicked');
+        console.log('increse button clicked');
 
         let inputField = this.closest('.input-group').querySelector('.form-control');
         let currentValue = parseInt(inputField.value, 10) || 0;
