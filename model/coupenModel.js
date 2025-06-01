@@ -1,8 +1,8 @@
-const mongoose = require('mongoose')
+const mongoose = require("mongoose");
 
 const coupenSchema = new mongoose.Schema({
   coupenCode: { type: String, required: true, unique: true },
-  discountType: { type: String, enum: ['percentage', 'fixed'], required: true },
+  discountType: { type: String, enum: ["percentage", "fixed"], required: true },
   discountValue: { type: Number, required: true },
   expiryDate: { type: Date, required: true },
   minPurchase: { type: Number, default: 0 },
@@ -13,15 +13,6 @@ const coupenSchema = new mongoose.Schema({
   usageLimit: { type: Number },
   updatedAt: { type: Date },
   used: { type: Number },
-  
-})
+});
 
-module.exports = mongoose.model('Coupen', coupenSchema)
-
-
-
-
-
-
-
-
+module.exports = mongoose.model("Coupen", coupenSchema);

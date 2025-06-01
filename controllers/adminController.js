@@ -4,18 +4,18 @@ const bcrypt = require("bcrypt");
 const User = require("../model/userModel");
 const Product = require("../model/productModel");
 const router = require("../routes/product");
-const Order = require('../model/orderModel')
-const Coupen = require('../model/coupenModel')
-const Offer = require('../model/offerModel');
-const RefferalOffer = require('../model/referralOfferModel')
-const Category = require('../model/categoryModel');
+const Order = require("../model/orderModel");
+const Coupen = require("../model/coupenModel");
+const Offer = require("../model/offerModel");
+const RefferalOffer = require("../model/referralOfferModel");
+const Category = require("../model/categoryModel");
 const { default: mongoose } = require("mongoose");
-const Wallet = require('../model/walletModel')
-const ejs = require('ejs');
-const path = require('path')
-const fs = require('fs');
-const pdf = require('html-pdf');
-const ExcelJS = require('exceljs');
+const Wallet = require("../model/walletModel");
+const ejs = require("ejs");
+const path = require("path");
+const fs = require("fs");
+const pdf = require("html-pdf");
+const ExcelJS = require("exceljs");
 
 const Razorpay = require("razorpay");
 // get login
@@ -25,14 +25,12 @@ const getLogin = async (req, res) => {
 
 // Post login
 const postLogin = async (req, res) => {
-
   const { email, password } = req.body;
 
   try {
     const admin = await Admin.findOne({ email });
 
     if (!admin) {
-
       return res.render("admin/login", {
         errorMessage: "Invalid email or password",
       });
@@ -40,7 +38,6 @@ const postLogin = async (req, res) => {
 
     const isMatch = await bcrypt.compare(password, admin.password);
     if (!isMatch) {
-
       return res.render("admin/login", {
         errorMessage: "Invalid email or password",
       });
@@ -81,45 +78,46 @@ const searchProducts = async (req, res) => {
   console.log("from admin searchproducts");
 
   try {
-
     const { query, type } = req.query;
 
-    console.log(`Search Query: ${query}, Type: ${type}`)
+    console.log(`Search Query: ${query}, Type: ${type}`);
 
     ////
-    let page = parseInt(req.query.page) || 1
-    let limit = parseInt(req.query.limit) || 5
-    let skip = (page - 1) * limit
+    let page = parseInt(req.query.page) || 1;
+    let limit = parseInt(req.query.limit) || 5;
+    let skip = (page - 1) * limit;
 
     console.log(`page is ${page} and limt is ${limit}`);
 
     ///
 
-    let searchQuery = {}
+    let searchQuery = {};
     if (type == "category") {
       searchQuery = {
         categoryName: { $regex: query, $options: "i" },
-      }
+      };
     } else if (type == "users") {
       searchQuery = {
         $or: [
           { name: { $regex: query, $options: "i" } },
           { email: { $regex: query, $options: "i" } },
         ],
-      }
+      };
     } else {
-      return res.status(400).json({ error: "Invalid search type" })
+      return res.status(400).json({ error: "Invalid search type" });
     }
 
     //finding results
     if (type === "products") {
-      let products = await Product.find(searchQuery).sort({
-        createdAt: -1,
-      }).skip(skip)
-        .limit(limit)
+      let products = await Product.find(searchQuery)
+        .sort({
+          createdAt: -1,
+        })
+        .skip(skip)
+        .limit(limit);
 
-      const totalProducts = await Product.countDocuments(searchQuery)
-      const totalPages = Math.ceil(totalProducts / limit)
+      const totalProducts = await Product.countDocuments(searchQuery);
+      const totalPages = Math.ceil(totalProducts / limit);
 
       res.render("admin/productManagement", {
         title: "Product Management",
@@ -128,10 +126,10 @@ const searchProducts = async (req, res) => {
         products,
         successMessage: res.locals.successMessage || "",
         errorMessage: res.locals.errorMessage || "",
-      })
+      });
     } else if (type === "categories") {
-      const totalCategory = await Category.countDocuments(searchQuery)
-      const totalPages = Math.ceil(totalCategory / limit)
+      const totalCategory = await Category.countDocuments(searchQuery);
+      const totalPages = Math.ceil(totalCategory / limit);
 
       let categories = await Category.find(searchQuery);
       res.render("../views/admin/categoryManagement", {
@@ -143,229 +141,233 @@ const searchProducts = async (req, res) => {
         successMessage: res.locals.successMessage[0] || "",
         errorMessage: res.locals.errorMessage[0] || "",
       });
-
     } else if (type === "users") {
-      let users = await User.find(searchQuery).skip(skip)
-        .limit(limit);
-      const totalUsers = await User.countDocuments(searchQuery)
-      const totalPages = totalUsers / limit
+      let users = await User.find(searchQuery).skip(skip).limit(limit);
+      const totalUsers = await User.countDocuments(searchQuery);
+      const totalPages = totalUsers / limit;
 
-      res.render('../views/admin/userManagement',
-        {
-          users, title: "User Management",
-          totalPages,
-          currentPage: page || 1,
+      res.render("../views/admin/userManagement", {
+        users,
+        title: "User Management",
+        totalPages,
+        currentPage: page || 1,
 
-          successMessage: res.locals.successMessage || '',
-          errorMessage: res.locals.errorMessage || ''
-        })
+        successMessage: res.locals.successMessage || "",
+        errorMessage: res.locals.errorMessage || "",
+      });
     }
-
-
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch products" });
-    console.log(error + 'error');
-
+    console.log(error + "error");
   }
 };
 
 //admin get order page
 
-
 const getOrder = async (req, res) => {
-
-  console.log('from admin get order page');
+  console.log("from admin get order page");
   try {
     //dummy datas
     const adminUser = {
-      name: 'Admin User',
-      role: 'Administrator',
-      profileImage: '/images/admin-avatar.jpg'
+      name: "Admin User",
+      role: "Administrator",
+      profileImage: "/images/admin-avatar.jpg",
     };
     const filter = {
-      status: 'all',
-      date: '',
-      search: ''
+      status: "all",
+      date: "",
+      search: "",
     };
-    let page = parseInt(req.query.page) || 1
-    limit = parseInt(req.query.limit) || 5
-    let skip = (page - 1) * limit
+    let page = parseInt(req.query.page) || 1;
+    limit = parseInt(req.query.limit) || 5;
+    let skip = (page - 1) * limit;
     console.log(`page is ${page} and limt is ${limit}`);
 
-    const totalOrders = await Order.countDocuments()
-    const totalPages = Math.ceil(totalOrders / limit)
+    const totalOrders = await Order.countDocuments();
+    const totalPages = Math.ceil(totalOrders / limit);
 
-
-
-    const orders = await Order.find().populate('userId').sort({ createdAt: -1 }).skip(skip).limit(limit)
-    const activeOrders = await Order.find({ status: { $nin: ['cancelled', 'returned'] } })
+    const orders = await Order.find()
+      .populate("userId")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+    const activeOrders = await Order.find({
+      status: { $nin: ["cancelled", "returned"] },
+    });
     for (const order of activeOrders) {
       if (order.deliveryDate <= new Date()) {
-        order.status = 'Delivered';
+        order.status = "Delivered";
         await order.save();
       }
     }
 
+    console.log("activeOrders ", activeOrders);
 
-    console.log('activeOrders ', activeOrders);
-
-    console.log('orders are ', orders);
-    return res.render('admin/orders', {
+    console.log("orders are ", orders);
+    return res.render("admin/orders", {
       title: "Admin Orders",
       adminUser,
       filter,
       orders,
       currentPage: page,
 
-      totalPages
-    })
+      totalPages,
+    });
   } catch (error) {
-    console.log('error in fetching orders', error);
-    res.json({ success: false, message: "Order fetching failed" })
+    console.log("error in fetching orders", error);
+    res.json({ success: false, message: "Order fetching failed" });
   }
-}
+};
 
 //get order details
 
 const getOrderDetails = async (req, res) => {
-  console.log('from admin get order details');
-  const orderId = req.params.orderId
-  const order = await Order.findOne({ _id: orderId }).populate('items.productId')
+  console.log("from admin get order details");
+  const orderId = req.params.orderId;
+  const order = await Order.findOne({ _id: orderId }).populate(
+    "items.productId",
+  );
   if (!order) {
-    console.log('order not found');
-    res.json({ success: false, message: "Order not found" })
+    console.log("order not found");
+    res.json({ success: false, message: "Order not found" });
   }
-  const userId = order.userId
-  console.log('user Id is ', userId);
+  const userId = order.userId;
+  console.log("user Id is ", userId);
 
-  const user = await User.findOne({ _id: userId })
+  const user = await User.findOne({ _id: userId });
   if (!user) {
-    console.log('user not found');
-    res.json({ success: false, message: "User not found" })
+    console.log("user not found");
+    res.json({ success: false, message: "User not found" });
   }
-  res.render('admin/adminViewOrder', {
+  res.render("admin/adminViewOrder", {
     user,
     order,
-
-  })
-
-}
+  });
+};
 
 //get ipdate order
 const getUpdateOrder = async (req, res) => {
-  console.log('from admin order update route');
+  console.log("from admin order update route");
   try {
-    const orderId = req.params.orderId
-    const order = await Order.findOne({ _id: orderId }).populate('items.productId')
+    const orderId = req.params.orderId;
+    const order = await Order.findOne({ _id: orderId }).populate(
+      "items.productId",
+    );
     if (!order) {
-      console.log('order not found');
-      res.json({ success: false, message: "Order not found" })
+      console.log("order not found");
+      res.json({ success: false, message: "Order not found" });
     }
 
-
-    res.render('admin/adminEditOrder', {
+    res.render("admin/adminEditOrder", {
       order,
-
-    })
+    });
   } catch (error) {
     console.log(error);
-    res.json({ success: false, message: "Order not found" })
+    res.json({ success: false, message: "Order not found" });
   }
-}
+};
 
 //post update user
 const postUpdateOrder = async (req, res) => {
-  console.log('from post update order');
-  const formObject = req.body
-  const orderId = formObject.orderId
-  const order = await Order.findOne({ _id: orderId })
+  console.log("from post update order");
+  const formObject = req.body;
+  const orderId = formObject.orderId;
+  const order = await Order.findOne({ _id: orderId });
   if (!order) {
-    console.log('order not found');
-    return res.json({ success: false, message: "Order not found" })
+    console.log("order not found");
+    return res.json({ success: false, message: "Order not found" });
   }
-  order.status = formObject.status
-  await order.save()
+  order.status = formObject.status;
+  await order.save();
   console.log("order staus updated succesfully");
-  return res.json({ success: true, message: "order staus updated succesfully" })
-
-}
+  return res.json({
+    success: true,
+    message: "order staus updated succesfully",
+  });
+};
 
 //admin delete order
 const deleteOrder = async (req, res) => {
-  console.log('from admin order delete route');
+  console.log("from admin order delete route");
 
   try {
-    const orderId = req.params.orderId
+    const orderId = req.params.orderId;
     if (!orderId) {
-      console.log('Order id is not found');
+      console.log("Order id is not found");
 
-      return res.json({ success: false, message: "Order id is not found" })
+      return res.json({ success: false, message: "Order id is not found" });
     }
-    const order = await Order.findOne({ _id: orderId }).populate('items.productId')
+    const order = await Order.findOne({ _id: orderId }).populate(
+      "items.productId",
+    );
 
     if (!order) {
-      console.log('order not found');
+      console.log("order not found");
 
-      return res.json({ success: false, message: "order not found" })
+      return res.json({ success: false, message: "order not found" });
     }
-    if (order.status == 'cancelled') {
-      console.log('order already cancelled');
+    if (order.status == "cancelled") {
+      console.log("order already cancelled");
 
-      return res.json({ success: false, message: "order already cancelled" })
+      return res.json({ success: false, message: "order already cancelled" });
     }
-    order.status = 'cancelled'
-    await order.save()
+    order.status = "cancelled";
+    await order.save();
 
     console.log("order cancelled successfully");
 
     //restore the stock
 
     for (item of order.items) {
-      const product = await Product.findById(item.productId)
-      console.log(`before restoring ${product.productName} is ${product.stock}`);
+      const product = await Product.findById(item.productId);
+      console.log(
+        `before restoring ${product.productName} is ${product.stock}`,
+      );
 
-      product.stock = product.stock + item.quantity
-      await product.save()
+      product.stock = product.stock + item.quantity;
+      await product.save();
       console.log(`after restoring ${product.productName} is ${product.stock}`);
-
     }
 
-    return res.json({ success: true, message: "order cancelled successfully" })
+    return res.json({ success: true, message: "order cancelled successfully" });
   } catch (error) {
     console.log("error in fetching order");
-    return res.json({ success: false, message: "error in fetching order" })
+    return res.json({ success: false, message: "error in fetching order" });
   }
-}
+};
 
 //admin logout
 const postLogout = async (req, res) => {
-  console.log('from admin logout route');
+  console.log("from admin logout route");
   req.session.admin = null;
-  console.log('admin in session is ', req.session.admin);
-  return res.json({ success: true, message: "Admin logouted successfully" })
-}
+  console.log("admin in session is ", req.session.admin);
+  return res.json({ success: true, message: "Admin logouted successfully" });
+};
 
 //coupen management
 const getCoupenPage = async (req, res) => {
   //console.log('this is from admin coupens');
 
   try {
-    const page = parseInt(req.query.page) || 1
-    const limit = parseInt(req.query.limit) || 5
-    const skip = (page - 1) * limit
-    const coupons = await Coupen.find().sort({ createdAt: -1 }).skip(skip).limit(limit)
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 5;
+    const skip = (page - 1) * limit;
+    const coupons = await Coupen.find()
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
     //console.log(page, limit, skip, coupons);
 
     if (!coupons) {
-      console.log('No coupens');
+      console.log("No coupens");
 
-      return res.json({ success: false, message: "Coupens not found" })
+      return res.json({ success: false, message: "Coupens not found" });
     }
-    const activeCouponsCount = await Coupen.countDocuments({ isActive: true })
-    const totalCoupons = await Coupen.countDocuments()
-    const totalPages = Math.floor(totalCoupons / limit)
+    const activeCouponsCount = await Coupen.countDocuments({ isActive: true });
+    const totalCoupons = await Coupen.countDocuments();
+    const totalPages = Math.floor(totalCoupons / limit);
 
-    const currentDate = new Date()
+    const currentDate = new Date();
 
     for (const coupon of coupons) {
       if (coupon.expiryDate < currentDate) {
@@ -374,9 +376,8 @@ const getCoupenPage = async (req, res) => {
       }
     }
 
-
-    res.render('admin/coupenManagement', {
-      title: 'Admin Coupon Management',
+    res.render("admin/coupenManagement", {
+      title: "Admin Coupon Management",
       coupons,
       activeCouponsCount,
       totalRedemptions: 10,
@@ -385,25 +386,45 @@ const getCoupenPage = async (req, res) => {
       currentPage: page,
       skip,
       limit,
-      totalPages
-    })
+      totalPages,
+    });
   } catch (error) {
-    console.log('Error in fetching coupens');
-    return res.json({ success: false, message: "Error in fetching coupens" })
+    console.log("Error in fetching coupens");
+    return res.json({ success: false, message: "Error in fetching coupens" });
   }
-}
+};
 
 //add coupon
 const addCoupen = async (req, res) => {
-  console.log('from add coupen');
+  console.log("from add coupen");
   try {
-    let { coupenCode, description, discountType, discountValue, endDate, minOrder, startDate, isActive, usageLimit } = req.body
-    console.log(coupenCode, description, discountType, discountValue, endDate, minOrder, startDate, isActive, usageLimit);
-    const coupen = await Coupen.findOne({ coupenCode: coupenCode })
+    let {
+      coupenCode,
+      description,
+      discountType,
+      discountValue,
+      endDate,
+      minOrder,
+      startDate,
+      isActive,
+      usageLimit,
+    } = req.body;
+    console.log(
+      coupenCode,
+      description,
+      discountType,
+      discountValue,
+      endDate,
+      minOrder,
+      startDate,
+      isActive,
+      usageLimit,
+    );
+    const coupen = await Coupen.findOne({ coupenCode: coupenCode });
     if (coupen) {
-      console.log('Coupen alredy Exists');
+      console.log("Coupen alredy Exists");
 
-      return res.json({ success: false, message: "Coupen already exist" })
+      return res.json({ success: false, message: "Coupen already exist" });
     }
 
     const newCoupen = new Coupen({
@@ -417,166 +438,188 @@ const addCoupen = async (req, res) => {
       isActive: isActive ? true : false,
       usageLimit,
 
-      createdAt: new Date()
-    })
-    await newCoupen.save()
-    console.log('Coupen saved successfully');
+      createdAt: new Date(),
+    });
+    await newCoupen.save();
+    console.log("Coupen saved successfully");
 
-    return res.json({ success: true, message: "Coupen created Successfully" })
+    return res.json({ success: true, message: "Coupen created Successfully" });
   } catch (error) {
-    console.log('error is ', error);
-    return res.json({ success: false, message: "Error in adding coupen" })
+    console.log("error is ", error);
+    return res.json({ success: false, message: "Error in adding coupen" });
   }
-
-}
+};
 
 //editCoupon
 const editCoupen = async (req, res) => {
-  console.log('from edit coupen');
+  console.log("from edit coupen");
   try {
-    const couponId = req.params.couponId
+    const couponId = req.params.couponId;
     console.log("coupen id is ", couponId);
-    let { coupenCode, description, discountType, discountValue, endDate, minOrder, startDate, isActive, usageLimit } = req.body
-    const coupen = await Coupen.findOne({ _id: couponId })
+    let {
+      coupenCode,
+      description,
+      discountType,
+      discountValue,
+      endDate,
+      minOrder,
+      startDate,
+      isActive,
+      usageLimit,
+    } = req.body;
+    const coupen = await Coupen.findOne({ _id: couponId });
     if (!coupen) {
-      return res.json({ success: false, message: "Coupen not found" })
+      return res.json({ success: false, message: "Coupen not found" });
     }
-    coupen.coupenCode = coupenCode,
-      coupen.description = description,
-      coupen.discountType = discountType,
-      coupen.discountValue = discountValue,
-      coupen.expiryDate = endDate,
-      coupen.minPurchase = minOrder,
-      coupen.startDate = startDate,
-      coupen.isActive = isActive,
-      coupen.usageLimit = usageLimit,
-      coupen.updatedAt = new Date(),
-      await coupen.save()
-    console.log('couped editted successfully');
+    (coupen.coupenCode = coupenCode),
+      (coupen.description = description),
+      (coupen.discountType = discountType),
+      (coupen.discountValue = discountValue),
+      (coupen.expiryDate = endDate),
+      (coupen.minPurchase = minOrder),
+      (coupen.startDate = startDate),
+      (coupen.isActive = isActive),
+      (coupen.usageLimit = usageLimit),
+      (coupen.updatedAt = new Date()),
+      await coupen.save();
+    console.log("couped editted successfully");
 
-    return res.json({ success: true, message: "Coupen edited successfully" })
+    return res.json({ success: true, message: "Coupen edited successfully" });
   } catch (error) {
-    console.log('error is ', error);
-    return res.json({ success: false, message: "Error in fetching coupen" })
+    console.log("error is ", error);
+    return res.json({ success: false, message: "Error in fetching coupen" });
   }
-}
+};
 
 //getCouponData
 const getCouponData = async (req, res) => {
   try {
-    console.log('getCouponData');
+    console.log("getCouponData");
 
-    const coupenId = req.params.coupenId
+    const coupenId = req.params.coupenId;
     if (!coupenId) {
-      console.log('coupen id is not present');
-      return res.json({ success: false, message: "coupen id is not seen" })
+      console.log("coupen id is not present");
+      return res.json({ success: false, message: "coupen id is not seen" });
     }
 
-    const coupon = await Coupen.findOne({ _id: coupenId })
+    const coupon = await Coupen.findOne({ _id: coupenId });
     if (!coupon) {
-      console.log('coupen  is not present');
-      return res.json({ success: false, message: "coupen  is not seen" })
+      console.log("coupen  is not present");
+      return res.json({ success: false, message: "coupen  is not seen" });
     }
-    return res.json({ success: true, coupon })
-
+    return res.json({ success: true, coupon });
   } catch (error) {
-    console.log('Error in fetching coupen');
-    return res.json({ success: false, message: "Error in fetching coupen" })
+    console.log("Error in fetching coupen");
+    return res.json({ success: false, message: "Error in fetching coupen" });
   }
-}
+};
 
 //removeCoupon
 const removeCoupon = async (req, res) => {
-  console.log('removeCoupon');
+  console.log("removeCoupon");
   try {
-    const couponId = req.params.couponId
+    const couponId = req.params.couponId;
     const coupon = await Coupen.findByIdAndUpdate(
       couponId,
       { $set: { isActive: false } },
-      { new: true } // optional: returns the updated document
+      { new: true }, // optional: returns the updated document
     );
-    await coupon.save()
-    console.log('Coupen removed suucesfully');
-    return res.json({ success: false, message: "Coupen removed  suuccessfully" })
+    await coupon.save();
+    console.log("Coupen removed suucesfully");
+    return res.json({
+      success: false,
+      message: "Coupen removed  suuccessfully",
+    });
   } catch (error) {
-    console.log('error is ', error);
-    return res.json({ success: false, message: 'Server error' })
+    console.log("error is ", error);
+    return res.json({ success: false, message: "Server error" });
   }
-
-}
+};
 
 //applyCoupon
 const applyCoupon = async (req, res) => {
-  console.log('applyCoupon');
+  console.log("applyCoupon");
   try {
-    const couponId = req.params.couponId
+    const couponId = req.params.couponId;
     const coupon = await Coupen.findByIdAndUpdate(
       couponId,
       { $set: { isActive: true } },
-      { new: true } // optional: returns the updated document
+      { new: true }, // optional: returns the updated document
     );
-    await coupon.save()
-    console.log('Coupen Applied suucesfully');
-    return res.json({ success: false, message: "Coupen Applied  suuccessfully" })
+    await coupon.save();
+    console.log("Coupen Applied suucesfully");
+    return res.json({
+      success: false,
+      message: "Coupen Applied  suuccessfully",
+    });
   } catch (error) {
-    console.log('error is ', error);
-    return res.json({ success: false, message: 'Server error' })
+    console.log("error is ", error);
+    return res.json({ success: false, message: "Server error" });
   }
-
-}
+};
 
 //get offers
 const getOffers = async (req, res) => {
-
   try {
-
-    let date = new Date()
-    const totalOffers = await Offer.countDocuments()
-    const pendingOffers = await Offer.countDocuments({ status: 'pending' })
-    const activeOffers = await Offer.countDocuments({ status: 'active' })
-    const expiredOffers = await Offer.countDocuments({ endDate: { $lt: date } })
+    let date = new Date();
+    const totalOffers = await Offer.countDocuments();
+    const pendingOffers = await Offer.countDocuments({ status: "pending" });
+    const activeOffers = await Offer.countDocuments({ status: "active" });
+    const expiredOffers = await Offer.countDocuments({
+      endDate: { $lt: date },
+    });
     const stats = {
       totalOffers,
       activeOffers,
       pendingOffers,
-      expiredOffers
+      expiredOffers,
     };
 
-    const page = parseInt(req.query.page) || 1
-    const limit = parseInt(req.query.limit) || 5
-    const skip = (page - 1) * limit
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 5;
+    const skip = (page - 1) * limit;
 
+    const totalPages = Math.ceil(totalOffers / limit);
 
-    const totalPages = Math.ceil(totalOffers / limit)
+    const products = await Product.find({ isDeleted: false });
+    const categories = await Category.find({ isDeleted: false });
+    const offers = await Offer.find()
+      .sort({ startDate: -1 })
+      .skip(skip)
+      .limit(limit);
 
-    const products = await Product.find({ isDeleted: false })
-    const categories = await Category.find({ isDeleted: false })
-    const offers = await Offer.find().sort({ startDate: -1 }).skip(skip).limit(limit)
-
-    console.log('from admin offer');
-    const refferalOffers = await RefferalOffer.find().sort({ startDate: -1 })
+    console.log("from admin offer");
+    const refferalOffers = await RefferalOffer.find().sort({ startDate: -1 });
 
     for (let offer of offers) {
       if (offer.endDate < date) {
-        offer.status = 'expired'
-        await offer.save()
+        offer.status = "expired";
+        await offer.save();
       }
     }
 
- const populatedOffers = await Promise.all(
+    const populatedOffers = await Promise.all(
       offers.map(async (offer) => {
-        if (offer.applicableTo === 'product' && offer.productId) {
-          const product = await Product.findById(offer.productId).select('productName');
-          offer.applicableName = product ? product.productName : 'Unknown Product';
-        } else if (offer.applicableTo === 'category' && offer.categoryId) {
-          const category = await Category.findById(offer.categoryId).select('categoryName');
-          offer.applicableName = category ? category.categoryName : 'Unknown Category';
+        if (offer.applicableTo === "product" && offer.productId) {
+          const product = await Product.findById(offer.productId).select(
+            "productName",
+          );
+          offer.applicableName = product
+            ? product.productName
+            : "Unknown Product";
+        } else if (offer.applicableTo === "category" && offer.categoryId) {
+          const category = await Category.findById(offer.categoryId).select(
+            "categoryName",
+          );
+          offer.applicableName = category
+            ? category.categoryName
+            : "Unknown Category";
         }
         return offer;
-      })
+      }),
     );
 
-    res.render('admin/offerManagement', {
+    res.render("admin/offerManagement", {
       title: "Offer Management",
       currentPage: page || 1,
       limit,
@@ -586,25 +629,28 @@ const getOffers = async (req, res) => {
       populatedOffers,
       stats,
       refferalOffers,
-      offers, products, categories
-    })
+      offers,
+      products,
+      categories,
+    });
   } catch (error) {
-    console.log('error is ', error);
-    return res.json({ success: false, message: 'Server Error' })
+    console.log("error is ", error);
+    return res.json({ success: false, message: "Server Error" });
   }
-}
+};
 
 //add offer
 const addOffer = async (req, res) => {
-  console.log('from admin add offer');
+  console.log("from admin add offer");
   try {
-    const formObject = req.body
-    console.log('form Object ', formObject);
+    const formObject = req.body;
+    console.log("form Object ", formObject);
 
     const offer = new Offer({
       offerName: formObject.offerName,
       description: formObject.offerDesc,
-      discountType: formObject.discountType == 'percentage' ? 'percentage' : 'amount',
+      discountType:
+        formObject.discountType == "percentage" ? "percentage" : "amount",
       discountValue: formObject.discountValue,
       startDate: formObject.startDate,
       endDate: formObject.endDate,
@@ -612,110 +658,127 @@ const addOffer = async (req, res) => {
       productId: formObject.productId || null,
       categoryId: formObject.categoryId || null,
       applicableTo: formObject.offerOn,
-      createdAt: new Date()
-    })
+      createdAt: new Date(),
+    });
 
-    await offer.save()
-    return res.json({ success: false, message: "Offer Created successfully" })
+    await offer.save();
+    return res.json({ success: false, message: "Offer Created successfully" });
   } catch (error) {
-    console.log('error is ', error);
-    return res.json({ success: false, message: "Error in Making offer" })
+    console.log("error is ", error);
+    return res.json({ success: false, message: "Error in Making offer" });
   }
-}
+};
 
 const deleteOffer = async (req, res) => {
-  console.log('from delete offer');
+  console.log("from delete offer");
   try {
-    const offerId = req.params.offerId
+    const offerId = req.params.offerId;
     if (!offerId) {
-      console.log('Offer id not found');
-      return res.json({ success: false, message: "Offer id is missing" })
+      console.log("Offer id not found");
+      return res.json({ success: false, message: "Offer id is missing" });
     }
-    const offer = await Offer.findOne({ _id: offerId })
+    const offer = await Offer.findOne({ _id: offerId });
     if (!offer) {
-      console.log('Offer not found');
-      return res.json({ success: false, message: "Offer is not found" })
+      console.log("Offer not found");
+      return res.json({ success: false, message: "Offer is not found" });
     }
 
-    offer.status = 'inactive'
-    await offer.save()
-    return res.json({ success: true, message: "Offer deleted successfully" })
+    offer.status = "inactive";
+    await offer.save();
+    return res.json({ success: true, message: "Offer deleted successfully" });
   } catch (error) {
-    console.log('error is ', error);
-    return res.json({ success: false, message: "server Error" })
+    console.log("error is ", error);
+    return res.json({ success: false, message: "server Error" });
   }
-}
+};
 
 const getSingleOffer = async (req, res) => {
-  console.log('from admin getSingleOffer');
+  console.log("from admin getSingleOffer");
   try {
-    const offerId = req.params.offerId
+    const offerId = req.params.offerId;
 
-    console.log('offerId ', offerId);
+    console.log("offerId ", offerId);
 
     if (!offerId) {
       console.log("offer Id not found");
-      return res.json({ success: false, message: "offerId not found" })
+      return res.json({ success: false, message: "offerId not found" });
     }
-    const offer = await Offer.findOne({ _id: offerId })
+    const offer = await Offer.findOne({ _id: offerId });
     if (!offer) {
       console.log("offer not found");
-      return res.json({ success: false, message: "offer not found" })
+      return res.json({ success: false, message: "offer not found" });
     }
-    return res.json({ success: true, offer, message: "offer found" })
+    return res.json({ success: true, offer, message: "offer found" });
   } catch (error) {
-    console.log('errr in finding getSingleOffer');
-    return res.json({ success: false, message: "Error in finding offer" })
+    console.log("errr in finding getSingleOffer");
+    return res.json({ success: false, message: "Error in finding offer" });
   }
-}
+};
 
 const editOffer = async (req, res) => {
-  console.log('from editOffer');
+  console.log("from editOffer");
   try {
-    let offerId = req.params.offerId
-    console.log('offerId', offerId);
+    let offerId = req.params.offerId;
+    console.log("offerId", offerId);
 
     if (!offerId) {
-      console.log('Offerid not found');
-      return res.json({ success: false, success: "Offer id is not found" })
+      console.log("Offerid not found");
+      return res.json({ success: false, success: "Offer id is not found" });
     }
-    const offer = await Offer.findOne({ _id: offerId })
+    const offer = await Offer.findOne({ _id: offerId });
     if (!offer) {
-      console.log('Offer not found');
-      return res.json({ success: false, success: "Offer  is not found" })
+      console.log("Offer not found");
+      return res.json({ success: false, success: "Offer  is not found" });
     }
-    const { offerName, offerDesc, discountType, discountValue, startDate, endDate, status, productId, categoryId, offerOn } = req.body
+    const {
+      offerName,
+      offerDesc,
+      discountType,
+      discountValue,
+      startDate,
+      endDate,
+      status,
+      productId,
+      categoryId,
+      offerOn,
+    } = req.body;
 
-    offer.offerName = offerName || offer.offerName
-    offer.description = offerDesc || offer.description,
-      offer.discountType = discountType == 'percentage' ? 'percentage' : 'amount',
-      offer.discountValue = discountValue || offer.discountValue,
-      offer.startDate = startDate || offer.startDate,
-      offer.endDate = endDate || offer.endDate,
-      offer.status = status || offer.status,
-      offer.productId = productId || offer.productId,
-      offer.categoryId = categoryId || offer.categoryId,
-      offer.applicableTo = offerOn || offer.applicableTo,
-      offer.updatedAt = new Date()
+    offer.offerName = offerName || offer.offerName;
+    (offer.description = offerDesc || offer.description),
+      (offer.discountType =
+        discountType == "percentage" ? "percentage" : "amount"),
+      (offer.discountValue = discountValue || offer.discountValue),
+      (offer.startDate = startDate || offer.startDate),
+      (offer.endDate = endDate || offer.endDate),
+      (offer.status = status || offer.status),
+      (offer.productId = productId || offer.productId),
+      (offer.categoryId = categoryId || offer.categoryId),
+      (offer.applicableTo = offerOn || offer.applicableTo),
+      (offer.updatedAt = new Date());
 
-    await offer.save()
-    return res.json({ success: true, message: "offer Edited Successfully" })
+    await offer.save();
+    return res.json({ success: true, message: "offer Edited Successfully" });
   } catch (error) {
-    console.log('error ', error);
-    return res.json({ success: false, message: "Server error" })
+    console.log("error ", error);
+    return res.json({ success: false, message: "Server error" });
   }
-}
+};
 
 const addrefferalOffer = async (req, res, next) => {
-  console.log('from addrefferalOffer');
+  console.log("from addrefferalOffer");
   try {
-    const bonusAmount = req.body.bonusAmount
-    const minOrderAmount = req.body.minOrderAmount
-    const rewardType = req.body.rewardType
-    const status = req.body.status == 'enabled' ? 'active' : 'inactive'
-    if (status == '' || rewardType == '' || minOrderAmount == '' || bonusAmount == '') {
+    const bonusAmount = req.body.bonusAmount;
+    const minOrderAmount = req.body.minOrderAmount;
+    const rewardType = req.body.rewardType;
+    const status = req.body.status == "enabled" ? "active" : "inactive";
+    if (
+      status == "" ||
+      rewardType == "" ||
+      minOrderAmount == "" ||
+      bonusAmount == ""
+    ) {
       console.log("all field are required");
-      throw new Error('All fields are required')
+      throw new Error("All fields are required");
     }
 
     const offer = new RefferalOffer({
@@ -723,135 +786,154 @@ const addrefferalOffer = async (req, res, next) => {
       rewardType,
       minOrderAmount,
       status,
-      isActive: status == 'enabled' ? true : false,
-      createAt: new Date()
-    })
-    await offer.save()
-    return res.json({ success: true, message: "Refferal offer created successfully" })
+      isActive: status == "enabled" ? true : false,
+      createAt: new Date(),
+    });
+    await offer.save();
+    return res.json({
+      success: true,
+      message: "Refferal offer created successfully",
+    });
   } catch (error) {
-    console.log('error is ', error);
-    next(error)
+    console.log("error is ", error);
+    next(error);
   }
-}
+};
 
 const referalOffers = async (req, res) => {
-  console.log('referalOffers');
-  let date = new Date()
-  const totalOffers = await Offer.countDocuments()
-  const pendingOffers = await Offer.countDocuments({ status: 'pending' })
-  const activeOffers = await Offer.countDocuments({ status: 'active' })
-  const expiredOffers = await Offer.countDocuments({ endDate: { $lt: date } })
+  console.log("referalOffers");
+  let date = new Date();
+  const totalOffers = await Offer.countDocuments();
+  const pendingOffers = await Offer.countDocuments({ status: "pending" });
+  const activeOffers = await Offer.countDocuments({ status: "active" });
+  const expiredOffers = await Offer.countDocuments({ endDate: { $lt: date } });
   const stats = {
     totalOffers,
     activeOffers,
     pendingOffers,
-    expiredOffers
+    expiredOffers,
   };
   try {
-    const offers = await RefferalOffer.find().sort({ createdAt: -1 })
+    const offers = await RefferalOffer.find().sort({ createdAt: -1 });
 
-    res.render('admin/referalOffer', {
+    res.render("admin/referalOffer", {
       offers,
       stats,
-      title: "Offer Management"
-    })
+      title: "Offer Management",
+    });
   } catch (error) {
-    console.log('error is', error);
-    res.json({ success: false, message: "error in fetching orders" })
+    console.log("error is", error);
+    res.json({ success: false, message: "error in fetching orders" });
   }
-}
+};
 
 const deleteReferalOffers = async (req, res, next) => {
-  console.log('deleteReferalOffers');
+  console.log("deleteReferalOffers");
   try {
-    const offerId = req.params.offerId
+    const offerId = req.params.offerId;
     if (!offerId) {
-      console.log('offer id is not found');
-      throw new Error("Offer id is not found")
+      console.log("offer id is not found");
+      throw new Error("Offer id is not found");
     }
 
-    const offer = await RefferalOffer.findOne({ _id: offerId })
+    const offer = await RefferalOffer.findOne({ _id: offerId });
     if (!offer) {
-      console.log('offer  not found');
-      throw new Error("Offer not found")
+      console.log("offer  not found");
+      throw new Error("Offer not found");
     }
-    offer.status = 'inactive'
-    await offer.save()
-    return res.json({ success: false, message: "Offer deleted successfully" })
+    offer.status = "inactive";
+    await offer.save();
+    return res.json({ success: false, message: "Offer deleted successfully" });
   } catch (error) {
-    console.log('error', error);
-    next(error)
+    console.log("error", error);
+    next(error);
   }
-}
+};
 
 const getSinglerefferal = async (req, res, next) => {
   try {
-    console.log('getSinglerefferal');
+    console.log("getSinglerefferal");
 
-    const offerId = req.params.offerId
-    console.log('offer id ', offerId);
+    const offerId = req.params.offerId;
+    console.log("offer id ", offerId);
 
     if (!offerId) {
-      throw new Error("Offer id is not found")
+      throw new Error("Offer id is not found");
     }
-    const offer = await RefferalOffer.findOne({ _id: offerId })
-    console.log('offer ', offer);
+    const offer = await RefferalOffer.findOne({ _id: offerId });
+    console.log("offer ", offer);
 
     if (!offer) {
-      throw new Error("Offer is not found")
+      throw new Error("Offer is not found");
     }
-    return res.json({ success: true, message: "Offer founduccessfully", offer })
+    return res.json({
+      success: true,
+      message: "Offer founduccessfully",
+      offer,
+    });
   } catch (error) {
-    console.log('error is ', error);
+    console.log("error is ", error);
 
-    next(error)
+    next(error);
   }
-}
+};
 
 const editReffferalOffer = async (req, res, next) => {
-  console.log('editReffferalOffer');
+  console.log("editReffferalOffer");
   try {
-    const { bonusAmount, minOrderAmount, rewardType, status } = req.body
-    const offerId = req.params.offerId
-    console.log('offerId,bonusAmount,minOrderAmount,rewardType,status', offerId, bonusAmount, minOrderAmount, rewardType, status);
+    const { bonusAmount, minOrderAmount, rewardType, status } = req.body;
+    const offerId = req.params.offerId;
+    console.log(
+      "offerId,bonusAmount,minOrderAmount,rewardType,status",
+      offerId,
+      bonusAmount,
+      minOrderAmount,
+      rewardType,
+      status,
+    );
     if (!offerId) {
-      console.log('offer id is not fount');
-      throw new Error("Offer Id is not found")
+      console.log("offer id is not fount");
+      throw new Error("Offer Id is not found");
     }
-    const offer = await RefferalOffer.findOne({ _id: offerId })
+    const offer = await RefferalOffer.findOne({ _id: offerId });
     if (!offer) {
       console.log("Offer not fount");
-      throw new Error("Offer not found")
+      throw new Error("Offer not found");
     }
-    offer.bonusAmount = bonusAmount
-    offer.minOrderAmount = minOrderAmount
-    offer.rewardType = rewardType
-    offer.status = status == 'enabled' ? 'active' : "inactive"
-    offer.isActive = status == 'enabled' ? true : false
-    await offer.save()
+    offer.bonusAmount = bonusAmount;
+    offer.minOrderAmount = minOrderAmount;
+    offer.rewardType = rewardType;
+    offer.status = status == "enabled" ? "active" : "inactive";
+    offer.isActive = status == "enabled" ? true : false;
+    await offer.save();
 
-    return res.json({ success: true, message: "Offer edited successfully" })
+    return res.json({ success: true, message: "Offer edited successfully" });
   } catch (error) {
-    console.log('error is ', error);
+    console.log("error is ", error);
 
-    next(error)
+    next(error);
   }
-}
+};
 
 const getPendings = async (req, res, next) => {
   try {
-
-    const orders = await Order.find({ returnRequests: { $exists: true, $ne: [] } });
+    const orders = await Order.find({
+      returnRequests: { $exists: true, $ne: [] },
+    });
     //console.log('orders ', orders);
 
     //fetching return requests
-    const returnRequests = []
-    const products = await Product.find()
-    const users = await User.find()
-    orders.forEach(order => {
-      order.returnRequests.forEach(request => {
-        const product = products.find(product => product._id.toString() == request.productId?.toString())
-        const user = users.find(user => user._id.toString() == order.userId?.toString())
+    const returnRequests = [];
+    const products = await Product.find();
+    const users = await User.find();
+    orders.forEach((order) => {
+      order.returnRequests.forEach((request) => {
+        const product = products.find(
+          (product) => product._id.toString() == request.productId?.toString(),
+        );
+        const user = users.find(
+          (user) => user._id.toString() == order.userId?.toString(),
+        );
         returnRequests.push({
           userId: order.userId,
           productId: request.productId,
@@ -859,29 +941,28 @@ const getPendings = async (req, res, next) => {
           requestedDate: request.date,
           orderId: order._id,
           status: request.status,
-          productName: product?.productName || '',
-          userEmail: user.email
-        })
-      })
-    })
+          productName: product?.productName || "",
+          userEmail: user.email,
+        });
+      });
+    });
 
     // console.log('requestedItems ', returnRequests);
 
-
-    res.render('admin/aprovalPage', {
+    res.render("admin/aprovalPage", {
       title: "Admin Approvals Management",
-      returnRequests
-    })
+      returnRequests,
+    });
   } catch (error) {
     console.log(error);
-    next(error)
+    next(error);
   }
-}
+};
 const approveReturn = async (req, res) => {
   try {
-    console.log('From approveReturn');
+    console.log("From approveReturn");
     const { orderId, productId } = req.body;
-    console.log('orderId, productId', orderId, productId);
+    console.log("orderId, productId", orderId, productId);
 
     if (!orderId || !productId) {
       throw new Error("Order ID or Product ID not found");
@@ -890,50 +971,53 @@ const approveReturn = async (req, res) => {
     const order = await Order.findOne({ _id: orderId });
     if (!order) throw new Error("Order not found");
 
-    const product = order.items.find(item => item.productId.toString() === productId.toString());
+    const product = order.items.find(
+      (item) => item.productId.toString() === productId.toString(),
+    );
     if (!product) throw new Error("Product not found in order items");
 
-    console.log('returning product is ', product);
+    console.log("returning product is ", product);
 
     // Update product status
-    product.status = 'returned';
+    product.status = "returned";
     product.isreturned = true;
-    order.markModified('items');
+    order.markModified("items");
 
     // If all products are returned, mark the whole order as returned
-    if (order.items.every(item => item.status === 'returned')) {
-      order.status = 'returned';
+    if (order.items.every((item) => item.status === "returned")) {
+      order.status = "returned";
     }
 
     // Approve the return request
-    const returnRequest = order.returnRequests.find(req =>
-      req.productId?.toString() === productId.toString()
+    const returnRequest = order.returnRequests.find(
+      (req) => req.productId?.toString() === productId.toString(),
     );
-    if (!returnRequest) throw new Error("Return request not found for this product");
+    if (!returnRequest)
+      throw new Error("Return request not found for this product");
 
     //console.log('returnrequest before save',returnRequest);
 
-    returnRequest.status = 'approved';
-    order.markModified('returnRequests')
-    console.log('Return approved');
+    returnRequest.status = "approved";
+    order.markModified("returnRequests");
+    console.log("Return approved");
 
     await order.save();
 
-    console.log('returnrequest after save', order.returnRequests)
+    console.log("returnrequest after save", order.returnRequests);
     // Restock product
     const quantity = product.quantity;
     const item = await Product.findOne({ _id: productId });
     if (!item) throw new Error("Product not found in database");
     item.stock += quantity;
     await item.save();
-    console.log('Product restocked');
+    console.log("Product restocked");
 
     // calculating refund amount
     let refundAmount = quantity * item.price;
     let actualRefundAmount = refundAmount;
 
     if (order.items.length === 1) {
-      console.log('Only one item in order.');
+      console.log("Only one item in order.");
 
       if (order.isOfferApplied) {
         refundAmount -= order.offerDiscountAmount;
@@ -948,19 +1032,23 @@ const approveReturn = async (req, res) => {
       order.finalAmount = 0;
       order.coupenDiscountAmount = 0;
       order.isCouponApplied = false;
-
     } else {
       //if offerapplied
       if (order.isOfferApplied) {
-        let returnlItem = order.items.find(item => item.productId.toString() == productId.toString())
-        console.log('returning item ', returnlItem);
+        let returnlItem = order.items.find(
+          (item) => item.productId.toString() == productId.toString(),
+        );
+        console.log("returning item ", returnlItem);
 
         if (returnlItem.offerApplied) {
-          order.offerDiscountAmount = Math.max(0, order.offerDiscountAmount - returnlItem.offerDiscount);
+          order.offerDiscountAmount = Math.max(
+            0,
+            order.offerDiscountAmount - returnlItem.offerDiscount,
+          );
           if (order.offerDiscountAmount == 0) {
-            order.isOfferApplied = false
+            order.isOfferApplied = false;
           }
-          refundAmount -= returnlItem.offerDiscount
+          refundAmount -= returnlItem.offerDiscount;
         }
       }
       // More than one item in the order
@@ -968,24 +1056,23 @@ const approveReturn = async (req, res) => {
         const code = order.couponCode;
         const coupon = await Coupen.findOne({ coupenCode: code });
 
-        if (coupon.minPurchase > (order.totalAmount - actualRefundAmount)) {
+        if (coupon.minPurchase > order.totalAmount - actualRefundAmount) {
           // Coupon no longer valid after refund
           order.totalAmount -= actualRefundAmount;
-          console.log('now total amount is ', order.totalAmount);
+          console.log("now total amount is ", order.totalAmount);
 
           refundAmount -= order.coupenDiscountAmount; // Reduce refund
           order.finalAmount -= refundAmount;
-          console.log('now final amount is ', order.finalAmount);
+          console.log("now final amount is ", order.finalAmount);
           // Remove coupon
 
-          console.log('now final amount is ', order.finalAmount);
+          console.log("now final amount is ", order.finalAmount);
           order.coupenDiscountAmount = 0;
           order.isCouponApplied = false;
         } else {
           order.totalAmount -= actualRefundAmount;
           order.finalAmount -= refundAmount;
         }
-
       } else {
         // No coupon applied, normal refund
         order.totalAmount -= actualRefundAmount;
@@ -1005,11 +1092,9 @@ const approveReturn = async (req, res) => {
     //   refundAmount=refundAmount-order.coupenDiscountAmount
     // }
 
-
     const userId = order.userId;
     if (!userId) throw new Error("User ID is not found");
     // Wallet refund
-
 
     if (order.useWallet) {
       const wallet = await Wallet.findOne({ userId });
@@ -1021,36 +1106,32 @@ const approveReturn = async (req, res) => {
         amount: refundAmount,
         type: "credit",
         date: new Date(),
-        description: "Product returned"
-      })
+        description: "Product returned",
+      });
 
       await wallet.save();
     }
 
-    console.log('Wallet refunded with:', refundAmount);
+    console.log("Wallet refunded with:", refundAmount);
 
-
-    await order.save()
+    await order.save();
 
     return res.json({
       success: true,
       message: "Return approved successfully",
     });
-
   } catch (error) {
-    console.error('Error in approveReturn:', error.message, error);
+    console.error("Error in approveReturn:", error.message, error);
     return res.status(400).json({ success: false, message: error.message });
   }
 };
 
-
-
 const rejectReturn = async (req, res) => {
   try {
-    console.log('From rejectReturn');
+    console.log("From rejectReturn");
 
     const { orderId, productId } = req.body;
-    console.log(orderId, productId, 'orderId, productId');
+    console.log(orderId, productId, "orderId, productId");
 
     // Validate inputs
     if (!orderId) throw new Error("Order ID not found");
@@ -1061,233 +1142,257 @@ const rejectReturn = async (req, res) => {
     if (!order) throw new Error("Order not found");
 
     // Find the product in order items
-    const product = order.items.find(item => item.productId.toString() === productId.toString());
+    const product = order.items.find(
+      (item) => item.productId.toString() === productId.toString(),
+    );
     if (!product) throw new Error("Product not found in order items");
 
     // Revert status back to delivered (or keep original if needed)
-    product.status = 'delivered';
-    order.markModified('items');
+    product.status = "delivered";
+    order.markModified("items");
 
     // Find and reject the return request
-    const returnRequest = order.returnRequests.find(req => req.productId?.toString() === productId.toString());
-    if (!returnRequest) throw new Error("Return request not found for this product");
-    console.log('returnRequest', returnRequest);
+    const returnRequest = order.returnRequests.find(
+      (req) => req.productId?.toString() === productId.toString(),
+    );
+    if (!returnRequest)
+      throw new Error("Return request not found for this product");
+    console.log("returnRequest", returnRequest);
 
-    returnRequest.status = 'rejected';
+    returnRequest.status = "rejected";
 
     // Save changes
     await order.save();
 
     return res.json({ success: true, message: "Return rejected successfully" });
-
   } catch (error) {
-    console.error('Error in rejectReturn:', error.message);
+    console.error("Error in rejectReturn:", error.message);
     return res.status(400).json({ success: false, message: error.message });
   }
 };
 
-
-
 const getSalesReport = async (req, res, next) => {
   try {
-    console.log('from sales report page');
+    console.log("from sales report page");
 
-    const reportType = req.query.reportType || '';
-    console.log('reportType', reportType);
+    const reportType = req.query.reportType || "";
+    console.log("reportType", reportType);
 
-    let matchStage = { $match: { status: { $eq: 'Delivered' } } };
-    let groupStage,
-      sortStage;
+    let matchStage = { $match: { status: { $eq: "Delivered" } } };
+    let groupStage, sortStage;
 
-
-    if (reportType === 'weekly') {
+    if (reportType === "weekly") {
       groupStage = {
         $group: {
-          _id: { $isoWeek: '$createdAt' },
-          totalSales: { $sum: '$finalAmount' }
-        }
+          _id: { $isoWeek: "$createdAt" },
+          totalSales: { $sum: "$finalAmount" },
+        },
       };
-      sortStage = { $sort: { '_id': 1 } };
-    } else if (reportType === 'monthly') {
+      sortStage = { $sort: { _id: 1 } };
+    } else if (reportType === "monthly") {
       groupStage = {
         $group: {
-          _id: { $month: '$createdAt' },
-          totalSales: { $sum: '$finalAmount' }
-        }
+          _id: { $month: "$createdAt" },
+          totalSales: { $sum: "$finalAmount" },
+        },
       };
-      sortStage = { $sort: { '_id': 1 } };
-    } else if (reportType === 'yearly') {
+      sortStage = { $sort: { _id: 1 } };
+    } else if (reportType === "yearly") {
       groupStage = {
         $group: {
-          _id: { $year: '$createdAt' },
-          totalSales: { $sum: '$finalAmount' }
-        }
+          _id: { $year: "$createdAt" },
+          totalSales: { $sum: "$finalAmount" },
+        },
       };
-      sortStage = { $sort: { '_id': 1 } };
-    } else if (reportType === 'custom') {
+      sortStage = { $sort: { _id: 1 } };
+    } else if (reportType === "custom") {
       const { startDate, endDate } = req.query;
       matchStage = {
         $match: {
           createdAt: {
             $gte: new Date(startDate),
-            $lte: new Date(endDate)
+            $lte: new Date(endDate),
           },
-          status: { $ne: 'cancelled' }
-        }
+          status: { $ne: "cancelled" },
+        },
       };
       groupStage = {
         $group: {
           _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
-          totalSales: { $sum: '$finalAmount' }
-        }
+          totalSales: { $sum: "$finalAmount" },
+        },
       };
-      sortStage = { $sort: { '_id': 1 } };
+      sortStage = { $sort: { _id: 1 } };
     } else {
       groupStage = {
         $group: {
-          _id: { $dayOfMonth: '$createdAt' },
-          totalSales: { $sum: '$finalAmount' },
-          offerDeduction: { $sum: '$offerDiscountAmount' },
-          couponDeduction: { $sum: '$coupenDiscountAmount' },
-          orderCount: { $sum: 1 }
+          _id: { $dayOfMonth: "$createdAt" },
+          totalSales: { $sum: "$finalAmount" },
+          offerDeduction: { $sum: "$offerDiscountAmount" },
+          couponDeduction: { $sum: "$coupenDiscountAmount" },
+          orderCount: { $sum: 1 },
         },
-      }
-      sortStage = { $sort: { '_id': 1 } }
+      };
+      sortStage = { $sort: { _id: 1 } };
     }
-
 
     const salesData = await Order.aggregate([
       matchStage,
       groupStage,
-      sortStage
+      sortStage,
     ]);
 
-    console.log('salesData', salesData);
-    const totalSales = await salesData.map(s => s.totalSales)
-    console.log('totalSales', totalSales);
+    console.log("salesData", salesData);
+    const totalSales = await salesData.map((s) => s.totalSales);
+    console.log("totalSales", totalSales);
 
     //salesdates
     const year = 2025;
     const month = 4;
-    const salesDates = salesData.map(item => {
+    const salesDates = salesData.map((item) => {
       const id = item._id;
 
-      if (reportType === 'weekly') {
+      if (reportType === "weekly") {
         return `Week ${id}`;
-      } else if (reportType === 'monthly') {
-        const monthNames = ["January", "February", "March", "April", "May", "June",
-          "July", "August", "September", "October", "November", "December"];
+      } else if (reportType === "monthly") {
+        const monthNames = [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+          "August",
+          "September",
+          "October",
+          "November",
+          "December",
+        ];
         return monthNames[id - 1]; // since $month returns 1 for Jan
-      } else if (reportType === 'yearly') {
+      } else if (reportType === "yearly") {
         return id.toString(); // id is the year
-      } else if (reportType === 'custom') {
+      } else if (reportType === "custom") {
         return id; // it's already a formatted date string like "2025-05-12"
       } else {
         // default: daily by day of month
         const date = new Date(year, month, id);
-        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const days = [
+          "Sunday",
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday",
+        ];
         return days[date.getDay()];
       }
     });
 
-
-    console.log('salesDates', salesDates);
+    console.log("salesDates", salesDates);
 
     //total discounts
-    let discountMatchStage = { $match: { status: { $ne: 'cancelled' } } };
+    let discountMatchStage = { $match: { status: { $ne: "cancelled" } } };
     let discountGroupStage, discountSortStage;
 
-    if (reportType === 'weekly') {
+    if (reportType === "weekly") {
       discountGroupStage = {
         $group: {
-          _id: { $isoWeek: '$createdAt' },
-          totalDiscountAmount: { $sum: '$offerDiscountAmount' },
-          couponDiscount: { $sum: '$coupenDiscountAmount' }
-        }
+          _id: { $isoWeek: "$createdAt" },
+          totalDiscountAmount: { $sum: "$offerDiscountAmount" },
+          couponDiscount: { $sum: "$coupenDiscountAmount" },
+        },
       };
-      discountSortStage = { $sort: { '_id': 1 } };
-    } else if (reportType === 'monthly') {
+      discountSortStage = { $sort: { _id: 1 } };
+    } else if (reportType === "monthly") {
       discountGroupStage = {
         $group: {
-          _id: { $month: '$createdAt' },
-          totalDiscountAmount: { $sum: '$offerDiscountAmount' },
-          couponDiscount: { $sum: '$coupenDiscountAmount' }
-        }
+          _id: { $month: "$createdAt" },
+          totalDiscountAmount: { $sum: "$offerDiscountAmount" },
+          couponDiscount: { $sum: "$coupenDiscountAmount" },
+        },
       };
-      discountSortStage = { $sort: { '_id': 1 } };
-    } else if (reportType === 'yearly') {
+      discountSortStage = { $sort: { _id: 1 } };
+    } else if (reportType === "yearly") {
       discountGroupStage = {
         $group: {
-          _id: { $year: '$createdAt' },
-          totalDiscountAmount: { $sum: '$offerDiscountAmount' },
-          couponDiscount: { $sum: '$coupenDiscountAmount' }
-        }
+          _id: { $year: "$createdAt" },
+          totalDiscountAmount: { $sum: "$offerDiscountAmount" },
+          couponDiscount: { $sum: "$coupenDiscountAmount" },
+        },
       };
-      discountSortStage = { $sort: { '_id': 1 } };
-    } else if (reportType === 'custom') {
+      discountSortStage = { $sort: { _id: 1 } };
+    } else if (reportType === "custom") {
       const { startDate, endDate } = req.query;
       discountMatchStage = {
         $match: {
           createdAt: {
             $gte: new Date(startDate),
-            $lte: new Date(endDate)
+            $lte: new Date(endDate),
           },
-          status: { $ne: 'cancelled' }
-        }
+          status: { $ne: "cancelled" },
+        },
       };
       discountGroupStage = {
         $group: {
           _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
-          totalDiscountAmount: { $sum: '$offerDiscountAmount' },
-          couponDiscount: { $sum: '$coupenDiscountAmount' }
-        }
+          totalDiscountAmount: { $sum: "$offerDiscountAmount" },
+          couponDiscount: { $sum: "$coupenDiscountAmount" },
+        },
       };
-      discountSortStage = { $sort: { '_id': 1 } };
+      discountSortStage = { $sort: { _id: 1 } };
     } else {
       // default: daily (per day)
       discountGroupStage = {
         $group: {
-          _id: { $dayOfMonth: '$createdAt' },
-          totalDiscountAmount: { $sum: '$offerDiscountAmount' },
-          couponDiscount: { $sum: '$coupenDiscountAmount' }
-        }
+          _id: { $dayOfMonth: "$createdAt" },
+          totalDiscountAmount: { $sum: "$offerDiscountAmount" },
+          couponDiscount: { $sum: "$coupenDiscountAmount" },
+        },
       };
-      discountSortStage = { $sort: { '_id': 1 } };
+      discountSortStage = { $sort: { _id: 1 } };
     }
 
     const totalDiscount = await Order.aggregate([
       discountMatchStage,
       discountGroupStage,
-      discountSortStage
+      discountSortStage,
     ]);
 
-    console.log('total discont', totalDiscount);
+    console.log("total discont", totalDiscount);
 
     //top products
-    let topProductMatchStage = { status: { $eq: 'Delivered' } };
-
+    let topProductMatchStage = { status: { $eq: "Delivered" } };
 
     const topProducts = await Order.aggregate([
       { $match: topProductMatchStage },
-      { $unwind: '$items' },
+      { $unwind: "$items" },
       {
         $lookup: {
-          from: 'products',
-          localField: 'items.productId',
-          foreignField: '_id',
-          as: 'productDetails'
-        }
+          from: "products",
+          localField: "items.productId",
+          foreignField: "_id",
+          as: "productDetails",
+        },
       },
-      { $unwind: '$productDetails' },
-      { $group: { _id: '$items.productId', totalSold: { $sum: '$items.quantity' }, productName: { $first: '$productDetails.productName' }, images: { $first: '$productDetails.images' } } },
+      { $unwind: "$productDetails" },
+      {
+        $group: {
+          _id: "$items.productId",
+          totalSold: { $sum: "$items.quantity" },
+          productName: { $first: "$productDetails.productName" },
+          images: { $first: "$productDetails.images" },
+        },
+      },
       { $sort: { totalSold: -1 } },
-      { $limit: 3 }
-    ])
+      { $limit: 3 },
+    ]);
     // console.log('top products ', topProducts);
 
     //recent orders
     const recentOrders = await Order.find({
-      status: { $nin: ['cancelled', 'returned'] }
+      status: { $nin: ["cancelled", "returned"] },
     })
       .sort({ createdAt: -1 })
       .limit(5);
@@ -1329,19 +1434,24 @@ const getSalesReport = async (req, res, next) => {
       //   couponDeduction: 600
       // }
       //    ];
-
       //summary
-    ]
+    ];
 
-    const orders=await Order.find({status:'Delivered'})
+    const orders = await Order.find({ status: "Delivered" });
     let summary = {
-      offerDiscountAmount: totalDiscount.reduce((acc, val) => acc + val.totalDiscountAmount, 0),
-      couponDiscount: totalDiscount.reduce((acc, val) => acc + val.couponDiscount, 0),
+      offerDiscountAmount: totalDiscount.reduce(
+        (acc, val) => acc + val.totalDiscountAmount,
+        0,
+      ),
+      couponDiscount: totalDiscount.reduce(
+        (acc, val) => acc + val.couponDiscount,
+        0,
+      ),
       totalOrders: orders.length,
       totalRevenue: totalSales.reduce((acc, val) => acc + val, 0),
-    }
-    res.render('admin/report', {
-      title: 'Sales Report',
+    };
+    res.render("admin/report", {
+      title: "Sales Report",
       salesData,
       recentOrders,
       summary,
@@ -1349,229 +1459,257 @@ const getSalesReport = async (req, res, next) => {
       totalSales: totalSales || 0,
       reportType,
       salesDates,
-      salesDatas
+      salesDatas,
     });
   } catch (error) {
-    console.error('Error generating sales report:', error);
+    console.error("Error generating sales report:", error);
     next(error);
   }
 };
 
 const updateSaleReport = async (req, res, next) => {
-  console.log('updateSaleReport');
+  console.log("updateSaleReport");
   try {
-    const reportType = req.query.reportType || '';
-    console.log('reportType', reportType);
+    const reportType = req.query.reportType || "";
+    console.log("reportType", reportType);
     //////
-    let matchStage = { $match: { status: { $eq: 'Delivered' } } };
+    let matchStage = { $match: { status: { $eq: "Delivered" } } };
     let groupStage, sortStage;
 
-
-    if (reportType === 'weekly') {
+    if (reportType === "weekly") {
       groupStage = {
         $group: {
-          _id: { $isoWeek: '$createdAt' },
-          totalSales: { $sum: '$finalAmount' },
-          offerDeduction: { $sum: '$offerDiscountAmount' },
-          couponDeduction: { $sum: '$coupenDiscountAmount' },
-          orderCount: { $sum: 1 }
-        }
+          _id: { $isoWeek: "$createdAt" },
+          totalSales: { $sum: "$finalAmount" },
+          offerDeduction: { $sum: "$offerDiscountAmount" },
+          couponDeduction: { $sum: "$coupenDiscountAmount" },
+          orderCount: { $sum: 1 },
+        },
       };
-      sortStage = { $sort: { '_id': 1 } };
-    } else if (reportType === 'monthly') {
+      sortStage = { $sort: { _id: 1 } };
+    } else if (reportType === "monthly") {
       groupStage = {
         $group: {
-          _id: { $month: '$createdAt' },
-          totalSales: { $sum: '$finalAmount' },
-          offerDeduction: { $sum: '$offerDiscountAmount' },
-          couponDeduction: { $sum: '$coupenDiscountAmount' },
-          orderCount: { $sum: 1 }
-        }
+          _id: { $month: "$createdAt" },
+          totalSales: { $sum: "$finalAmount" },
+          offerDeduction: { $sum: "$offerDiscountAmount" },
+          couponDeduction: { $sum: "$coupenDiscountAmount" },
+          orderCount: { $sum: 1 },
+        },
       };
-      sortStage = { $sort: { '_id': 1 } };
-    } else if (reportType === 'yearly') {
+      sortStage = { $sort: { _id: 1 } };
+    } else if (reportType === "yearly") {
       groupStage = {
         $group: {
-          _id: { $year: '$createdAt' },
-          totalSales: { $sum: '$finalAmount' },
-          offerDeduction: { $sum: '$offerDiscountAmount' },
-          couponDeduction: { $sum: '$coupenDiscountAmount' },
-          orderCount: { $sum: 1 }
-        }
+          _id: { $year: "$createdAt" },
+          totalSales: { $sum: "$finalAmount" },
+          offerDeduction: { $sum: "$offerDiscountAmount" },
+          couponDeduction: { $sum: "$coupenDiscountAmount" },
+          orderCount: { $sum: 1 },
+        },
       };
-      sortStage = { $sort: { '_id': 1 } };
-    } else if (reportType === 'custom') {
+      sortStage = { $sort: { _id: 1 } };
+    } else if (reportType === "custom") {
       const { startDate, endDate } = req.query;
       matchStage = {
         $match: {
           createdAt: {
             $gte: new Date(startDate),
-            $lte: new Date(endDate)
+            $lte: new Date(endDate),
           },
-          status: { $ne: 'cancelled' }
-        }
+          status: { $ne: "cancelled" },
+        },
       };
       groupStage = {
         $group: {
           _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
-          totalSales: { $sum: '$finalAmount' },
-          offerDeduction: { $sum: '$offerDiscountAmount' },
-          couponDeduction: { $sum: '$coupenDiscountAmount' },
-          orderCount: { $sum: 1 }
-        }
+          totalSales: { $sum: "$finalAmount" },
+          offerDeduction: { $sum: "$offerDiscountAmount" },
+          couponDeduction: { $sum: "$coupenDiscountAmount" },
+          orderCount: { $sum: 1 },
+        },
       };
-      sortStage = { $sort: { '_id': 1 } };
+      sortStage = { $sort: { _id: 1 } };
     } else {
       groupStage = {
         $group: {
-          _id: { $dayOfMonth: '$createdAt' },
-          totalSales: { $sum: '$finalAmount' },
-          offerDeduction: { $sum: '$offerDiscountAmount' },
-          couponDeduction: { $sum: '$coupenDiscountAmount' },
-          orderCount: { $sum: 1 }
+          _id: { $dayOfMonth: "$createdAt" },
+          totalSales: { $sum: "$finalAmount" },
+          offerDeduction: { $sum: "$offerDiscountAmount" },
+          couponDeduction: { $sum: "$coupenDiscountAmount" },
+          orderCount: { $sum: 1 },
         },
-      }
-      sortStage = { $sort: { '_id': 1 } }
+      };
+      sortStage = { $sort: { _id: 1 } };
     }
-
 
     const salesData = await Order.aggregate([
       matchStage,
       groupStage,
-      sortStage
+      sortStage,
     ]);
 
-    console.log('salesData from updates', salesData);
-    const totalSales = await salesData.map(s => s.totalSales)
-    console.log('totalSales', totalSales);
+    console.log("salesData from updates", salesData);
+    const totalSales = await salesData.map((s) => s.totalSales);
+    console.log("totalSales", totalSales);
 
     //salesdates
     const year = 2025;
     const month = 4;
-    const salesDates = salesData.map(item => {
+    const salesDates = salesData.map((item) => {
       const id = item._id;
 
-      if (reportType === 'weekly') {
+      if (reportType === "weekly") {
         return `Week ${id}`;
-      } else if (reportType === 'monthly') {
-        const monthNames = ["January", "February", "March", "April", "May", "June",
-          "July", "August", "September", "October", "November", "December"];
+      } else if (reportType === "monthly") {
+        const monthNames = [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+          "August",
+          "September",
+          "October",
+          "November",
+          "December",
+        ];
         return monthNames[id - 1]; // since $month returns 1 for Jan
-      } else if (reportType === 'yearly') {
+      } else if (reportType === "yearly") {
         return id.toString(); // id is the year
-      } else if (reportType === 'custom') {
+      } else if (reportType === "custom") {
         return id; // it's already a formatted date string like "2025-05-12"
       } else {
         // default: daily by day of month
         const date = new Date(year, month, id);
-        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const days = [
+          "Sunday",
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday",
+        ];
         return days[date.getDay()];
       }
     });
 
-
-    console.log('salesDates', salesDates);
+    console.log("salesDates", salesDates);
 
     //total discounts
-    let discountMatchStage = { $match: { status: { $ne: 'cancelled' } } };
+    let discountMatchStage = { $match: { status: { $ne: "cancelled" } } };
     let discountGroupStage, discountSortStage;
 
-    if (reportType === 'weekly') {
+    if (reportType === "weekly") {
       discountGroupStage = {
         $group: {
-          _id: { $isoWeek: '$createdAt' },
-          totalDiscountAmount: { $sum: '$offerDiscountAmount' },
-          couponDiscount: { $sum: '$coupenDiscountAmount' }
-        }
+          _id: { $isoWeek: "$createdAt" },
+          totalDiscountAmount: { $sum: "$offerDiscountAmount" },
+          couponDiscount: { $sum: "$coupenDiscountAmount" },
+        },
       };
-      discountSortStage = { $sort: { '_id': 1 } };
-    } else if (reportType === 'monthly') {
+      discountSortStage = { $sort: { _id: 1 } };
+    } else if (reportType === "monthly") {
       discountGroupStage = {
         $group: {
-          _id: { $month: '$createdAt' },
-          totalDiscountAmount: { $sum: '$offerDiscountAmount' },
-          couponDiscount: { $sum: '$coupenDiscountAmount' }
-        }
+          _id: { $month: "$createdAt" },
+          totalDiscountAmount: { $sum: "$offerDiscountAmount" },
+          couponDiscount: { $sum: "$coupenDiscountAmount" },
+        },
       };
-      discountSortStage = { $sort: { '_id': 1 } };
-    } else if (reportType === 'yearly') {
+      discountSortStage = { $sort: { _id: 1 } };
+    } else if (reportType === "yearly") {
       discountGroupStage = {
         $group: {
-          _id: { $year: '$createdAt' },
-          totalDiscountAmount: { $sum: '$offerDiscountAmount' },
-          couponDiscount: { $sum: '$coupenDiscountAmount' }
-        }
+          _id: { $year: "$createdAt" },
+          totalDiscountAmount: { $sum: "$offerDiscountAmount" },
+          couponDiscount: { $sum: "$coupenDiscountAmount" },
+        },
       };
-      discountSortStage = { $sort: { '_id': 1 } };
-    } else if (reportType === 'custom') {
+      discountSortStage = { $sort: { _id: 1 } };
+    } else if (reportType === "custom") {
       const { startDate, endDate } = req.query;
       discountMatchStage = {
         $match: {
           createdAt: {
             $gte: new Date(startDate),
-            $lte: new Date(endDate)
+            $lte: new Date(endDate),
           },
-          status: { $ne: 'cancelled' }
-        }
+          status: { $ne: "cancelled" },
+        },
       };
       discountGroupStage = {
         $group: {
           _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
-          totalDiscountAmount: { $sum: '$offerDiscountAmount' },
-          couponDiscount: { $sum: '$coupenDiscountAmount' }
-        }
+          totalDiscountAmount: { $sum: "$offerDiscountAmount" },
+          couponDiscount: { $sum: "$coupenDiscountAmount" },
+        },
       };
-      discountSortStage = { $sort: { '_id': 1 } };
+      discountSortStage = { $sort: { _id: 1 } };
     } else {
       // default: daily (per day)
       discountGroupStage = {
         $group: {
-          _id: { $dayOfMonth: '$createdAt' },
-          totalDiscountAmount: { $sum: '$offerDiscountAmount' },
-          couponDiscount: { $sum: '$coupenDiscountAmount' }
-        }
+          _id: { $dayOfMonth: "$createdAt" },
+          totalDiscountAmount: { $sum: "$offerDiscountAmount" },
+          couponDiscount: { $sum: "$coupenDiscountAmount" },
+        },
       };
-      discountSortStage = { $sort: { '_id': 1 } };
+      discountSortStage = { $sort: { _id: 1 } };
     }
 
     const totalDiscount = await Order.aggregate([
       discountMatchStage,
       discountGroupStage,
-      discountSortStage
+      discountSortStage,
     ]);
 
-    console.log('total discont', totalDiscount);
-
-
+    console.log("total discont", totalDiscount);
 
     //top products
-    let topProductMatchStage = { status: { $ne: 'cancelled' } };
+    let topProductMatchStage = { status: { $ne: "cancelled" } };
 
-
-    if (reportType == 'weekly') {
+    if (reportType == "weekly") {
       const today = new Date();
-      const firstDayOfWeek = new Date(today.setDate(today.getDate() - today.getDay()));
-      const lastDayOfWeek = new Date(today.setDate(today.getDate() - today.getDay() + 6));
-      topProductMatchStage.createdAt = { $gte: firstDayOfWeek, $lte: lastDayOfWeek };
-
-    } else if (reportType == 'monthly') {
+      const firstDayOfWeek = new Date(
+        today.setDate(today.getDate() - today.getDay()),
+      );
+      const lastDayOfWeek = new Date(
+        today.setDate(today.getDate() - today.getDay() + 6),
+      );
+      topProductMatchStage.createdAt = {
+        $gte: firstDayOfWeek,
+        $lte: lastDayOfWeek,
+      };
+    } else if (reportType == "monthly") {
       const now = new Date();
       const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-      const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+      const lastDay = new Date(
+        now.getFullYear(),
+        now.getMonth() + 1,
+        0,
+        23,
+        59,
+        59,
+        999,
+      );
       topProductMatchStage.createdAt = { $gte: firstDay, $lte: lastDay };
-    } else if (reportType == 'yearly') {
+    } else if (reportType == "yearly") {
       const now = new Date();
       const start = new Date(now.getFullYear(), 0, 1);
       const end = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
       topProductMatchStage.createdAt = { $gte: start, $lte: end };
-    } else if (reportType == 'custom') {
+    } else if (reportType == "custom") {
       const { startDate, endDate } = req.query;
       topProductMatchStage.createdAt = {
         $gte: new Date(startDate),
-        $lte: new Date(endDate)
-      }
+        $lte: new Date(endDate),
+      };
     } else {
-      const today = new Date()
+      const today = new Date();
       const start = new Date(today.setHours(0, 0, 0, 0));
       const end = new Date(today.setHours(23, 59, 59, 999));
       topProductMatchStage.createdAt = { $gte: start, $lte: end };
@@ -1610,10 +1748,9 @@ const updateSaleReport = async (req, res, next) => {
     // ]);
 
     //recent orders
-    const recentOrders = await Order.find({ status: { $ne: 'cancelled' } })
+    const recentOrders = await Order.find({ status: { $ne: "cancelled" } })
       .sort({ createdAt: -1 })
       .limit(3);
-
 
     //summary
 
@@ -1623,135 +1760,135 @@ const updateSaleReport = async (req, res, next) => {
     //   totalOrders: salesData.length,
     //   totalRevenue: totalSales.reduce((acc, val) => acc + val, 0),
     // }
-    console.log('salesDates,totalsales', salesDates, totalSales);
+    console.log("salesDates,totalsales", salesDates, totalSales);
 
-    res.json({ success: true, message: 'Data got successfully', totalSales, salesDates, salesData })
+    res.json({
+      success: true,
+      message: "Data got successfully",
+      totalSales,
+      salesDates,
+      salesData,
+    });
     /////
   } catch (error) {
     console.log(error);
-    next(error)
+    next(error);
   }
-}
+};
 
 const downloadSaleReportpdf = async (req, res, next) => {
-  console.log('downloadSaleReportpdf');
+  console.log("downloadSaleReportpdf");
   try {
-
-    const { chartImage, startDate, endDate, reportType } = req.body
+    const { chartImage, startDate, endDate, reportType } = req.body;
     // console.log('chartImage,startDate,endDate,reportType',chartImage,startDate,endDate,reportType);
     //getiing salesdata
-    console.log('reportType', reportType);
+    console.log("reportType", reportType);
     //////
-    let matchStage = { $match: { status: { $eq: 'Delivered' } } };
+    let matchStage = { $match: { status: { $eq: "Delivered" } } };
     let groupStage, sortStage;
 
-
-
-    if (reportType === 'weekly') {
+    if (reportType === "weekly") {
       groupStage = {
         $group: {
           _id: {
-            $dateToString: { format: "%G-W%V", date: "$createdAt" } // ISO week year and week
+            $dateToString: { format: "%G-W%V", date: "$createdAt" }, // ISO week year and week
           },
           totalSales: { $sum: "$finalAmount" },
           offerDeduction: { $sum: "$offerDiscountAmount" },
           couponDeduction: { $sum: "$coupenDiscountAmount" },
-          orderCount: { $sum: 1 }
-        }
+          orderCount: { $sum: 1 },
+        },
       };
-      sortStage = { $sort: { '_id': 1 } };
-    } else if (reportType === 'monthly') {
+      sortStage = { $sort: { _id: 1 } };
+    } else if (reportType === "monthly") {
       groupStage = {
         $group: {
           _id: {
-            $dateToString: { format: "%B %Y", date: "$createdAt" } // e.g., "May 2025"
+            $dateToString: { format: "%B %Y", date: "$createdAt" }, // e.g., "May 2025"
           },
           totalSales: { $sum: "$finalAmount" },
           offerDeduction: { $sum: "$offerDiscountAmount" },
           couponDeduction: { $sum: "$coupenDiscountAmount" },
-          orderCount: { $sum: 1 }
-        }
+          orderCount: { $sum: 1 },
+        },
       };
 
-      sortStage = { $sort: { '_id': 1 } };
-    } else if (reportType === 'yearly') {
+      sortStage = { $sort: { _id: 1 } };
+    } else if (reportType === "yearly") {
       groupStage = {
         $group: {
           _id: {
-            $dateToString: { format: "%Y", date: "$createdAt" }
+            $dateToString: { format: "%Y", date: "$createdAt" },
           },
           totalSales: { $sum: "$finalAmount" },
           offerDeduction: { $sum: "$offerDiscountAmount" },
           couponDeduction: { $sum: "$coupenDiscountAmount" },
-          orderCount: { $sum: 1 }
-        }
+          orderCount: { $sum: 1 },
+        },
       };
 
-      sortStage = { $sort: { '_id': 1 } };
-    } else if (reportType === 'custom') {
-
+      sortStage = { $sort: { _id: 1 } };
+    } else if (reportType === "custom") {
       matchStage = {
         $match: {
           createdAt: {
             $gte: new Date(startDate),
-            $lte: new Date(endDate)
+            $lte: new Date(endDate),
           },
-          status: { $ne: 'cancelled' }
-        }
+          status: { $ne: "cancelled" },
+        },
       };
       groupStage = {
         $group: {
           _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
-          totalSales: { $sum: '$finalAmount' },
-          offerDeduction: { $sum: '$offerDiscountAmount' },
-          couponDeduction: { $sum: '$coupenDiscountAmount' },
-          orderCount: { $sum: 1 }
-        }
+          totalSales: { $sum: "$finalAmount" },
+          offerDeduction: { $sum: "$offerDiscountAmount" },
+          couponDeduction: { $sum: "$coupenDiscountAmount" },
+          orderCount: { $sum: 1 },
+        },
       };
-      sortStage = { $sort: { '_id': 1 } };
+      sortStage = { $sort: { _id: 1 } };
     } else {
       groupStage = {
         $group: {
           _id: {
-            $dateToString: { format: "%d %b %G", date: "$createdAt" }
+            $dateToString: { format: "%d %b %G", date: "$createdAt" },
           },
           totalSales: { $sum: "$finalAmount" },
           offerDeduction: { $sum: "$offerDiscountAmount" },
           couponDeduction: { $sum: "$coupenDiscountAmount" },
-          orderCount: { $sum: 1 }
-        }
+          orderCount: { $sum: 1 },
+        },
       };
-      sortStage = { $sort: { '_id': 1 } }
+      sortStage = { $sort: { _id: 1 } };
     }
-
-
 
     const salesData = await Order.aggregate([
       matchStage,
       groupStage,
-      sortStage
+      sortStage,
     ]);
 
-    console.log('sale Dta', salesData);
-    console.log('sales data', salesData);
+    console.log("sale Dta", salesData);
+    console.log("sales data", salesData);
 
     const htmlContent = await ejs.renderFile(
-      path.join(__dirname, '..', 'views', 'admin', 'salesReportPdf.ejs'),
+      path.join(__dirname, "..", "views", "admin", "salesReportPdf.ejs"),
       {
         chartImage,
         salesData,
         reportType,
         startDate: startDate || null,
-        endDate: endDate || null
-      }
+        endDate: endDate || null,
+      },
     );
 
-    const downloadsDir = path.join(__dirname, '..', 'public', 'downloads');
+    const downloadsDir = path.join(__dirname, "..", "public", "downloads");
     if (!fs.existsSync(downloadsDir)) {
       fs.mkdirSync(downloadsDir, { recursive: true });
     }
 
-    const pdfPath = path.join(downloadsDir, 'SalesReport.pdf');
+    const pdfPath = path.join(downloadsDir, "SalesReport.pdf");
 
     pdf.create(htmlContent).toFile(pdfPath, (err, result) => {
       if (err) {
@@ -1759,125 +1896,121 @@ const downloadSaleReportpdf = async (req, res, next) => {
         return res.status(500).send("Failed to generate PDF");
       }
 
-      return res.download(pdfPath, 'SalesReport.pdf', (err) => {
+      return res.download(pdfPath, "SalesReport.pdf", (err) => {
         if (err) {
           console.error("Download error:", err);
           return res.status(500).send("Error downloading file.");
         }
       });
     });
-
   } catch (error) {
     console.error(error);
     next(error);
   }
-}
+};
 
 const downloadSaleReportExcel = async (req, res, next) => {
-  console.log('downloadSaleReportExcel');
+  console.log("downloadSaleReportExcel");
   try {
-    const { startDate } = req.query || null
-    const { endDate } = req.query || null
-    const { reportType } = req.query
-    console.log('startDate,endDate,reportType', startDate, endDate, reportType);
+    const { startDate } = req.query || null;
+    const { endDate } = req.query || null;
+    const { reportType } = req.query;
+    console.log("startDate,endDate,reportType", startDate, endDate, reportType);
     //getiing salesdata
-    console.log('reportType', reportType);
+    console.log("reportType", reportType);
     //////
-    let matchStage = { $match: { status: { $eq: 'Delivered' } } };
+    let matchStage = { $match: { status: { $eq: "Delivered" } } };
     let groupStage, sortStage;
 
-    if (reportType === 'weekly') {
+    if (reportType === "weekly") {
       groupStage = {
         $group: {
           _id: {
-            $dateToString: { format: "%G-W%V", date: "$createdAt" } // ISO week year and week
+            $dateToString: { format: "%G-W%V", date: "$createdAt" }, // ISO week year and week
           },
           totalSales: { $sum: "$finalAmount" },
           offerDeduction: { $sum: "$offerDiscountAmount" },
           couponDeduction: { $sum: "$coupenDiscountAmount" },
-          orderCount: { $sum: 1 }
-        }
+          orderCount: { $sum: 1 },
+        },
       };
-      sortStage = { $sort: { '_id': 1 } };
-    } else if (reportType === 'monthly') {
+      sortStage = { $sort: { _id: 1 } };
+    } else if (reportType === "monthly") {
       groupStage = {
         $group: {
           _id: {
-            $dateToString: { format: "%B %Y", date: "$createdAt" } // e.g., "May 2025"
+            $dateToString: { format: "%B %Y", date: "$createdAt" }, // e.g., "May 2025"
           },
           totalSales: { $sum: "$finalAmount" },
           offerDeduction: { $sum: "$offerDiscountAmount" },
           couponDeduction: { $sum: "$coupenDiscountAmount" },
-          orderCount: { $sum: 1 }
-        }
+          orderCount: { $sum: 1 },
+        },
       };
 
-      sortStage = { $sort: { '_id': 1 } };
-    } else if (reportType === 'yearly') {
+      sortStage = { $sort: { _id: 1 } };
+    } else if (reportType === "yearly") {
       groupStage = {
         $group: {
           _id: {
-            $dateToString: { format: "%Y", date: "$createdAt" }
+            $dateToString: { format: "%Y", date: "$createdAt" },
           },
           totalSales: { $sum: "$finalAmount" },
           offerDeduction: { $sum: "$offerDiscountAmount" },
           couponDeduction: { $sum: "$coupenDiscountAmount" },
-          orderCount: { $sum: 1 }
-        }
+          orderCount: { $sum: 1 },
+        },
       };
 
-      sortStage = { $sort: { '_id': 1 } };
-    } else if (reportType === 'custom') {
-
+      sortStage = { $sort: { _id: 1 } };
+    } else if (reportType === "custom") {
       matchStage = {
         $match: {
           createdAt: {
             $gte: new Date(startDate),
-            $lte: new Date(endDate)
+            $lte: new Date(endDate),
           },
-          status: { $ne: 'cancelled' }
-        }
+          status: { $ne: "cancelled" },
+        },
       };
       groupStage = {
         $group: {
           _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
-          totalSales: { $sum: '$finalAmount' },
-          offerDeduction: { $sum: '$offerDiscountAmount' },
-          couponDeduction: { $sum: '$coupenDiscountAmount' },
-          orderCount: { $sum: 1 }
-        }
+          totalSales: { $sum: "$finalAmount" },
+          offerDeduction: { $sum: "$offerDiscountAmount" },
+          couponDeduction: { $sum: "$coupenDiscountAmount" },
+          orderCount: { $sum: 1 },
+        },
       };
-      sortStage = { $sort: { '_id': 1 } };
+      sortStage = { $sort: { _id: 1 } };
     } else {
       groupStage = {
         $group: {
           _id: {
-            $dateToString: { format: "%d %b %G", date: "$createdAt" }
+            $dateToString: { format: "%d %b %G", date: "$createdAt" },
           },
           totalSales: { $sum: "$finalAmount" },
           offerDeduction: { $sum: "$offerDiscountAmount" },
           couponDeduction: { $sum: "$coupenDiscountAmount" },
-          orderCount: { $sum: 1 }
-        }
+          orderCount: { $sum: 1 },
+        },
       };
-      sortStage = { $sort: { '_id': 1 } }
+      sortStage = { $sort: { _id: 1 } };
     }
-
-
 
     const salesData = await Order.aggregate([
       matchStage,
       groupStage,
-      sortStage
+      sortStage,
     ]);
 
-    console.log('sale Dta', salesData);
-    console.log('sales data', salesData);
+    console.log("sale Dta", salesData);
+    console.log("sales data", salesData);
 
-    console.log('sale Data from excel', salesData);
+    console.log("sale Data from excel", salesData);
 
     const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet('Sales Report')
+    const worksheet = workbook.addWorksheet("Sales Report");
     // let th = 'Date'
     // if (reportType == 'daily') {
     //   th = 'Date'
@@ -1892,43 +2025,50 @@ const downloadSaleReportExcel = async (req, res, next) => {
     worksheet.columns = [
       {
         header:
-          reportType === 'daily' || reportType === 'custom'
-            ? 'Date'
-            : reportType === 'weekly'
-              ? 'Week'
-              : reportType === 'monthly'
-                ? 'Month'
-                : 'Year',
-        key: 'date',
+          reportType === "daily" || reportType === "custom"
+            ? "Date"
+            : reportType === "weekly"
+              ? "Week"
+              : reportType === "monthly"
+                ? "Month"
+                : "Year",
+        key: "date",
         width: 20,
       },
-      { header: 'Total Discount', key: 'totalDiscount', width: 15 },
-      { header: 'Order Count', key: 'orderCount', width: 15 },
-      { header: 'Total Sales', key: 'total', width: 15 }
+      { header: "Total Discount", key: "totalDiscount", width: 15 },
+      { header: "Order Count", key: "orderCount", width: 15 },
+      { header: "Total Sales", key: "total", width: 15 },
     ];
 
     // Add data rows
     salesData.forEach((entry) => {
       worksheet.addRow({
         date: entry._id,
-         totalDiscount: (Number(entry.offerDeduction || 0) + Number(entry.couponDeduction|| 0)).toFixed(2),
+        totalDiscount: (
+          Number(entry.offerDeduction || 0) + Number(entry.couponDeduction || 0)
+        ).toFixed(2),
         orderCount: entry.orderCount,
         total: entry.totalSales.toFixed(2),
       });
-    })
+    });
 
     // Set response headers
-    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', 'attachment; filename=SalesReport.xlsx');
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    );
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=SalesReport.xlsx",
+    );
 
     await workbook.xlsx.write(res);
     res.end();
   } catch (error) {
     console.log(error);
-    next(error)
+    next(error);
   }
-
-}
+};
 module.exports = {
   getLogin,
   postLogin,
@@ -1965,5 +2105,5 @@ module.exports = {
   getSalesReport,
   updateSaleReport,
   downloadSaleReportpdf,
-  downloadSaleReportExcel
-}
+  downloadSaleReportExcel,
+};

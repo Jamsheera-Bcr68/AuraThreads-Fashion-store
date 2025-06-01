@@ -7,57 +7,59 @@ const category = require("../model/categoryModel");
 const { title } = require("process");
 const adminController = require("../controllers/adminController");
 const sharp = require("sharp");
-const User=require('../model/userModel')
-const Cart=require('../model/cartModel')
-const fs=require('fs')
+const User = require("../model/userModel");
+const Cart = require("../model/cartModel");
+const fs = require("fs");
 
 const router = express.Router();
 
 //Admin  product management
 router.get("/products", async (req, res) => {
-  
   try {
-    const query=req.query.query || ""
-    console.log('Query is ',query);
-    
-   let page=parseInt(req.query.page)|| 1
-   let limit=parseInt(req.query.limit) ||5
-   let skip=(page-1)*limit
+    const query = req.query.query || "";
+    console.log("Query is ", query);
 
-   //search
-   let searchQuery = {isDeleted:false}
+    let page = parseInt(req.query.page) || 1;
+    let limit = parseInt(req.query.limit) || 5;
+    let skip = (page - 1) * limit;
 
-   // If query is not empty, apply $regex search
-   if (query.trim()) {
-    searchQuery = {
-      $and: [
-        {
-          $or: [
-            { productName: { $regex: query, $options: "i" } },
-            { category: { $regex: query, $options: "i" } },
-            { description: { $regex: query, $options: "i" } },
-          ],
-        },
-        { isDeleted: false },
-      ],
-    };
-  }
+    //search
+    let searchQuery = { isDeleted: false };
+
+    // If query is not empty, apply $regex search
+    if (query.trim()) {
+      searchQuery = {
+        $and: [
+          {
+            $or: [
+              { productName: { $regex: query, $options: "i" } },
+              { category: { $regex: query, $options: "i" } },
+              { description: { $regex: query, $options: "i" } },
+            ],
+          },
+          { isDeleted: false },
+        ],
+      };
+    }
     console.log(`page is ${page} and limt is ${limit}`);
-    const products = await Product.find(searchQuery).sort({
-    createdAt: -1,
-    }).skip(skip)
-    .limit(limit).populate('categoryId')
+    const products = await Product.find(searchQuery)
+      .sort({
+        createdAt: -1,
+      })
+      .skip(skip)
+      .limit(limit)
+      .populate("categoryId");
 
     const totalProducts = await Product.countDocuments({
       $and: [searchQuery, { isDeleted: false }],
     });
-    const totalPages=Math.ceil(totalProducts/limit)
+    const totalPages = Math.ceil(totalProducts / limit);
 
     res.render("admin/productManagement", {
       title: "Product Management",
-      currentPage:page ||1,
+      currentPage: page || 1,
       totalPages,
-     query:query||'',
+      query: query || "",
       products,
       successMessage: res.locals.successMessage || "",
       errorMessage: res.locals.errorMessage || "",
@@ -77,125 +79,129 @@ router.get("/products/add", async (req, res) => {
   });
 });
 
-
-const uploadDir = path.join(__dirname, '../uploads');
+const uploadDir = path.join(__dirname, "../uploads");
 if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
+  fs.mkdirSync(uploadDir, { recursive: true });
 }
 
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, uploadDir);
-    },
-    filename: (req, file, cb) => {
-        cb(null, `cropped-${Date.now()}-${file.originalname}`);
-    }
+  destination: (req, file, cb) => {
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    cb(null, `cropped-${Date.now()}-${file.originalname}`);
+  },
 });
 
 const upload = multer({ storage });
 
 // Upload route for images
-router.post('/upload', upload.array('image'), (req, res) => {
-    console.log('Multiple image upload route hit');
-    
-    if (!req.files || req.files.length === 0) {
-        return res.status(400).json({ message: 'No files uploaded' });
-    }
-    
-    const filePaths = req.files.map(file => `/uploads/${file.filename}`);
-    
-    console.log('Uploaded file paths:', filePaths);
-    
-    res.json({ filePaths });
+router.post("/upload", upload.array("image"), (req, res) => {
+  console.log("Multiple image upload route hit");
+
+  if (!req.files || req.files.length === 0) {
+    return res.status(400).json({ message: "No files uploaded" });
+  }
+
+  const filePaths = req.files.map((file) => `/uploads/${file.filename}`);
+
+  console.log("Uploaded file paths:", filePaths);
+
+  res.json({ filePaths });
 });
 
 // Product add route with full multer handling
-router.post('/products/add', upload.fields([
-    { name: 'imageInput', maxCount: 10 },
-    { name: 'uploadedImages', maxCount: 1 }
-]), async (req, res) => {
+router.post(
+  "/products/add",
+  upload.fields([
+    { name: "imageInput", maxCount: 10 },
+    { name: "uploadedImages", maxCount: 1 },
+  ]),
+  async (req, res) => {
     try {
-        console.log('Add product route hit');
-        console.log('Request Files:', req.files);
-        console.log('Request Body:', req.body);
+      console.log("Add product route hit");
+      console.log("Request Files:", req.files);
+      console.log("Request Body:", req.body);
 
-        const {
-            productName,
-            stock,
-            price,
-            description,
-            categoryId,
-            color,
-            size,
-            brand,
-            isActive,
-            isListed,
-            uploadedImages
-        } = req.body;
+      const {
+        productName,
+        stock,
+        price,
+        description,
+        categoryId,
+        color,
+        size,
+        brand,
+        isActive,
+        isListed,
+        uploadedImages,
+      } = req.body;
 
-        // Validate required fields
-        if (!productName || !price || !description || !categoryId) {
-            return res.status(400).json({ message: 'All required fields must be filled' });
+      // Validate required fields
+      if (!productName || !price || !description || !categoryId) {
+        return res
+          .status(400)
+          .json({ message: "All required fields must be filled" });
+      }
+
+      const existProduct = await Product.findOne({ productName });
+      if (existProduct) {
+        return res.json({ success: false, message: "product already exists" });
+      }
+      // Parse uploaded images
+      let imagePaths = [];
+      try {
+        if (uploadedImages) {
+          // Try parsing if it's a JSON string
+          imagePaths = JSON.parse(uploadedImages);
         }
 
-        const existProduct=await Product.findOne({productName})
-        if(existProduct){
-          return res.json({success:false,message:'product already exists'})
-        }
-        // Parse uploaded images
-        let imagePaths = [];
-        try {
-            if (uploadedImages) {
-                // Try parsing if it's a JSON string
-                imagePaths = JSON.parse(uploadedImages);
-            }
-            
-            // If files were uploaded via imageInput, add those paths
-            // if (req.files && req.files.imageInput) {
-            //     const additionalPaths = req.files.imageInput.map(file => `/uploads/${file.filename}`);
-            //     imagePaths = [...imagePaths, ...additionalPaths];
-            // }
-        } catch (parseError) {
-            console.error('Error parsing uploaded images:', parseError);
-        }
+        // If files were uploaded via imageInput, add those paths
+        // if (req.files && req.files.imageInput) {
+        //     const additionalPaths = req.files.imageInput.map(file => `/uploads/${file.filename}`);
+        //     imagePaths = [...imagePaths, ...additionalPaths];
+        // }
+      } catch (parseError) {
+        console.error("Error parsing uploaded images:", parseError);
+      }
 
-        // Ensure imagePaths is an array
-        if (!Array.isArray(imagePaths)) {
-            imagePaths = [];
-        }
+      // Ensure imagePaths is an array
+      if (!Array.isArray(imagePaths)) {
+        imagePaths = [];
+      }
 
-        // Create new product
-        const newProduct = new Product({
-            productName,
-            price,
-            description,
-            categoryId,
-            size,
-            color,
-            isActive: isActive === 'true',
-            isListed: isListed === 'true',
-            brand,
-            stock: parseInt(stock),
-            images: imagePaths, // Store the image paths
-        });
+      // Create new product
+      const newProduct = new Product({
+        productName,
+        price,
+        description,
+        categoryId,
+        size,
+        color,
+        isActive: isActive === "true",
+        isListed: isListed === "true",
+        brand,
+        stock: parseInt(stock),
+        images: imagePaths, // Store the image paths
+      });
 
-        // Save product
-        await newProduct.save();
-        console.log("New Product saved:", newProduct);
+      // Save product
+      await newProduct.save();
+      console.log("New Product saved:", newProduct);
 
-        res.status(201).json({
-            message: 'Product added successfully!',
-            product: newProduct
-        });
+      res.status(201).json({
+        message: "Product added successfully!",
+        product: newProduct,
+      });
     } catch (error) {
-        console.error('Product add error:', error);
-        res.status(500).json({
-            message: 'Server error',
-            error: error.message
-        });
+      console.error("Product add error:", error);
+      res.status(500).json({
+        message: "Server error",
+        error: error.message,
+      });
     }
-});
-
+  },
+);
 
 //edit product admin
 router.get("/products/edit/:productId", async (req, res) => {
@@ -205,7 +211,7 @@ router.get("/products/edit/:productId", async (req, res) => {
     // Getting the product
     const product = await Product.findOne({ _id: productId });
     const categories = await category.find({ isDeleted: false });
-   
+
     if (!product) {
       req.flash("errorMessage", "Product not found");
       res.redirect("/admin/productManagement");
@@ -233,17 +239,17 @@ router.post(
         throw new Error("Request body is empty");
       }
 
-      const imagePaths = req.files.map((file) =>'/uploads/'+ file.filename);
-      console.log('imagepath ',imagePaths);
-      
-       // Extract image filenames
-      const { productName, categoryId, price, description,stock } = req.body;
+      const imagePaths = req.files.map((file) => "/uploads/" + file.filename);
+      console.log("imagepath ", imagePaths);
+
+      // Extract image filenames
+      const { productName, categoryId, price, description, stock } = req.body;
       const { productId } = req.params;
 
       console.log("This is req.body:", JSON.stringify(req.body, null, 2));
       console.log("Product name is:", productName);
       console.log("Product ID is:", productId);
-       console.log("Product stock is:", stock);
+      console.log("Product stock is:", stock);
 
       const productToUpdate = await Product.findOne({ _id: productId });
       if (!productToUpdate) {
@@ -251,15 +257,17 @@ router.post(
         return res.redirect("/product/products");
       }
       let images;
-      if(imagePaths==''){
-        images=productToUpdate.images
-      }else{
-        images=imagePaths
+      if (imagePaths == "") {
+        images = productToUpdate.images;
+      } else {
+        images = imagePaths;
       }
       const updatedProduct = await Product.findOneAndUpdate(
         { _id: productId },
-        { $set: { productName, categoryId, description, price, images,stock} },
-        { new: true }
+        {
+          $set: { productName, categoryId, description, price, images, stock },
+        },
+        { new: true },
       );
 
       console.log("Updated Product:", updatedProduct);
@@ -270,7 +278,7 @@ router.post(
       req.flash("errorMessage", "Product not found");
       return res.redirect("/product/products");
     }
-  }
+  },
 );
 
 //admin product delete function
@@ -283,7 +291,7 @@ router.delete("/products/delete/:productId", async (req, res) => {
     const deleteProduct = await Product.findOneAndUpdate(
       { _id: productId },
       { isDeleted: true },
-      { new: true }
+      { new: true },
     );
     if (!deleteProduct) {
       return res
@@ -308,7 +316,5 @@ router.delete("/products/delete/:productId", async (req, res) => {
     // res.redirect('/product/products')
   }
 });
-
-
 
 module.exports = router;

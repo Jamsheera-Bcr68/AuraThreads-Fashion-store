@@ -1,3 +1,1 @@
-function searchProducts(){
-    
-}
+function searchProducts() {}

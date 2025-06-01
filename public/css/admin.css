@@ -1,56 +1,52 @@
-
- .navbar{
+.navbar {
   margin-top: 0;
   height: 100px;
- }
- a{
+}
+a {
   font-weight: bold;
   font-size: 1.3rem;
- }
- .title{
+}
+.title {
   font-size: 2rem;
- }
-
- .container {
-   margin-left: 0;
-   margin-right: 0;
-   margin-top: 0;
-   padding: 0;
-   max-width: 100%;
- }
- body {
-   margin: 0;
-   padding-top: 0;
-   font-size: 1.2em;
- }
- 
-
- .alert:empty {
-display: none;
-   }
-   .searchAddButtons{
-    display: flex;
-    justify-content: space-between;
-   }
-   input{
-    border-radius: 2px;
-    width: 276px;
-    border-radius: 4px;
-    height: 40px;
-   }
-   .product-search-bar {
-    height: 42px;
-    width: 400px;
-  
-    padding-left: 0px;
-    border-radius: 5px;
-    margin-left: unset;
-}
-.searchbtn{
-    text-transform: none;
-    width: 40px;
-    border-radius:4px;
-    height: 40px;
 }
 
-   
+.container {
+  margin-left: 0;
+  margin-right: 0;
+  margin-top: 0;
+  padding: 0;
+  max-width: 100%;
+}
+body {
+  margin: 0;
+  padding-top: 0;
+  font-size: 1.2em;
+}
+
+.alert:empty {
+  display: none;
+}
+.searchAddButtons {
+  display: flex;
+  justify-content: space-between;
+}
+input {
+  border-radius: 2px;
+  width: 276px;
+  border-radius: 4px;
+  height: 40px;
+}
+.product-search-bar {
+  height: 42px;
+  width: 400px;
+
+  padding-left: 0px;
+  border-radius: 5px;
+  margin-left: unset;
+}
+.searchbtn {
+  text-transform: none;
+  width: 40px;
+  border-radius: 4px;
+  height: 40px;
+}

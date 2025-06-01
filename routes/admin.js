@@ -8,12 +8,10 @@ const category = require("../model/categoryModel");
 const user = require("../model/userModel");
 const multer = require("multer");
 const mongoose = require("mongoose");
-const sharp = require('sharp')
-const path = require('path');
+const sharp = require("sharp");
+const path = require("path");
 const { route } = require("./product");
-const Order = require('../model/orderModel')
-
-
+const Order = require("../model/orderModel");
 
 // Display Login Page
 router.get("/login", adminController.getLogin);
@@ -27,152 +25,163 @@ router.get("/dashboard", async (req, res) => {
   const productCount = await product.countDocuments({ isDeleted: false });
   const categoryCount = await category.countDocuments({ isDeleted: false });
   const orderCount = await Order.countDocuments({});
-  const orders = await Order.find({ status: 'Delivered' })
+  const orders = await Order.find({ status: "Delivered" });
   //console.log(orders);
-  const totalSalesAmount = orders.reduce((acc, order) => acc + order.finalAmount, 0)
-  totalDiscount = orders.reduce((acc, order) => acc + (order.offerDiscountAmount + order.coupenDiscountAmount), 0)
+  const totalSalesAmount = orders.reduce(
+    (acc, order) => acc + order.finalAmount,
+    0,
+  );
+  totalDiscount = orders.reduce(
+    (acc, order) =>
+      acc + (order.offerDiscountAmount + order.coupenDiscountAmount),
+    0,
+  );
   // console.log('total discount ', totalDiscount);
 
-  let matchStage = { $match: { status: { $eq: 'Delivered' }, createdAt: { $lte: new Date() } } };
-
+  let matchStage = {
+    $match: { status: { $eq: "Delivered" }, createdAt: { $lte: new Date() } },
+  };
 
   let groupStage = {
     $group: {
       _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
-      totalSales: { $sum: '$finalAmount' },
-      offerDeduction: { $sum: '$offerDiscountAmount' },
-      couponDeduction: { $sum: '$coupenDiscountAmount' },
-      orderCount: { $sum: 1 }
+      totalSales: { $sum: "$finalAmount" },
+      offerDeduction: { $sum: "$offerDiscountAmount" },
+      couponDeduction: { $sum: "$coupenDiscountAmount" },
+      orderCount: { $sum: 1 },
     },
-  }
-  let sortStage = { $sort: { '_id': 1 } }
+  };
+  let sortStage = { $sort: { _id: 1 } };
 
-  const salesData = await Order.aggregate([
-    matchStage,
-    groupStage,
-    sortStage
-  ]);
+  const salesData = await Order.aggregate([matchStage, groupStage, sortStage]);
 
-  let salesDates = salesData.map(data => data._id)
+  let salesDates = salesData.map((data) => data._id);
   //console.log('salesData',salesData);
   //console.log('salesDates ',salesDates);
 
   const topProducts = await Order.aggregate([
     matchStage,
-    { $unwind: '$items' },
+    { $unwind: "$items" },
     {
       $lookup: {
-        from: 'products',
-        localField: 'items.productId',
-        foreignField: '_id',
-        as: 'productDetails'
-      }
+        from: "products",
+        localField: "items.productId",
+        foreignField: "_id",
+        as: "productDetails",
+      },
     },
-    { $unwind: '$productDetails' },
-    { $group: { _id: '$items.productId', totalSold: { $sum: '$items.quantity' }, productName: { $first: '$productDetails.productName' }, images: { $first: '$productDetails.images' } } },
+    { $unwind: "$productDetails" },
+    {
+      $group: {
+        _id: "$items.productId",
+        totalSold: { $sum: "$items.quantity" },
+        productName: { $first: "$productDetails.productName" },
+        images: { $first: "$productDetails.images" },
+      },
+    },
     { $sort: { totalSold: -1 } },
-    { $limit: 5 }
-  ])
+    { $limit: 5 },
+  ]);
   //    console.log('topProduct ',topProducts);
 
- const topCategories = await Order.aggregate([
-  matchStage,
+  const topCategories = await Order.aggregate([
+    matchStage,
 
-  { $unwind: '$items' },
+    { $unwind: "$items" },
 
-  // Step 1: Lookup product details based on items.productId
-  {
-    $lookup: {
-      from: 'products',
-      localField: 'items.productId',
-      foreignField: '_id',
-      as: 'productDetails'
-    }
-  },
+    // Step 1: Lookup product details based on items.productId
+    {
+      $lookup: {
+        from: "products",
+        localField: "items.productId",
+        foreignField: "_id",
+        as: "productDetails",
+      },
+    },
 
-  { $unwind: '$productDetails' },
+    { $unwind: "$productDetails" },
 
-  // Step 2: Lookup category using productDetails.categoryId
-  {
-    $lookup: {
-      from: 'categories',
-      localField: 'productDetails.categoryId',
-      foreignField: '_id',
-      as: 'categoryDetails'
-    }
-  },
+    // Step 2: Lookup category using productDetails.categoryId
+    {
+      $lookup: {
+        from: "categories",
+        localField: "productDetails.categoryId",
+        foreignField: "_id",
+        as: "categoryDetails",
+      },
+    },
 
-  { $unwind: '$categoryDetails' },
+    { $unwind: "$categoryDetails" },
 
-  // Step 3: Group by category
-  {
-    $group: {
-      _id: '$productDetails.categoryId',
-      totalSold: { $sum: '$items.quantity' },
-      name: { $first: '$categoryDetails.categoryName' }
-    }
-  },
+    // Step 3: Group by category
+    {
+      $group: {
+        _id: "$productDetails.categoryId",
+        totalSold: { $sum: "$items.quantity" },
+        name: { $first: "$categoryDetails.categoryName" },
+      },
+    },
 
-  // Step 4: Sort and limit
-  { $sort: { totalSold: -1 } },
-  { $limit: 5 },
+    // Step 4: Sort and limit
+    { $sort: { totalSold: -1 } },
+    { $limit: 5 },
 
-  // Optional: Clean output
-  {
-    $project: {
-      _id: 0,
-      categoryId: '$_id',
-      name: 1,
-      totalSold: 1
-    }
-  }
-]);
+    // Optional: Clean output
+    {
+      $project: {
+        _id: 0,
+        categoryId: "$_id",
+        name: 1,
+        totalSold: 1,
+      },
+    },
+  ]);
 
- // console.log('topCategory ', topCategory);
-const topBrands = await Order.aggregate([
-  matchStage, // optional date filter
+  // console.log('topCategory ', topCategory);
+  const topBrands = await Order.aggregate([
+    matchStage, // optional date filter
 
-  { $unwind: '$items' },
+    { $unwind: "$items" },
 
-  {
-    $lookup: {
-      from: 'products',
-      localField: 'items.productId',
-      foreignField: '_id',
-      as: 'productDetails'
-    }
-  },
+    {
+      $lookup: {
+        from: "products",
+        localField: "items.productId",
+        foreignField: "_id",
+        as: "productDetails",
+      },
+    },
 
-  { $unwind: '$productDetails' },
+    { $unwind: "$productDetails" },
 
-  {
-    $group: {
-      _id: '$productDetails.brand', // group by brand name
-      totalSold: { $sum: '$items.quantity' }
-    }
-  },
+    {
+      $group: {
+        _id: "$productDetails.brand", // group by brand name
+        totalSold: { $sum: "$items.quantity" },
+      },
+    },
 
-  { $sort: { totalSold: -1 } },
-  { $limit: 5 },
+    { $sort: { totalSold: -1 } },
+    { $limit: 5 },
 
-  {
-    $project: {
-      _id: 0,
-      name: '$_id',
-      totalSold: 1
-    }
-  }
-]);
+    {
+      $project: {
+        _id: 0,
+        name: "$_id",
+        totalSold: 1,
+      },
+    },
+  ]);
 
-//console.log('topBrands ',topBrands);
+  //console.log('topBrands ',topBrands);
 
-//recent orders
- const recentOrders = await Order.find({
-  status: { $nin: ['cancelled', 'returned'] }
-})
-.sort({ createdAt: -1 })
-.limit(5);
- 
+  //recent orders
+  const recentOrders = await Order.find({
+    status: { $nin: ["cancelled", "returned"] },
+  })
+    .sort({ createdAt: -1 })
+    .limit(5);
+
   res.render("../views/admin/dashboard", {
     title: "Dashboard",
     userCount,
@@ -185,19 +194,19 @@ const topBrands = await Order.aggregate([
     topBrands,
     salesData,
     salesDates,
-    recentOrders
+    recentOrders,
   });
 });
 
 //get categoryManagement
 router.get("/category", async (req, res) => {
   try {
-    const query = req.query.query || ''
-    const page = parseInt(req.query.page) || 1
-    const limit = parseInt(req.query.limit) || 5
-    const skip = (page - 1) * limit
-    console.log('Query is', query);
-    let searchQuery = { isDeleted: false }
+    const query = req.query.query || "";
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 5;
+    const skip = (page - 1) * limit;
+    console.log("Query is", query);
+    let searchQuery = { isDeleted: false };
 
     if (query.trim()) {
       searchQuery = {
@@ -213,12 +222,15 @@ router.get("/category", async (req, res) => {
       };
     }
 
-    const categories = await category.find(searchQuery).sort({ createdAt: -1 })
-      .skip(skip).limit(limit)
+    const categories = await category
+      .find(searchQuery)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
     console.log(`from category page is ${page} lmit is ${limit}`);
 
-    const totalCategory = await category.countDocuments(searchQuery)
-    const totalPages = Math.ceil(totalCategory / limit)
+    const totalCategory = await category.countDocuments(searchQuery);
+    const totalPages = Math.ceil(totalCategory / limit);
 
     res.render("../views/admin/categoryManagement", {
       categories,
@@ -234,7 +246,6 @@ router.get("/category", async (req, res) => {
   }
 });
 
-
 // Multer storage setup (for storing images in "uploads" folder)
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -247,15 +258,12 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-
-
-
 router.post("/category/add", upload.array("images", 5), async (req, res) => {
   console.log("Uploaded files:", req.files); // Debugging
 
   if (!req.files || req.files.length === 0) {
     req.flash("errorMessage", "No images uploaded.");
-    return res.redirect("/admin/category");;
+    return res.redirect("/admin/category");
   }
 
   const { categoryName, description } = req.body;
@@ -264,11 +272,14 @@ router.post("/category/add", upload.array("images", 5), async (req, res) => {
 
   try {
     // Check if category already exists
-    const existingCategory = await category.findOne({ categoryName, isDeleted: false });
+    const existingCategory = await category.findOne({
+      categoryName,
+      isDeleted: false,
+    });
 
     if (existingCategory) {
       req.flash("errorMessage", "This Category already exists.");
-      return res.redirect("/admin/category");;
+      return res.redirect("/admin/category");
     }
 
     // Resize each uploaded image and save only resized paths
@@ -281,7 +292,7 @@ router.post("/category/add", upload.array("images", 5), async (req, res) => {
           .toFile(resizedPath);
 
         imagePaths.push(resizedPath); // Save only resized image path
-      })
+      }),
     );
 
     // Save category
@@ -302,8 +313,6 @@ router.post("/category/add", upload.array("images", 5), async (req, res) => {
   }
 });
 
-
-
 router.post("/category/edit/:id", async (req, res) => {
   const { categoryName, description } = req.body;
   const { id } = req.params;
@@ -317,196 +326,197 @@ router.post("/category/edit/:id", async (req, res) => {
       {
         $set: { categoryName, description, isListed },
       },
-      { new: true }
+      { new: true },
     );
     console.log("category found");
 
     if (!existCategory) {
-      req.flash('errorMessage', 'Category not found')
-      res.redirect('/admin/category')
+      req.flash("errorMessage", "Category not found");
+      res.redirect("/admin/category");
     }
 
-    req.flash('successMessage', 'Category Updated Successfully')
-    res.redirect('/admin/category')
-
+    req.flash("successMessage", "Category Updated Successfully");
+    res.redirect("/admin/category");
   } catch (error) {
     console.log(error);
-    req.flash('errorMessage', 'Error While Adding Caterory')
+    req.flash("errorMessage", "Error While Adding Caterory");
   }
 });
 
 router.delete("/category/delete/:id", async (req, res) => {
   const { id } = req.params;
-  console.log('from delete routes');
+  console.log("from delete routes");
 
   try {
     const softDeleteCategory = await category.findByIdAndUpdate(
       id,
       { isDeleted: true },
-      { new: true }
+      { new: true },
     );
     if (!softDeleteCategory) {
-      console.log('Category not found');
+      console.log("Category not found");
 
-      return res.json({ success: false, message: "Category not found" })
+      return res.json({ success: false, message: "Category not found" });
     } else {
-      console.log('Category Deleted successfully');
+      console.log("Category Deleted successfully");
       console.log("soft deleted category " + softDeleteCategory);
-      return res.json({ success: true, message: "Category Deleted successfully" })
-
+      return res.json({
+        success: true,
+        message: "Category Deleted successfully",
+      });
     }
   } catch (error) {
     console.log("error on deleting category", error);
-    return res.json({ success: false, message: "Error in delting category" })
+    return res.json({ success: false, message: "Error in delting category" });
   }
-})
+});
 
 //get usermangement
-router.get('/users', async (req, res) => {
+router.get("/users", async (req, res) => {
   try {
-    const query = req.query.query || ''
-    const page = parseInt(req.query.page) || 1
-    const limit = parseInt(req.query.limit) || 5
-    const skip = (page - 1) * limit
+    const query = req.query.query || "";
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 5;
+    const skip = (page - 1) * limit;
 
-    console.log('query', query);
+    console.log("query", query);
 
-    let searchQuery = {}
+    let searchQuery = {};
     if (query.trim()) {
       searchQuery = {
         $or: [
           { name: { $regex: query, $options: "i" } },
           { email: { $regex: query, $options: "i" } },
         ],
-      }
+      };
     }
-    const users = await user.find(searchQuery).sort({ createdAt: -1 }).skip(skip).limit(limit)
+    const users = await user
+      .find(searchQuery)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
 
-    const totalUsers = await user.countDocuments()
-    const totalPages = Math.ceil(totalUsers / limit)
+    const totalUsers = await user.countDocuments();
+    const totalPages = Math.ceil(totalUsers / limit);
 
     console.log(`from userpage.page is ${page} and limit is ${limit}`);
 
-
-    res.render('../views/admin/userManagement',
-      {
-        users,
-        currentPage: page,
-        totalPages,
-        title: "User Management",
-        successMessage: res.locals.successMessage || '',
-        errorMessage: res.locals.errorMessage || ''
-      })
+    res.render("../views/admin/userManagement", {
+      users,
+      currentPage: page,
+      totalPages,
+      title: "User Management",
+      successMessage: res.locals.successMessage || "",
+      errorMessage: res.locals.errorMessage || "",
+    });
   } catch (error) {
-    req.flash('errorMessage', 'Error in fetching User')
-    res.render('../views/admin/dashboard', { title: 'Admin Dashboard' })
+    req.flash("errorMessage", "Error in fetching User");
+    res.render("../views/admin/dashboard", { title: "Admin Dashboard" });
   }
-})
+});
 
-//block and unblock user 
+//block and unblock user
 
-router.patch('/block-user/:userId', async (req, res) => {
-  console.log('from block user');
-  const { userId } = req.params
-  const { isActive } = req.body
+router.patch("/block-user/:userId", async (req, res) => {
+  console.log("from block user");
+  const { userId } = req.params;
+  const { isActive } = req.body;
 
   try {
-
     const blockUser = await user.findOneAndUpdate(
       { _id: userId },
       { isActive },
-      { new: true })
-
-
+      { new: true },
+    );
 
     if (!blockUser) {
-
-      req.flash('errorMessage', 'user not found')
-      res.redirect('/users')
+      req.flash("errorMessage", "user not found");
+      res.redirect("/users");
     }
-    req.flash('succesMessage', 'user not found')
-    res.redirect('/users')
+    req.flash("succesMessage", "user not found");
+    res.redirect("/users");
   } catch (error) {
-    console.log('error in blocking user');
-    req.flash('errorMessage', 'error in blocking user')
-    res.redirect('/users')
-
+    console.log("error in blocking user");
+    req.flash("errorMessage", "error in blocking user");
+    res.redirect("/users");
   }
+});
 
-})
-
-router.get('/orders', adminController.getOrder)
-router.get('/orderDetails/:orderId', adminController.getOrderDetails)
-router.get('/updateOrder/:orderId', adminController.getUpdateOrder)
-router.post('/updateOrder', adminController.postUpdateOrder)
-router.delete('/deleteOrder/:orderId', adminController.deleteOrder)
-router.post('/logout', adminController.postLogout)
+router.get("/orders", adminController.getOrder);
+router.get("/orderDetails/:orderId", adminController.getOrderDetails);
+router.get("/updateOrder/:orderId", adminController.getUpdateOrder);
+router.post("/updateOrder", adminController.postUpdateOrder);
+router.delete("/deleteOrder/:orderId", adminController.deleteOrder);
+router.post("/logout", adminController.postLogout);
 
 //admin coupenMangement
-router.get('/coupens', adminController.getCoupenPage)
+router.get("/coupens", adminController.getCoupenPage);
 
-//admin add coupen 
-router.post('/addCoupon', adminController.addCoupen)
+//admin add coupen
+router.post("/addCoupon", adminController.addCoupen);
 
 //admin edit coupen
-router.put('/editCoupon/:couponId', adminController.editCoupen)
+router.put("/editCoupon/:couponId", adminController.editCoupen);
 
 //get coupen data
-router.get('/getCouponData/:coupenId', adminController.getCouponData)
+router.get("/getCouponData/:coupenId", adminController.getCouponData);
 
 //remove coupon
-router.delete('/removeCoupon/:couponId', adminController.removeCoupon)
+router.delete("/removeCoupon/:couponId", adminController.removeCoupon);
 
 //applyCoupon
-router.put('/applyCoupon/:couponId', adminController.applyCoupon)
+router.put("/applyCoupon/:couponId", adminController.applyCoupon);
 
 //get offer mangement
-router.get('/offers', adminController.getOffers)
+router.get("/offers", adminController.getOffers);
 
 //add offer
-router.post('/addOffer', adminController.addOffer)
+router.post("/addOffer", adminController.addOffer);
 
 //delte Offer
-router.delete('/offer/delete/:offerId', adminController.deleteOffer)
+router.delete("/offer/delete/:offerId", adminController.deleteOffer);
 
 //edit offer
-router.get('/getSingleOffer/:offerId', adminController.getSingleOffer)
+router.get("/getSingleOffer/:offerId", adminController.getSingleOffer);
 
 //edit offer
-router.put('/editOffer/:offerId', adminController.editOffer)
+router.put("/editOffer/:offerId", adminController.editOffer);
 
 //add refferal offer
-router.post('/addrefferalOffer', adminController.addrefferalOffer)
+router.post("/addrefferalOffer", adminController.addrefferalOffer);
 
 //get referal offer
-router.get('/referalOffers', adminController.referalOffers)
+router.get("/referalOffers", adminController.referalOffers);
 
 //delete referal offer
-router.delete('/refferalOffer/delete/:offerId', adminController.deleteReferalOffers)
+router.delete(
+  "/refferalOffer/delete/:offerId",
+  adminController.deleteReferalOffers,
+);
 
 //get single refferal
-router.get('/getSinglerefferal/:offerId', adminController.getSinglerefferal)
+router.get("/getSinglerefferal/:offerId", adminController.getSinglerefferal);
 
 //edit referal offer
-router.post('/editReferralForm/:offerId', adminController.editReffferalOffer)
+router.post("/editReferralForm/:offerId", adminController.editReffferalOffer);
 
 // get approval page
-router.get('/pendings',adminAuth, adminController.getPendings)
+router.get("/pendings", adminAuth, adminController.getPendings);
 
 //admin return approval
-router.post('/returns/approve', adminController.approveReturn)
+router.post("/returns/approve", adminController.approveReturn);
 
 //admin reject return
-router.post('/returns/reject', adminController.rejectReturn)
+router.post("/returns/reject", adminController.rejectReturn);
 
 //admin report get
-router.get('/reports', adminController.getSalesReport)
+router.get("/reports", adminController.getSalesReport);
 
-router.get('/updateReport', adminController.updateSaleReport)
+router.get("/updateReport", adminController.updateSaleReport);
 
 // get salesreport pdf
-router.post('/downloadSaleReportpdf', adminController.downloadSaleReportpdf)
+router.post("/downloadSaleReportpdf", adminController.downloadSaleReportpdf);
 
 //downloadSaleReportExcel
-router.get('/downloadSaleReportExcel', adminController.downloadSaleReportExcel)
+router.get("/downloadSaleReportExcel", adminController.downloadSaleReportExcel);
 module.exports = router;

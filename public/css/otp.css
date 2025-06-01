@@ -2,14 +2,16 @@ body {
   margin: 0;
   padding: 0;
   font-family: "Segoe UI", sans-serif;
-  background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
-    url('https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=1350&q=80') no-repeat center center/cover;
+  background:
+    linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
+    url("https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=1350&q=80")
+      no-repeat center center/cover;
   height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-#textSpan{
+#textSpan {
   font-weight: bold;
 }
 .otp-container {
@@ -62,8 +64,8 @@ button {
 button:hover {
   background-color: #0056b3;
 }
-#resendBtn{
-      display: block;
-    margin-left: 5em;
-    margin-top: .5em;
+#resendBtn {
+  display: block;
+  margin-left: 5em;
+  margin-top: 0.5em;
 }
