@@ -22,6 +22,10 @@ app.use(morgan('dev'));
 
 app.use("/uploads", express.static("uploads"));
 
+app.get('/', (req, res) => {
+  res.redirect('/user/home');
+});
+
 // Set the view engine to EJS
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
