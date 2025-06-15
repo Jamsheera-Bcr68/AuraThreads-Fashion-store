@@ -156,11 +156,7 @@ router.post(
           imagePaths = JSON.parse(uploadedImages);
         }
 
-        // If files were uploaded via imageInput, add those paths
-        // if (req.files && req.files.imageInput) {
-        //     const additionalPaths = req.files.imageInput.map(file => `/uploads/${file.filename}`);
-        //     imagePaths = [...imagePaths, ...additionalPaths];
-        // }
+        
       } catch (parseError) {
         console.error("Error parsing uploaded images:", parseError);
       }
@@ -190,6 +186,7 @@ router.post(
       console.log("New Product saved:", newProduct);
 
       res.status(201).json({
+        success:true,
         message: "Product added successfully!",
         product: newProduct,
       });
@@ -235,6 +232,8 @@ router.post(
   upload.array("images", 5),
   async (req, res) => {
     try {
+      console.log('req.body',req.body)
+      
       if (!req.body) {
         throw new Error("Request body is empty");
       }
@@ -253,8 +252,10 @@ router.post(
 
       const productToUpdate = await Product.findOne({ _id: productId });
       if (!productToUpdate) {
-        req.flash("errorMessage", "No product found");
-        return res.redirect("/product/products");
+        console.log('product not found');
+        
+       return res.json({success:false,message:'Product Not Fount'})
+       
       }
       let images;
       if (imagePaths == "") {
@@ -270,13 +271,14 @@ router.post(
         { new: true },
       );
 
-      console.log("Updated Product:", updatedProduct);
-      req.flash("successMessage", "Product Updated Successfully");
-      return res.redirect("/product/products");
+      console.log(" product updated, Updated Product:", updatedProduct);
+      return res.json({success:true,message: "Product Updated Successfully"})
+    
     } catch (error) {
       console.error("Error updating product:", error);
-      req.flash("errorMessage", "Product not found");
-      return res.redirect("/product/products");
+     console.log('error in fetching products');
+        
+       return res.json({success:false,message:'Server error'})
     }
   },
 );
@@ -291,8 +293,12 @@ router.delete("/products/delete/:productId", async (req, res) => {
     const deleteProduct = await Product.findOneAndUpdate(
       { _id: productId },
       { isDeleted: true },
+      {isActive:false},
+      {isListed:false},
       { new: true },
-    );
+    )
+    console.log('deleted product',deleteProduct);
+    
     if (!deleteProduct) {
       return res
         .status(404)

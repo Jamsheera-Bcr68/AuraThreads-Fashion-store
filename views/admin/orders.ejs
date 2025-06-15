@@ -47,7 +47,10 @@
                                                     <td>#<%= order._id %>
                                                     </td>
                                                     <td>
-                                                        <%= order.userId.fullName %>
+                                                        <% if(order.userId){ %>
+                                                            <%= order.userId.fullName %>
+                                                        <% } %>
+                                                        
                                                     </td>
                                                     <td>
                                                         <%= new Date(order.createdAt).toLocaleDateString('en-US', {
@@ -61,14 +64,13 @@
                                                         </span></td>
                                                     <td class="actions">
                                                         <button class="btn btn-view btn-info"
-                                                            onclick="openOrderDetails('<%= order._id %>')">View<i
-                                                                class="fas fa-eye"></i></button>
+                                                            onclick="openOrderDetails('<%= order._id %>')">View
+                                                                </button>
                                                         <button class="btn btn-edit btn-warning"
-                                                            onclick="openUpdateStatus('<%= order._id %>')">Edit<i
-                                                                class="fas fa-edit"></i></button>
+                                                            onclick="openUpdateStatus('<%= order._id %>')">Edit</button>
                                                         <button class="btn btn-delete btn-danger"
-                                                            onclick="deleteOrder('<%= order._id %>')">Delete<i
-                                                                class="fas fa-trash"></i></button>
+                                                            onclick="deleteOrder('<%= order._id %>')">Cancel
+                                                               </button>
                                                     </td>
                                                 </tr>
                                                 <% }); %>

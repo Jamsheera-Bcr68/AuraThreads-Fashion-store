@@ -38,13 +38,14 @@
         }
     </style>
 
-    <div class="container mt-5">
+    <div class="container">
         <!-- Include Header -->
         <%- include('../partials/header.ejs') %>
 
             <div class="d-flex" id="wrapper">
                 <!-- Include Sidebar -->
                 <%- include('../partials/sidebar') %>
+
 
                     <div class="container mt-4">
                         <h2 class="text-center fw-bold">Add New Product</h2>
@@ -164,7 +165,8 @@
                                     <!-- Buttons in One Row -->
                                     <div class="d-flex justify-content-end">
                                         <button type="reset" class="btn btn-secondary me-2">reset</button>
-                                        <button type="button" class="btn btn-secondary me-2"><a href="/product/products">cancel</a></button>
+                                        <button type="button" class="btn btn-secondary me-2"><a style="text-decoration: none;color: white;"
+                                                href="/product/products">Back</a></button>
                                         <button type="submit" id="addProductForm" class="btn btn-primary">Add
                                             Product</button>
                                     </div>
@@ -257,7 +259,7 @@
 
                             // Initialize Cropper for each image
                             const cropper = new Cropper(img, {
-                                aspectRatio: 3/4, // Square crop
+                                aspectRatio: 3 / 4, // Square crop
                                 viewMode: 2,
                                 guides: true,
                                 background: false
@@ -320,7 +322,12 @@
 
                     Promise.all(uploadPromises)
                         .then(() => {
-                            Swal.fire("Images Uploaded", "All images uploaded successfully!", "success");
+                            Swal.fire({
+                                icon: "success",
+                                title: 'image uploaded ',
+                                showConfirmButton: false,
+                                timer: 1000
+                            });
 
                             // Update hidden input with uploaded image paths
                             if (uploadedImagesInput) {
@@ -354,6 +361,59 @@
                     for (let [key, value] of formData.entries()) {
                         console.log(`${key}: ${value}`);
                     }
+                    const productName=formData.get('productName').trim()
+                    console.log(productName);
+                    if(!productName){
+                      return  Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text:"Product Name cannot be empty"
+                            })
+                    }
+                    if(productName.length<3){
+                        return  Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text:"Product Name Should contain at least 3 letters"
+                            })
+                    }
+                    if(productName.length>20){
+                        return  Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text:"Product Name Should not contain more than 20 letters"
+                            })
+                    }
+                     if(/^\d/.test(productName)){
+                         return  Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text:"Product Name Should not sart with numbers"
+                            })
+                     }
+                     const stock=formData.get('stock')
+                     if(stock<0){
+                         return  Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text:"Stock cannot be less than zero"
+                            })
+                     }
+                      if(!stock){
+                         return  Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text:"Stock cannot be empty"
+                            })
+                     }
+                     const price=formData.get('price')
+                     if(price==0){
+                         return  Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text:"Price cannot be zero"
+                            })
+                     }
 
                     try {
                         const response = await fetch("/product/products/add", {
@@ -363,13 +423,12 @@
 
                         const result = await response.json();
 
-                        if (response.ok) {
+                        if (result.success) {
                             Swal.fire({
-                                icon: 'success',
-                                title: 'Success',
-                                text: result.message || 'Product added successfully!',
-                                timer: 2000,
-                                timerProgressBar: true
+                                icon: "success",
+                                title: 'Product Added Successfully ',
+                                showConfirmButton: false,
+                                timer: 1000
                             }).then(() => {
                                 // Reset form and preview
                                 addForm.reset();
@@ -377,7 +436,7 @@
                                 uploadedImagePaths = [];
                                 uploadedImagesInput.value = '';
                             });
-                            window.location.href='/product/products'
+                            window.location.href = '/product/products'
                         } else {
                             Swal.fire({
                                 icon: 'error',
@@ -396,6 +455,7 @@
                 });
 
             });
+        
         </script>
 </body>
 

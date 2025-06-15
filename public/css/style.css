@@ -202,12 +202,13 @@ a:hover {
 .site-navbar .site-navbar-top {
   border-bottom: 1px solid #f3f3f4;
   padding-top: 20px;
-  /* padding-bottom: 20px; */
-  margin-bottom: 0px;
+   padding-bottom: 20px; 
+  margin-bottom: 0 px;
 }
 @media (min-width: 768px) {
   .site-navbar .site-navbar-top {
     /* padding-bottom: 40px; */
+   
   }
 }
 .site-navbar .site-search-icon a span {

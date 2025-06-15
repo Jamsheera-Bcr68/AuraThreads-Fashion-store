@@ -200,9 +200,7 @@ button:hover {
   margin-top: 20px;
 }
 
-.address-form {
-  display: none;
-}
+
 
 .show {
   display: block;
@@ -325,4 +323,33 @@ button:hover {
   width: 18px;
   height: 18px;
   cursor: pointer;
+}
+#add-address-modal{
+ display: none; /* Hidden by default */
+ 
+  z-index:2000;
+  top: 0 ;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+ color: black;
+  padding: 20px;
+  justify-content: center; /* ✅ center horizontally */
+  align-items: center;     /* ✅ center vertically */
+}
+.addModal-content{
+  background-color: #fefefe;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 40%;
+  border-radius: 8px;
+}
+.form-row {
+  display: flex;
+  gap: 10px;
+}
+
+.half-width {
+  flex: 1;
 }

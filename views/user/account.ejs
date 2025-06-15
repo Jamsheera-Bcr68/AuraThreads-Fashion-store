@@ -25,7 +25,7 @@
     <div class="container">
       <div class="profile-container">
         <!-- Sidebar -->
-        <div class="sidebar">
+        <div class="sidebar fw-bold">
 
           <!-- Profile Picture Div -->
           <div class="profile-pic" onclick="openModal()">
@@ -102,7 +102,7 @@
               <a href="#" class="active" onclick="showSection('profile-details')">Profile Details</a>
             </li>
             <li>
-              <a href="#" onclick="showSection('address-management')">Address Management</a>
+              <a href="#" onclick="showSection('address-management')">Manage Address </a>
             </li>
             <li>
               <a href="#" onclick="showSection('order-history')">Order History</a>
@@ -110,7 +110,7 @@
             <li>
               <a href="#" onclick="showForgotPassword()">Change Password</a>
             </li>
-            <li><button id="logout-btn" class="btn">Logout</button></li>
+            <li><button id="logout-btn" class="btn fw-bold">Logout</button></li>
           </ul>
         </div>
 
@@ -133,7 +133,7 @@
           </div>
           <!-- Profile Details Section -->
           <div id="profile-details" class="content-section">
-            <h2 class="section-title">Profile Details</h2>
+            <h2 class="section-title" style="text-align: center; margin-top: 2em;">Profile Details</h2>
             <form id="profile-form" action="/user/profile/update" method="POST" novalidate>
               <div class="form-group">
                 <label for="full-name">Full Name</label>
@@ -151,841 +151,1124 @@
                 <label for="dob">Date of Birth</label>
                 <input type="date" id="dob" name="dob" value="<%= user.dob %>">
               </div>
-              <button type="submit">Save Changes</button>
+              <button class="bg-success fw-bold" style="border-radius: 5px;" type="submit">Save Changes</button>
             </form>
           </div>
 
           <!-- Address Management Section -->
-          <div id="address-management" class="content-section hide">
-            <h2 class="section-title">Address Management</h2>
+          <div style="color: black;font-weight: 100;" id="address-management" class="content-section hide">
+            <h2 class="section-title" style="text-align: center; margin-top: 2em;">Saved Addresses</h2>
 
-            <div id="address-list">
+            <div id="address-list" class="container">
               <% if (addresses && addresses.length> 0) { %>
+                <div class="row">
+                  <% addresses.forEach(function(address, index) { %>
+                    <!-- Address Card -->
+                    <div class="col-md-6 mb-4">
+                      <div id="div-<%= address._id %>" class="address-card">
 
-                <% addresses.forEach(function(address, index) { %>
-                  <!-- Address Card -->
-                  <div class="address-card">
-                    <div class="address-actions">
-                      <button class="edit-btn"
-                        onclick="editAddress('<%= address._id %>', '<%= address.label %>', '<%= address.line1 %>', '<%= address.line2 %>', '<%= address.city %>', '<%= address.state %>', '<%= address.zip %>', '<%= address.country %>', '<%= address.phone %>', '<%= address.isDefault ? true :false %>')">
-                        Edit
-                      </button>
-                      <button class="delete-btn" onclick="deleteAddress('<%= address._id %>')">
-                        Delete
-                      </button>
+                        <% if (address.isDefault) { %>
+                          <h5>Default Address</h5>
+                          <% } %>
+                            <h4>
+                              <%= address.label %>
+                            </h4>
+                            <p>
+                              <%= address.line1 %>
+                                <%= address.line2 ? ', ' + address.line2 : '' %>
+                            </p>
+                            <p>
+                              <%= address.city %>, <%= address.state %>
+                                  <%= address.zip %>
+                            </p>
+                            <p>
+                              <%= address.country %>
+                            </p>
+                            <p>Phone: <%= address.phone %>
+                            </p>
+                            <button style="font-weight: bold;" class="edit-btn"
+                              onclick="editAddress('<%= address._id %>', '<%= address.label %>', '<%= address.line1 %>', '<%= address.line2 %>', '<%= address.city %>', '<%= address.state %>', '<%= address.zip %>', '<%= address.country %>', '<%= address.phone %>', '<%= address.isDefault ? true :false %>')">
+                              Edit
+                            </button>
+
+                            <button style="font-weight: bold;" class="delete-btn"
+                              onclick="deleteAddress('<%= address._id %>')">
+                              Delete
+                            </button>
+                      </div>
+
+
                     </div>
-                    <% if (address.isDefault) { %>
-                      <h5>Default Address</h5>
-                      <% } %>
-                        <h4>
-                          <%= address.label %>
-                        </h4>
-                        <p>
-                          <%= address.line1 %>
-                            <%= address.line2 ? ', ' + address.line2 : '' %>
-                        </p>
-                        <p>
-                          <%= address.city %>, <%= address.state %>
-                              <%= address.zip %>
-                        </p>
-                        <p>
-                          <%= address.country %>
-                        </p>
-                        <p>Phone: <%= address.phone %>
-                        </p>
-                  </div>
-                  <% }); %>
-                    <% } else { %>
-                      <p>You don't have any saved addresses yet.</p>
-                      <% } %>
+
+                    <% }); %>
+                </div>
+                <% } else { %>
+                  <p style="font-weight: bold;color: red;text-align: center;">You don't have any saved addresses yet.
+                  </p>
+                  <% } %>
             </div>
 
-            <button class="add-address-btn" onclick="showAddAddressForm()">
-              Add New Address
-            </button>
+
           </div>
 
-          <!-- Add Address Form (Initially Hidden) -->
-          <div id="address-form" class="address-form">
-            <h3 id="address-form-title">Add New Address</h3>
-            <form id="address-form-element" action="/user/address/add" method="POST">
+          <button style="border-radius: 5px;margin-left: 37em;" class="add-address-btn bg-success text-white fw-bold"
+            onclick="showAddAddressModal()">
+            Add New Address
+          </button>
+        </div>
+
+        <!-- Address Modal -->
+
+        <div id="add-address-modal" class="modal">
+          <div class="addModal-content">
+            <span class="close" onclick="closeAddModal()">&times;</span>
+            <h2 style="text-align: center;font-weight: bold;" class="modal-title ">Add Address</h2>
+
+            <form style="margin-top:2em ; " id="address-form-element" action="/user/address/add" method="POST">
               <input type="hidden" id="address-id" name="id" />
+
               <div class="form-group">
                 <label for="address-label">Label (e.g., Home, Work)</label>
-                <input type="text" id="address-label" name="label">
+                <input type="text" id="address-label" name="label" required>
               </div>
-              <div class="form-group">
-                <label for="address-line1">Address Line 1</label>
-                <input type="text" id="address-line1" name="line1">
-              </div>
-              <div class="form-group">
-                <label for="address-line2">Address Line 2 (Optional)</label>
-                <input type="text" id="address-line2" name="line2">
-              </div>
-              <div class="form-group">
-                <label for="address-city">City</label>
-                <input type="text" id="address-city" name="city">
-              </div>
-              <div class="form-group">
-                <label for="address-state">State/Province</label>
-                <input type="text" id="address-state" name="state">
-              </div>
-              <div class="form-group">
-                <label for="address-zip">ZIP/Postal Code</label>
-                <input type="text" id="address-zip" name="zip">
-              </div>
-              <div class="form-group">
-                <label for="address-country">Country</label>
-                <input type="text" value="" name="country" id="address-country">
 
+              <!-- Address Line 1 & 2 in one row -->
+              <div class="form-row">
+                <div class="form-group half-width">
+                  <label for="address-line1">Address Line 1</label>
+                  <input type="text" id="address-line1" name="line1">
+                </div>
+                <div class="form-group half-width">
+                  <label for="address-line2">Address Line 2 (Optional)</label>
+                  <input type="text" id="address-line2" name="line2">
+                </div>
               </div>
+
+              <!-- City & State in one row -->
+              <div class="form-row">
+                <div class="form-group half-width">
+                  <label for="address-city">City</label>
+                  <input type="text" id="address-city" name="city">
+                </div>
+                <div class="form-group half-width">
+                  <label for="address-state">State/Province</label>
+                  <input type="text" id="address-state" name="state">
+                </div>
+              </div>
+
+              <!-- ZIP & Country in one row -->
+              <div class="form-row">
+                <div class="form-group half-width">
+                  <label for="address-zip">ZIP/Postal Code</label>
+                  <input type="text" id="address-zip" name="zip">
+                </div>
+                <div class="form-group half-width">
+                  <label for="address-country">Country</label>
+                  <input type="text" id="address-country" name="country">
+                </div>
+              </div>
+
               <div class="form-group">
                 <label for="address-phone">Phone Number</label>
                 <input type="tel" id="address-phone" name="phone">
               </div>
+
               <div class="form-group checkbox-group">
                 <input type="checkbox" id="default" name="isDefault" value="true">
                 <label for="default">Set as Default Address</label>
               </div>
-              <div class="action-buttons">
-                <button type="button" class="btn-secondary" onclick="cancelAddressForm()">
-                  Cancel
-                </button>
-                <button type="submit">Save Address</button>
-              </div>
-            </form>
-          </div>
-
-          <!-- Edit Address Modal -->
-          <div id="address-edit-form" class="address-form">
-            <h3 id="address-form-title">Edit Address</h3>
-            <form id="edit-address-form" action="/user/address/edit" method="POST">
-              <input type="hidden" id="address-id" name="addressId" />
-
-              <div class="form-group">
-                <label for="address-label">Label</label>
-                <input type="text" id="edit-address-label" name="label" />
-              </div>
-
-              <div class="form-group">
-                <label for="address-line1">Address Line 1</label>
-                <input type="text" id="edit-address-line1" name="line1" />
-              </div>
-
-              <div class="form-group">
-                <label for="address-line2">Address Line 2</label>
-                <input type="text" id="edit-address-line2" name="line2" />
-              </div>
-
-              <div class="form-group">
-                <label for="address-city">City</label>
-                <input type="text" id="edit-address-city" name="city" />
-              </div>
-
-              <div class="form-group">
-                <label for="address-state">State/Province</label>
-                <input type="text" id="edit-address-state" name="state" />
-              </div>
-
-              <div class="form-group">
-                <label for="address-zip">ZIP/Postal Code</label>
-                <input type="text" id="edit-address-zip" name="zip" />
-              </div>
-
-              <div class="form-group">
-                <label for="address-country">Country</label>
-                <input type="text" id="edit-address-country" name="country" value="">
-
-              </div>
-
-              <div class="form-group">
-                <label for="address-phone">Phone Number</label>
-                <input type="tel" id="edit-address-phone" name="phone" />
-              </div>
-
-              <div class="form-group checkbox-group">
-                <input type="checkbox" id="edit-default" name="isDefault" value="true" />
-                <label for="default">Set as Default Address</label>
-              </div>
 
               <div class="action-buttons">
-                <button type="button" class="btn-secondary" onclick="cancelEditAddressForm()">
-                  Cancel
-                </button>
-                <button type="submit">Save Address</button>
+                <button class="bg-dangertext-white fw-bold" style="border-radius: 1em;" type="button"
+                  class="btn-secondary" onclick="closeAddModal()">Cancel</button>
+                <button class="bg-success text-white fw-bold" style="border-radius: 1em;" type="submit">Save </button>
               </div>
             </form>
-          </div>
 
-          <!-- Order History Section -->
-          <div id="order-history" class="content-section hide">
+
+          </div>
+        </div>
+
+        <!-- Edit Address Modal -->
+
+        <div class="modal fade" id="editAddressModal" tabindex="1" aria-labelledby="editAddressModalLabel"
+          aria-hidden="true">
+          <div class="modal-dialog modal-lg modal-dialog-centered"> <!-- Wider and centered -->
+            <div style="width: 100%;" class="modal-content p-3">
+
+              <div class="modal-header">
+                <h5 style="text-align: center;" class="modal-title  text-dark fw-bold" id="editAddressModalLabel">Edit
+                  Address</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+
+              <div class="modal-body">
+                <form id="edit-address-form" action="/user/address/edit" method="POST">
+                  <input type="hidden" id="address-id" name="addressId" />
+
+                  <div class="mb-3">
+                    <label for="edit-address-label" class="form-label">Label</label>
+                    <input type="text" id="edit-address-label" name="label" class="form-control" />
+                  </div>
+
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label for="edit-address-line1" class="form-label">Address Line 1</label>
+                      <input type="text" id="edit-address-line1" name="line1" class="form-control" />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <label for="edit-address-line2" class="form-label">Address Line 2</label>
+                      <input type="text" id="edit-address-line2" name="line2" class="form-control" />
+                    </div>
+                  </div>
+
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label for="edit-address-city" class="form-label">City</label>
+                      <input type="text" id="edit-address-city" name="city" class="form-control" />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <label for="edit-address-state" class="form-label">State/Province</label>
+                      <input type="text" id="edit-address-state" name="state" class="form-control" />
+                    </div>
+                  </div>
+
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label for="edit-address-zip" class="form-label">ZIP/Postal Code</label>
+                      <input type="text" id="edit-address-zip" name="zip" class="form-control" />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <label for="edit-address-country" class="form-label">Country</label>
+                      <input type="text" id="edit-address-country" name="country" class="form-control" />
+                    </div>
+                  </div>
+
+                  <div class="mb-3">
+                    <label for="edit-address-phone" class="form-label">Phone Number</label>
+                    <input type="tel" id="edit-address-phone" name="phone" class="form-control" />
+                  </div>
+
+                  <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="edit-default" name="isDefault" value="true" />
+                    <label class="form-check-label" for="edit-default">Set as Default Address</label>
+                  </div>
+
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update</button>
+                  </div>
+                </form>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+
+
+        <!-- Order History Section -->
+        <div id="order-history" class="content-section hide">
+
+          <!--cut from here-->
+          <% if (orders && orders.length> 0) { %>
             <h2 style="color: rgb(6, 104, 55);font-weight: bold;" class="section-title">Order History</h2>
-            <!--cut from here-->
-            <% if (orders && orders.length> 0) { %>
-              <% orders.forEach(function(order) { %>
-                <!-- Order Card -->
-                <div class="order-card">
-                  <div class="order-header">
-                    <div>
-                      <strong style="font-weight: bold;color: black;">Order #<%= order._id %></strong>
-                      <div style="color: black;font-weight: bold;">
-                        Placed on: <%= new Date(order.createdAt).toLocaleDateString() %>
-                      </div>
+            <% orders.forEach(function(order) { %>
+              <!-- Order Card -->
+              <div class="order-card">
+                <div class="order-header">
+                  <div>
+                    <strong style="font-weight: bold;color: black;">Order #<%= order._id %></strong>
+                    <div style="color: black;font-weight: bold;">
+                      Placed on: <%= new Date(order.createdAt).toLocaleDateString() %>
                     </div>
-                    <div>
-                      <span style="color: black;font-weight: bold;" class="status">
-                        <%= order.status %>
-                      </span>
-                      <button class="btn-sm bg-success" onclick="showOrderDetails('<%= order._id %>')">
-                        View Details
+                  </div>
+                  <div>
+                    <span style="color: black;font-weight: bold;" class="status">
+                      <%= order.status %>
+                    </span>
+                    <button class="btn-sm bg-success" onclick="showOrderDetails('<%= order._id %>')">
+                      View Details
+                    </button>
+                    <% if(order && order.status=='Delivered' ){ %>
+                      <button class="btn-sm btn-secondary" disabled>
+                        Cancell
                       </button>
-                      <% if(order && order.status=='Delivered' ){ %>
+                      <% } else if(order && order.status=='returned' ){ %>
                         <button class="btn-sm btn-secondary" disabled>
-                          Cancell
+                          Returned
                         </button>
-                        <% } else if(order && order.status=='returned' ){ %>
-                          <button class="btn-sm btn-secondary" disabled>
-                            Returned
+                        <% }else if(order && order.status !=='cancelled' ) { %>
+
+                          <button class="btn-sm cancel-btn" onclick="cancelOrder('<%= order._id %>', this)">
+                            Cancel Order
                           </button>
-                          <% }else if(order && order.status !=='cancelled' ) { %>
-
-                            <button class="btn-sm cancel-btn" onclick="cancelOrder('<%= order._id %>', this)">
-                              Cancel Order
+                          <% } else if (order.status==='cancelled' ) { %>
+                            <button class="btn-sm btn-secondary" disabled>
+                              Cancelled
                             </button>
-                            <% } else if (order.status==='cancelled' ) { %>
-                              <button class="btn-sm btn-secondary" disabled>
-                                Cancelled
-                              </button>
-                              <% } %>
-                    </div>
-                  </div>
-
-                  <div class="order-items">
-                    <div style="color: rgb(18, 102, 24);font-weight: bold;">
-                      <%= Array.isArray(order.items) ? order.items.length : 1 %> item<%= Array.isArray(order.items) &&
-                          order.items.length> 1 ? 's' : '' %> |
-                          Total: ₹ <%= order.finalAmount.toFixed(2) %>
-                    </div>
-                    <% if (order.estimatedDelivery) { %>
-                      <div style="color: black;font-weight: bold;">
-                        Estimated delivery: <%= new Date(order.estimatedDelivery).toLocaleDateString() %>
-                      </div>
-                      <% } %>
+                            <% } %>
                   </div>
                 </div>
-                <% }); %>
-                  <% } else { %>
-                    <p>You haven't placed any orders yet.</p>
+
+                <div class="order-items">
+                  <div style="color: rgb(18, 102, 24);font-weight: bold;">
+                    <%= Array.isArray(order.items) ? order.items.length : 1 %> item<%= Array.isArray(order.items) &&
+                        order.items.length> 1 ? 's' : '' %> |
+                        Total: ₹ <%= order.finalAmount.toFixed(2) %>
+                  </div>
+                  <% if (order.estimatedDelivery) { %>
+                    <div style="color: black;font-weight: bold;">
+                      Estimated delivery: <%= new Date(order.estimatedDelivery).toLocaleDateString() %>
+                    </div>
                     <% } %>
+                </div>
+              </div>
+              <% }); %>
+                <% } else { %>
+                  <p style="font-weight: bold;color: red;">You haven't placed any orders yet.</p>
+                  <% } %>
 
-                      <!--To here -->
+                    <!--To here -->
 
+        </div>
+
+        <!-- Forgot Password Modal -->
+        <div id="forgot-password-modal" class="modal">
+          <div class="modal-content">
+            <span class="close" onclick="closeForgotPassword()">&times;</span>
+            <h2 class="modal-title">Change Password</h2>
+
+            <form id="forgot-password-form" action="/profile/change-password" method="POST">
+              <div class="form-group">
+                <label for="current-password">Current Password</label>
+                <input type="password" id="current-password" name="currentPassword" required />
+              </div>
+
+              <div class="form-group">
+                <label for="new-password">New Password</label>
+                <input type="password" id="new-password" name="newPassword" required />
+              </div>
+
+              <div class="form-group">
+                <label for="confirm-password">Confirm New Password</label>
+                <input type="password" id="confirm-password" name="confirmPassword" required />
+              </div>
+
+              <div class="modal-actions">
+                <button type="button" class="btn-secondary" onclick="closeForgotPassword()">
+                  Cancel
+                </button>
+                <button type="submit" class="btn-primary">Change Password</button>
+              </div>
+            </form>
           </div>
+        </div>
 
-          <!-- Forgot Password Modal -->
-          <div id="forgot-password-modal" class="modal">
-            <div class="modal-content">
-              <span class="close" onclick="closeForgotPassword()">&times;</span>
-              <h2 class="modal-title">Change Password</h2>
-
-              <form id="forgot-password-form" action="/profile/change-password" method="POST">
-                <div class="form-group">
-                  <label for="current-password">Current Password</label>
-                  <input type="password" id="current-password" name="currentPassword" required />
-                </div>
-
-                <div class="form-group">
-                  <label for="new-password">New Password</label>
-                  <input type="password" id="new-password" name="newPassword" required />
-                </div>
-
-                <div class="form-group">
-                  <label for="confirm-password">Confirm New Password</label>
-                  <input type="password" id="confirm-password" name="confirmPassword" required />
-                </div>
-
-                <div class="modal-actions">
-                  <button type="button" class="btn-secondary" onclick="closeForgotPassword()">
-                    Cancel
-                  </button>
-                  <button type="submit" class="btn-primary">Change Password</button>
-                </div>
-              </form>
-            </div>
+        <!-- Delete Address Confirmation Modal -->
+        <div id="delete-address-modal" class="modal">
+          <div class="modal-content">
+            <span class="close" onclick="closeDeleteModal()">&times;</span>
+            <h2>Confirm Deletion</h2>
+            <p>Are you sure you want to delete this address?</p>
+            <form id="delete-address-form" action="/user/address/delete" method="delete">
+              <input type="hidden" id="delete-address-id" name="addressId" />
+              <div class="action-buttons">
+                <button type="button" class="btn-secondary" onclick="closeDeleteModal()">
+                  Cancel
+                </button>
+                <button type="submit" class="cancel-btn">Delete</button>
+              </div>
+            </form>
           </div>
+        </div>
 
-          <!-- Delete Address Confirmation Modal -->
-          <div id="delete-address-modal" class="modal">
-            <div class="modal-content">
-              <span class="close" onclick="closeDeleteModal()">&times;</span>
-              <h2>Confirm Deletion</h2>
-              <p>Are you sure you want to delete this address?</p>
-              <form id="delete-address-form" action="/user/address/delete" method="delete">
-                <input type="hidden" id="delete-address-id" name="addressId" />
-                <div class="action-buttons">
-                  <button type="button" class="btn-secondary" onclick="closeDeleteModal()">
-                    Cancel
-                  </button>
-                  <button type="submit" class="cancel-btn">Delete</button>
-                </div>
-              </form>
-            </div>
+        <!-- Cancel Order Confirmation Modal -->
+        <div id="cancel-order-modal" class="modal">
+          <div class="modal-content">
+            <span class="close" onclick="closeCancelOrderModal()">&times;</span>
+            <h2>Confirm Cancellation</h2>
+            <p>Are you sure you want to cancel this order?</p>
+            <form id="cancel-order-form" action="/order/cancel" method="POST">
+              <input type="hidden" id="cancel-order-id" name="orderId" />
+              <div class="form-group">
+                <label for="cancel-reason">Reason for cancellation</label>
+                <select id="cancel-reason" name="reason">
+                  <option value="">Select a reason</option>
+                  <% cancelReasons.forEach(function(reason) { %>
+                    <option value="<%= reason.value %>">
+                      <%= reason.label %>
+                    </option>
+                    <% }); %>
+                </select>
+              </div>
+              <div class="form-group" id="other-reason-group" style="display: none">
+                <label for="other-reason">Please specify</label>
+                <textarea id="other-reason" name="otherReason" rows="3"></textarea>
+              </div>
+              <div class="action-buttons">
+                <button type="button" class="btn-secondary" onclick="closeCancelOrderModal()">
+                  Keep Order
+                </button>
+                <button type="submit" class="cancel-btn">Cancel Order</button>
+              </div>
+            </form>
           </div>
+        </div>
+        <!-- Cropper.js CSS -->
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
 
-          <!-- Cancel Order Confirmation Modal -->
-          <div id="cancel-order-modal" class="modal">
-            <div class="modal-content">
-              <span class="close" onclick="closeCancelOrderModal()">&times;</span>
-              <h2>Confirm Cancellation</h2>
-              <p>Are you sure you want to cancel this order?</p>
-              <form id="cancel-order-form" action="/order/cancel" method="POST">
-                <input type="hidden" id="cancel-order-id" name="orderId" />
-                <div class="form-group">
-                  <label for="cancel-reason">Reason for cancellation</label>
-                  <select id="cancel-reason" name="reason">
-                    <option value="">Select a reason</option>
-                    <% cancelReasons.forEach(function(reason) { %>
-                      <option value="<%= reason.value %>">
-                        <%= reason.label %>
-                      </option>
-                      <% }); %>
-                  </select>
-                </div>
-                <div class="form-group" id="other-reason-group" style="display: none">
-                  <label for="other-reason">Please specify</label>
-                  <textarea id="other-reason" name="otherReason" rows="3"></textarea>
-                </div>
-                <div class="action-buttons">
-                  <button type="button" class="btn-secondary" onclick="closeCancelOrderModal()">
-                    Keep Order
-                  </button>
-                  <button type="submit" class="cancel-btn">Cancel Order</button>
-                </div>
-              </form>
-            </div>
-          </div>
-          <!-- Cropper.js CSS -->
-          <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
-
-          <!-- Cropper.js JS -->
-          <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+        <!-- Cropper.js JS -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
 
-          <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-          <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-          <script>
-            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-            // Initialize the page
-            document.addEventListener("DOMContentLoaded", function () {
-              // Show the profile details section by default
-              showSection("profile-details");
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+          const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+          // Initialize the page
+          document.addEventListener("DOMContentLoaded", function () {
+            // Show the profile details section by default
+            showSection("profile-details");
 
-              // Add event listener for cancel reason dropdown
-              var cancelReasonSelect = document.getElementById("cancel-reason");
-              if (cancelReasonSelect) {
-                cancelReasonSelect.addEventListener("change", function () {
-                  if (this.value === "other") {
-                    document.getElementById("other-reason-group").style.display =
-                      "block";
-                  } else {
-                    document.getElementById("other-reason-group").style.display =
-                      "none";
-                  }
-                });
-              }
-
-
-
-            });
-
-            // profile form validation
-            const profileForm = document.getElementById('profile-form')
-            document.getElementById('profile-form').addEventListener('submit', async function (e) {
-              e.preventDefault();
-              console.log('Profile submit button clicked');
-
-              const formData = new FormData(this);
-
-              // Log Form Data
-              console.log('Form Data Entries:');
-              for (let [key, value] of formData.entries()) {
-                console.log(`${key}: ${value}`);
-              }
-
-              // Convert FormData to JSON
-              let jsonObject = {};
-              formData.forEach((value, key) => jsonObject[key] = value);
-
-              try {
-                const response = await fetch('/user/profile/update', {
-                  method: "PATCH",
-                  headers: {
-                    "Content-Type": "application/json",
-                    'CSRF-Token': csrfToken
-                  },
-                  body: JSON.stringify(jsonObject)
-                });
-
-                const data = await response.json();
-
-                if (data && data.success) {
-                  Swal.fire(data.message);
-                  if (data.newEmail) {
-                    console.log('new emial', data.newEmail);
-
-                    window.location.href = '/user/emailChangeOtp'
-                  }
+            // Add event listener for cancel reason dropdown
+            var cancelReasonSelect = document.getElementById("cancel-reason");
+            if (cancelReasonSelect) {
+              cancelReasonSelect.addEventListener("change", function () {
+                if (this.value === "other") {
+                  document.getElementById("other-reason-group").style.display =
+                    "block";
                 } else {
-                  Swal.fire(data.message);
+                  document.getElementById("other-reason-group").style.display =
+                    "none";
                 }
-              } catch (error) {
-                Swal.fire('Something went wrong. Please try again.');
-                console.error('Fetch error:', error);
-              }
-            });
-
-            // add addressform
-            const addAddressForm = document.getElementById('address-form-element')
-            addAddressForm.addEventListener('submit', function (e) {
-              e.preventDefault()
-              console.log('add address form submitted');
-
-              const formData = new FormData(this)
-              let formObject = {};
-              formData.forEach((value, key) => { formObject[key] = value });
-
-              fetch('/user/address/add', {
-                method: "POST",
-                headers: {
-                  "content-Type": "application/json",
-                  'CSRF-Token': csrfToken
-                },
-                body: JSON.stringify(formObject)
-              }).then(response => response.json())
-                .then(data => {
-                  if (data && data.success) {
-                    Swal.fire(data.message)
-                    cancelAddressForm()
-                  } else {
-                    Swal.fire(data.message)
-                    cancelAddressForm()
-                  }
-                }).catch(error => {
-                  Swal.fire('Something Went Wrong')
-                  console.log('error is ', error);
-                  cancelAddressForm()
-                })
-            })
-            //DELETE ADDRESS
-
-            const deleteAddressForm = document.getElementById('delete-address-form')
-
-
-            // Show/hide sections
-            function showSection(sectionId) {
-              // Hide all sections
-              document.querySelectorAll(".content-section").forEach((section) => {
-                section.classList.add("hide");
               });
-
-              //hide forgot password modal
-              let forgotPasswordModal = document.getElementById(
-                "forgot-password-modal"
-              );
-              if (forgotPasswordModal) {
-                forgotPasswordModal.style.display = "none";
-              }
-              // Remove active class from all sidebar links
-              document.querySelectorAll(".sidebar-links a").forEach((link) => {
-                link.classList.remove("active");
-              });
-
-              // Show the selected section
-              document.getElementById(sectionId).classList.remove("hide");
-
-              // Add active class to the clicked link
-              event.target.classList.add("active");
             }
 
-            // Address Management Functions
-            function showAddAddressForm() {
-              document.getElementById("address-form-title").textContent =
-                "Add New Address";
-              document.getElementById("address-form").classList.add("show");
-              document.getElementById("address-id").value = "";
-              document.getElementById("address-form-element").reset();
-            }
-            let editAddressId
-            function editAddress(id, label, line1, line2, city, state, zip, country, phone, isDefault) {
-              console.log('edit button clicked');
-              editAddressId = id
-              console.log("Editing address:", id);
-              console.log(id, label, line1, line2, city, state, zip, country, phone, isDefault);
 
-              // Set values in the modal
-              // document.getElementById("address-id").value = id;
-              document.getElementById("edit-address-label").value = label;
-              document.getElementById("edit-address-line1").value = line1;
-              document.getElementById("edit-address-line2").value = line2 || '';
-              document.getElementById("edit-address-city").value = city;
-              document.getElementById("edit-address-state").value = state;
-              document.getElementById("edit-address-zip").value = zip;
-              document.getElementById("edit-address-country").value = country;
-              document.getElementById("edit-address-phone").value = phone;
 
-              // Handle checkbox for default address
-              document.getElementById("edit-default").checked = isDefault;
+          });
 
-              // Show modal
-              document.getElementById("address-edit-form").classList.add("show");
+          // profile form validation
+          const profileForm = document.getElementById('profile-form')
+          document.getElementById('profile-form').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            console.log('Profile submit button clicked');
+
+            const formData = new FormData(this);
+
+            // Log Form Data
+            console.log('Form Data Entries:');
+            for (let [key, value] of formData.entries()) {
+              console.log(`${key}: ${value}`);
             }
 
-            // handle edit form submission
-            const editAddressForm = document.getElementById('edit-address-form')
-            editAddressForm.addEventListener('submit', async function (e) {
-              e.preventDefault();
-              console.log('Edit form submitted');
+            // Convert FormData to JSON
+            let jsonObject = {};
+            formData.forEach((value, key) => jsonObject[key] = value);
 
-              let formData = new FormData(this);
-              let formObject = {};
-              formData.forEach((value, key) => { formObject[key] = value });
-
-              try {
-                fetch(`/user/address/edit/${editAddressId}`, {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                    'CSRF-Token': csrfToken
-                  },
-                  body: JSON.stringify(formObject)
-                }).then(response => response.json())
-                  .then(data => {
-                    if (data && data.success) {
-                      Swal.fire(data.message)
-                      cancelEditAddressForm()
-                    } else {
-                      Swal.fire(data.message)
-                    }
-                  }).catch(error => {
-                    console.log('error is', error);
-                    Swal.fire("Some thing went wrong")
-                  })
-
-              } catch (error) {
-                Swal.fire("error in fetching address", error)
-              }
-            })
-            function cancelAddressForm() {
-              document.getElementById("address-form").classList.remove("show");
-            }
-
-            //close edit address modal
-            function cancelEditAddressForm() {
-              document.getElementById("address-edit-form").classList.remove("show");
-            }
-            let deleteAddressId
-            function deleteAddress(addressId) {
-              // Show the delete confirmation modal
-              console.log(addressId, 'is delete adressid');
-              deleteAddressId = addressId
-              document.getElementById("delete-address-modal").style.display = "block";
-              document.getElementById("delete-address-id").value = addressId;
-
-            }
-
-            function closeDeleteModal() {
-              document.getElementById("delete-address-modal").style.display = "none";
-            }
-
-            // delete Address function
-            deleteAddressForm.addEventListener('submit', async function (event) {
-              event.preventDefault()
-              console.log('delete address button clicked');
-              const addressId = this.getAttribute('data-id')
-              console.log('addressId from delete function is ', deleteAddressId);
-
-              fetch(`/user/address/delete/${deleteAddressId}`, {
-                method: 'delete',
-                headers: { 'CSRF-Token': csrfToken }
-              }).then(response => response.json())
-                .then(data => {
-                  if (data && data.success) {
-                    Swal.fire('Address deleted successfully')
-                    closeDeleteModal()
-                  } else (
-                    Swal.fire('Error in deleteing address')
-
-                  )
-                }).catch(error => {
-                  Swal.fire('Some thing went wrong')
-                })
-
-            })
-
-            // Password Functions
-            function showForgotPassword() {
-              document.getElementById("forgot-password-modal").style.display =
-                "block";
-            }
-
-            function closeForgotPassword() {
-              document.getElementById("forgot-password-modal").style.display = "none";
-            }
-            //     //handle forgot password
-            const forgotForm = document.getElementById('forgot-password-form')
-            forgotForm.addEventListener('submit', function (e) {
-              e.preventDefault()
-              console.log('forgot form submitted');
-
-              const currentPassword = document.getElementById('current-password').value
-              const newPassword = document.getElementById('new-password').value
-              const confirmPassword = document.getElementById('confirm-password').value
-              console.log('newPassword', newPassword);
-              console.log('confirmPassword', confirmPassword);
-              if (newPassword !== confirmPassword) {
-                console.log('passwords are not matching');
-                Swal.fire('Passwords are not matching')
-                return
-              }
-              if (currentPassword === '' || newPassword === '' || confirmPassword === '') {
-                Swal.fire('All fields are required')
-                return
-              }
-              if (newPassword.length < 4 || newPassword.length > 8) {
-                Swal.fire("password should be beween 4 and 8 charectors")
-                return
-              }
-
-              fetch('/user/profile/change-password', {
-                method: "POST",
+            try {
+              const response = await fetch('/user/profile/update', {
+                method: "PATCH",
                 headers: {
                   "Content-Type": "application/json",
                   'CSRF-Token': csrfToken
                 },
-                body: JSON.stringify({ currentPassword, newPassword, confirmPassword })
-              }).then(response => response.json())
-                .then(data => {
-                  if (data && data.success) {
-                    Swal.fire(data.message)
-                    console.log(data.message);
-                    
-                    document.getElementById('current-password').value = ''
-                    document.getElementById('new-password').value = ''
-                    document.getElementById('confirm-password').value = ''
-                    document.getElementById("forgot-password-modal").style.display = "none";
-                  } else {
-                    Swal.fire(data.message)
-                  }
-                }).catch(error => {
-                  Swal.fire("Something Went Wrong")
-                  console.log('error is ', error);
-
-                })
-            })
-
-            // Order Functions
-            function showOrderDetails(orderId, btn) {
-              // Redirect to order details page
-              let source = 'profile'
-              window.location.href = `/user/order-details/${orderId}?source=${source}`;
-            }
-
-            function cancelOrder(orderId, btn) {
-              console.log('Cancel button clicked');
-
-              console.log(' Function called: cancelOrder');
-              console.log(' Order ID:', orderId);
-              console.log(' Button element:', btn);
-
-              Swal.fire({
-                title: "Are you sure to cancel this order?",
-                text: "You won't be able to revert this!",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#3085d6",
-                cancelButtonColor: "#d33",
-                confirmButtonText: "Yes, cancel it!"
-              }).then((result) => {
-                if (result.isConfirmed) {
-                  console.log(' Confirmed. Sending DELETE request...');
-
-                  fetch(`/user/cancel-order/${orderId}`, {
-                    method: "DELETE",
-                    headers: { 'CSRF-Token': csrfToken }
-                  })
-                    .then(res => {
-                      return res.json();
-                    })
-                    .then(data => {
-                      if (data && data.success) {
-                        console.log(' Cancellation successful');
-
-                        Swal.fire({
-                          title: "Cancelled!",
-                          text: "Your order has been cancelled.",
-                          icon: "success"
-                        });
-
-                        if (btn) {
-                          btn.disabled = true;
-                          btn.innerText = "Cancelled";
-                          btn.classList.remove('bg-danger', 'text-white');
-                          btn.classList.add('btn-secondary');
-                          console.log(' Button disabled and updated');
-                        } else {
-                          console.warn(' Button element is undefined or not passed');
-                        }
-                      } else {
-                        console.error(' Cancellation failed:', data.message);
-                        Swal.fire(data.message || "Failed to cancel order.");
-                      }
-                    })
-                    .catch(err => {
-                      console.error(' Fetch error:', err);
-                      Swal.fire("Something went wrong.");
-                    });
-                }
+                body: JSON.stringify(jsonObject)
               });
-            }
 
+              const data = await response.json();
 
-            function closeCancelOrderModal() {
-              document.getElementById("cancel-order-modal").style.display = "none";
-            }
+              if (data && data.success) {
+                //Swal.fire(data.message);
+                Swal.fire({
+                  icon: "success",
+                  title: data.message,
+                  showConfirmButton: false,
+                  timer: 1000
+                });
 
-            const logoutBtn = document.getElementById('logout-btn')
-            logoutBtn.addEventListener('click', function () {
-              console.log('user logout bttun clicked');
+                if (data.newEmail) {
+                  console.log('new emial', data.newEmail);
 
-              //alert
-              Swal.fire({
-                title: "Do you Want to logout?",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#3085d6",
-                cancelButtonColor: "#d33",
-                confirmButtonText: "Yes, Logout!"
-              }).then((result) => {
-                if (result.isConfirmed) {
-                  fetch('/user/logout', {
-                    method: "POST",
-                    headers: { 'CSRF-Token': csrfToken }
-                  })
-                    .then(res => res.json())
-                    .then(data => {
-                      if (data && data.success) {
-                        Swal.fire(data.message)
-                      } else {
-                        Swal.fire(data.message)
-                      }
-                    }).then(() => {
-                      window.location.href = '/user/login'
-                    })
+                  window.location.href = '/user/emailChangeOtp'
                 }
+              } else {
+                Swal.fire(data.message);
+              }
+            } catch (error) {
+              Swal.fire('Something went wrong. Please try again.');
+              console.error('Fetch error:', error);
+            }
+          });
+
+          // add addressform
+          const addAddressForm = document.getElementById('address-form-element')
+          addAddressForm.addEventListener('submit', function (e) {
+            e.preventDefault()
+            console.log('add address form submitted');
+
+            const formData = new FormData(this)
+            let formObject = {};
+            formData.forEach((value, key) => { formObject[key] = value });
+
+            console.log(formObject);
+            const label = formObject.label.trim()
+            if (!label) {
+              closeAddModal()
+              return Swal.fire("Label is required")
+
+            }
+            if (/^\d/.test(label)) {
+              closeAddModal()
+              return Swal.fire("Label cannot start with numbers")
+            }
+            if (label.length < 3) {
+              closeAddModal()
+              return Swal.fire("Label should contain  atleast 3 charectors")
+            }
+
+            const line1 = formObject.line1.trim()
+            console.log("line1");
+
+            if (!line1) {
+              closeAddModal()
+              return Swal.fire('Address line cannot be empty')
+            }
+            if (/^\d/.test(line1) || /^\d/.test(formObject.line2)) {
+              closeAddModal()
+              return Swal.fire("Address lines cannot start with numbers")
+            }
+            if (line1.length < 3) {
+              closeAddModal()
+              return Swal.fire("AddressLine should contain atleast 3 charectors")
+            }
+
+
+            const city = formObject.city.trim()
+            console.log("city");
+            if (!city) {
+              closeAddModal()
+              return Swal.fire('City cannot be empty')
+            }
+            if (/^\d/.test(city)) {
+              closeAddModal()
+              return Swal.fire("City cannot start with numbers")
+            }
+            if (city.length < 3) {
+              closeAddModal()
+              return Swal.fire("City should contain atleast 3 charectors")
+            }
+
+            const country = formObject.country.trim()
+            console.log("country");
+            if (!country) {
+              closeAddModal()
+              return Swal.fire("Country Cannot be empty")
+            }
+            if (/^\d/.test(country)) {
+              closeAddModal()
+              return Swal.fire("Country cannot start with numbers")
+            }
+            if (country.length < 3) {
+
+              closeAddModal()
+              return Swal.fire("Country should contain atleast 3 charectors")
+            }
+
+            const state = formObject.state.trim()
+            console.log("state");
+            if (!state) {
+              closeAddModal()
+              return Swal.fire("State Cannot be empty")
+            }
+            if (/^\d/.test(state)) {
+              closeAddModal()
+              return Swal.fire("State cannot start with numbers")
+            }
+            if (state.length < 3) {
+              closeAddModal()
+              return Swal.fire("State should contain atleast 3 charectors")
+            }
+
+            const post = formObject.zip.trim()
+            console.log("post");
+            if (!post) {
+              closeAddModal()
+              return Swal.fire("Post Cannot be empty")
+            }
+            if (!/^\d+$/.test(post)) {
+              closeAddModal()
+              return Swal.fire("Invalid post code")
+            }
+
+
+            if (formObject.phone.length < 10 || formObject.phone.length > 12) {
+              closeAddModal()
+              return Swal.fire('Invalid mobile number')
+            }
+            if (!/^\d+$/.test(formObject.phone)) {
+              closeAddModal()
+              return Swal.fire("Invalid mobile number")
+            }
+            fetch('/user/address/add', {
+              method: "POST",
+              headers: {
+                "content-Type": "application/json",
+                'CSRF-Token': csrfToken
+              },
+              body: JSON.stringify(formObject)
+            }).then(response => response.json())
+              .then(data => {
+                if (data && data.success) {
+                  Swal.fire({
+
+                    icon: "success",
+                    title: data.message,
+                    showConfirmButton: false,
+                    timer: 1000
+                  })
+                  closeAddModal()
+                } else {
+                  Swal.fire(data.message)
+                  closeAddModal()
+                }
+              }).catch(error => {
+                Swal.fire('Something Went Wrong')
+                console.log('error is ', error);
+                closeAddModal()
+              })
+          })
+          //DELETE ADDRESS
+
+          const deleteAddressForm = document.getElementById('delete-address-form')
+
+          // Show/hide sections
+          function showSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll(".content-section").forEach((section) => {
+              section.classList.add("hide");
+            });
+
+            //hide forgot password modal
+            let forgotPasswordModal = document.getElementById(
+              "forgot-password-modal"
+            );
+            if (forgotPasswordModal) {
+              forgotPasswordModal.style.display = "none";
+            }
+            // Remove active class from all sidebar links
+            document.querySelectorAll(".sidebar-links a").forEach((link) => {
+              link.classList.remove("active");
+            });
+
+            // Show the selected section
+            document.getElementById(sectionId).classList.remove("hide");
+
+            // Add active class to the clicked link
+            event.target.classList.add("active");
+          }
+
+          // Address Management Functions
+          function showAddAddressModal() {
+
+
+            document.getElementById("add-address-modal").style.display = "flex";
+            document.getElementById("address-form-title").textContent =
+              "Add New Address";
+            document.getElementById("address-form").classList.add("show");
+            document.getElementById("address-id").value = "";
+            document.getElementById("address-form-element").reset();
+          }
+
+          let editAddressId
+          function editAddress(id, label, line1, line2, city, state, zip, country, phone, isDefault) {
+            console.log('edit button clicked');
+            editAddressId = id
+
+            document.getElementById("edit-address-label").value = label;
+            document.getElementById("edit-address-line1").value = line1;
+            document.getElementById("edit-address-line2").value = line2 || '';
+            document.getElementById("edit-address-city").value = city;
+            document.getElementById("edit-address-state").value = state;
+            document.getElementById("edit-address-zip").value = zip;
+            document.getElementById("edit-address-country").value = country;
+            document.getElementById("edit-address-phone").value = phone;
+
+            // Handle checkbox for default address
+            document.getElementById("edit-default").checked = isDefault;
+
+            // Show modal
+
+            console.log('edit modal about to open');
+
+            const editModal = new bootstrap.Modal(document.getElementById('editAddressModal'));
+            editModal.show();
+          }
+
+          // handle edit form submission
+          const editAddressForm = document.getElementById('edit-address-form')
+          editAddressForm.addEventListener('submit', async function (e) {
+            e.preventDefault();
+            console.log('Edit form submitted');
+
+            let formData = new FormData(this);
+            let formObject = Object.fromEntries(formData)
+            console.log(formObject);
+
+            const label = formObject.label.trim()
+            if (!label) {
+             
+              return Swal.fire("Label is required")
+
+            }
+            if (/^\d/.test(label)) {
+             
+              return Swal.fire("Label cannot start with numbers")
+            }
+            if (label.length < 3) {
+             
+              return Swal.fire("Label should contain  atleast 3 charectors")
+            }
+
+            const line1 = formObject.line1.trim()
+            console.log("line1");
+
+            if (!line1) {
+              
+              return Swal.fire('Address line cannot be empty')
+            }
+            if (/^\d/.test(line1) || /^\d/.test(formObject.line2)) {
+              
+              return Swal.fire("Address lines cannot start with numbers")
+            }
+            if (line1.length < 3) {
+             
+              return Swal.fire("AddressLine should contain atleast 3 charectors")
+            }
+
+
+            const city = formObject.city.trim()
+            console.log("city");
+            if (!city) {
+              
+              return Swal.fire('City cannot be empty')
+            }
+            if (/^\d/.test(city)) {
+              
+              return Swal.fire("City cannot start with numbers")
+            }
+            if (city.length < 3) {
+             
+              return Swal.fire("City should contain atleast 3 charectors")
+            }
+
+            const country = formObject.country.trim()
+            console.log("country");
+            if (!country) {
+             
+              return Swal.fire("Country Cannot be empty")
+            }
+            if (/^\d/.test(country)) {
+              
+              return Swal.fire("Country cannot start with numbers")
+            }
+            if (country.length < 3) {
+
+              
+              return Swal.fire("Country should contain atleast 3 charectors")
+            }
+
+            const state = formObject.state.trim()
+            console.log("state");
+            if (!state) {
+              
+              return Swal.fire("State Cannot be empty")
+            }
+            if (/^\d/.test(state)) {
+              
+              return Swal.fire("State cannot start with numbers")
+            }
+            if (state.length < 3) {
+              
+              return Swal.fire("State should contain atleast 3 charectors")
+            }
+
+            const post = formObject.zip.trim()
+            console.log("post");
+            if (!post) {
+              
+              return Swal.fire("Post Cannot be empty")
+            }
+            if (!/^\d+$/.test(post)) {
+             
+              return Swal.fire("Invalid post code")
+            }
+
+
+            if (formObject.phone.length < 10 || formObject.phone.length > 12) {
+             
+              return Swal.fire('Invalid mobile number')
+            }
+            if (!/^\d+$/.test(formObject.phone)) {
+              
+              return Swal.fire("Invalid mobile number")
+            }
+
+
+            fetch(`/user/address/edit/${editAddressId}`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                'CSRF-Token': csrfToken
+              },
+              body: JSON.stringify(formObject)
+            }).then(response => response.json())
+              .then(data => {
+                if (data && data.success) {
+                  Swal.fire({
+
+                    icon: "success",
+                    title: data.message,
+                    showConfirmButton: false,
+                    timer: 1000
+                  })
+                  const modalElement = document.getElementById('editAddressModal');
+                  const editModal = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);
+                  editModal.hide();
+                } else {
+                  Swal.fire(data.message)
+                }
+              }).catch(error => {
+                console.log('error is', error);
+                Swal.fire("Some thing went wrong")
               })
 
+          })
+
+          function deleteAddress(addressId) {
+            // Show the delete confirmation modal
+            console.log(addressId, 'is delete adressid');
+
+
+            Swal.fire({
+              title: "Do you want to delete this address?",
+              text: "You won't be able to revert this!",
+              icon: "warning",
+              showCancelButton: true,
+              confirmButtonColor: "#3085d6",
+              cancelButtonColor: "#d33",
+              confirmButtonText: "Yes, delete it!"
+            }).then((result) => {
+              if (result.isConfirmed) {
+                fetch(`/user/address/delete/${addressId}`, {
+                  method: 'DELETE',
+                  headers: { 'CSRF-Token': csrfToken }
+                }).then(res => res.json())
+                  .then(data => {
+                    if (data && data.success) {
+                      Swal.fire({
+                        title: "Deleted!",
+                        text: "This address is deleted.",
+                        icon: "success",
+                        showConfirmButton: false,
+                        timer: 1000
+                      });
+                      const currentdiv = document.getElementById(`div-${addressId}`)
+                      currentdiv.remove()
+                    } else {
+                      Swal.fire(data.message)
+                    }
+                  }).catch(err => {
+                    Swal.fire("Server error")
+                  })
+
+              }
+            });
+
+          }
+
+          function closeDeleteModal() {
+            document.getElementById("delete-address-modal").style.display = "none";
+          }
+
+          // Password Functions
+          function showForgotPassword() {
+            document.getElementById("forgot-password-modal").style.display =
+              "block";
+          }
+
+          function closeForgotPassword() {
+            document.getElementById("forgot-password-modal").style.display = "none";
+          }
+          //handle forgot password
+          const forgotForm = document.getElementById('forgot-password-form')
+          forgotForm.addEventListener('submit', function (e) {
+            e.preventDefault()
+            console.log('forgot form submitted');
+
+            const currentPassword = document.getElementById('current-password').value
+            const newPassword = document.getElementById('new-password').value
+            const confirmPassword = document.getElementById('confirm-password').value
+            console.log('newPassword', newPassword);
+            console.log('confirmPassword', confirmPassword);
+            if (newPassword !== confirmPassword) {
+              console.log('passwords are not matching');
+              Swal.fire('Passwords are not matching')
+              return
+            }
+            if (currentPassword === '' || newPassword === '' || confirmPassword === '') {
+              Swal.fire('All fields are required')
+              return
+            }
+            if (newPassword.length < 4 || newPassword.length > 8) {
+              Swal.fire("password should be beween 4 and 8 charectors")
+              return
+            }
+
+            fetch('/user/profile/change-password', {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                'CSRF-Token': csrfToken
+              },
+              body: JSON.stringify({ currentPassword, newPassword, confirmPassword })
+            }).then(response => response.json())
+              .then(data => {
+                if (data && data.success) {
+                  //  Swal.fire(data.message)
+
+                  Swal.fire({
+
+                    icon: "success",
+                    title: data.message,
+                    showConfirmButton: false,
+                    timer: 1000
+                  });
+
+                  console.log(data.message);
+
+                  document.getElementById('current-password').value = ''
+                  document.getElementById('new-password').value = ''
+                  document.getElementById('confirm-password').value = ''
+                  document.getElementById("forgot-password-modal").style.display = "none";
+                } else {
+                  Swal.fire(data.message)
+                }
+              }).catch(error => {
+                Swal.fire("Something Went Wrong")
+                console.log('error is ', error);
+
+              })
+          })
+
+          // Order Functions
+          function showOrderDetails(orderId, btn) {
+            // Redirect to order details page
+            let source = 'profile'
+            window.location.href = `/user/order-details/${orderId}?source=${source}`;
+          }
+
+          function cancelOrder(orderId, btn) {
+            console.log('Cancel button clicked');
+
+            console.log(' Function called: cancelOrder');
+            console.log(' Order ID:', orderId);
+            console.log(' Button element:', btn);
+
+            Swal.fire({
+              title: "Are you sure to cancel this order?",
+              text: "You won't be able to revert this!",
+              icon: "warning",
+              showCancelButton: true,
+              confirmButtonColor: "#3085d6",
+              cancelButtonColor: "#d33",
+              confirmButtonText: "Yes, cancel it!"
+            }).then((result) => {
+              if (result.isConfirmed) {
+                console.log(' Confirmed. Sending DELETE request...');
+
+                fetch(`/user/cancel-order/${orderId}`, {
+                  method: "DELETE",
+                  headers: { 'CSRF-Token': csrfToken }
+                })
+                  .then(res => {
+                    return res.json();
+                  })
+                  .then(data => {
+                    if (data && data.success) {
+                      console.log(' Cancellation successful');
+
+                      Swal.fire({
+                        title: "Cancelled!",
+                        text: "Your order has been cancelled.",
+                        icon: "success"
+                      });
+
+                      if (btn) {
+                        btn.disabled = true;
+                        btn.innerText = "Cancelled";
+                        btn.classList.remove('bg-danger', 'text-white');
+                        btn.classList.add('btn-secondary');
+                        console.log(' Button disabled and updated');
+                      } else {
+                        console.warn(' Button element is undefined or not passed');
+                      }
+                    } else {
+                      console.error(' Cancellation failed:', data.message);
+                      Swal.fire(data.message || "Failed to cancel order.");
+                    }
+                  })
+                  .catch(err => {
+                    console.error(' Fetch error:', err);
+                    Swal.fire("Something went wrong.");
+                  });
+              }
+            });
+          }
+
+
+          function closeCancelOrderModal() {
+            document.getElementById("cancel-order-modal").style.display = "none";
+          }
+
+          const logoutBtn = document.getElementById('logout-btn')
+          logoutBtn.addEventListener('click', function () {
+            console.log('user logout bttun clicked');
+
+            //alert
+            Swal.fire({
+              title: "Do you Want to logout?",
+              icon: "warning",
+              showCancelButton: true,
+              confirmButtonColor: "#3085d6",
+              cancelButtonColor: "#d33",
+              confirmButtonText: "Yes, Logout!"
+            }).then((result) => {
+              if (result.isConfirmed) {
+                fetch('/user/logout', {
+                  method: "POST",
+                  headers: { 'CSRF-Token': csrfToken }
+                })
+                  .then(res => res.json())
+                  .then(data => {
+                    if (data && data.success) {
+                      Swal.fire(data.message)
+                    } else {
+                      Swal.fire(data.message)
+                    }
+                  }).then(() => {
+                    window.location.href = '/user/login'
+                  })
+              }
             })
 
-
-            let cropper;
-
-            // Existing function to open modal
-            function openModal() {
-              var myModal = new bootstrap.Modal(document.getElementById('profileModal'));
-              myModal.show();
-            }
-
-            // Updated triggerFileInput
-            function triggerFileInput() {
-              document.getElementById('fileInput').click();
-            }
-
-            // Preview selected image for cropping
-            function previewImage(event) {
-              const file = event.target.files[0];
-              if (file) {
-                const reader = new FileReader();
-                reader.onload = function (e) {
-                  const img = document.getElementById('imagePreview'); // Make sure this ID exists
-                  img.src = e.target.result;
-
-                  var cropperModal = new bootstrap.Modal(document.getElementById('cropperModal'));
-                  cropperModal.show();
-
-                  img.onload = function () {
-                    if (cropper) {
-                      cropper.destroy();
-                    }
-                    cropper = new Cropper(img, {
-                      aspectRatio: 1, // Square crop
-                      viewMode: 1,
-                      autoCropArea: 1,
-                    });
-                  };
-                };
-                reader.readAsDataURL(file);
-              }
-            }
+          })
 
 
-            function cropAndUpload() {
-              if (cropper) {
-                cropper.getCroppedCanvas().toBlob(function (blob) {
-                  const formData = new FormData();
-                  formData.append('profilePic', blob, 'cropped.jpg');
+          let cropper;
 
-                  fetch('/user/addProfileImage', {
-                    method: 'POST',
-                    headers: { 'CSRF-Token': csrfToken },
-                    body: formData,
-                  })
-                    .then(response => response.json())
-                    .then(data => {
-                      if (data && data.success) {
-                        Swal.fire(data.message);
-                        location.reload();
-                      } else {
-                        Swal.fire(data.message);
-                      }
-                    })
-                    .catch(error => {
-                      Swal.fire("Server Error");
-                    });
-                })
-              }
-            }
+          // Existing function to open modal
+          function openModal() {
+            var myModal = new bootstrap.Modal(document.getElementById('profileModal'));
+            myModal.show();
+          }
 
-            // Your existing function for removing profile image
-            function removeProfilePicture() {
-              fetch('/user/removeProfileImage', {
-                method: 'POST',
-                headers: { 'CSRF-Token': csrfToken }
-              })
-                .then(response => response.json())
-                .then(data => {
-                  if (data && data.success) {
-                    Swal.fire(data.message);
-                    location.reload();
-                  } else {
-                    Swal.fire(data.message);
+          // Updated triggerFileInput
+          function triggerFileInput() {
+            document.getElementById('fileInput').click();
+          }
+
+          // Preview selected image for cropping
+          function previewImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+              const reader = new FileReader();
+              reader.onload = function (e) {
+                const img = document.getElementById('imagePreview'); // Make sure this ID exists
+                img.src = e.target.result;
+
+                var cropperModal = new bootstrap.Modal(document.getElementById('cropperModal'));
+                cropperModal.show();
+
+                img.onload = function () {
+                  if (cropper) {
+                    cropper.destroy();
                   }
-                }).catch(error => {
-                  Swal.fire("Server error");
-                })
+                  cropper = new Cropper(img, {
+                    aspectRatio: 1, // Square crop
+                    viewMode: 1,
+                    autoCropArea: 1,
+                  });
+                };
+              };
+              reader.readAsDataURL(file);
             }
+          }
 
-            function copyReferralCode() {
-              console.log('copy button clicked');
-              const code = document.getElementById("referralCode").textContent.trim();
-              navigator.clipboard.writeText(code)
-                .then(() => {
-                  Swal.fire("Referral code copied to clipboard!");
+
+          function cropAndUpload() {
+            if (cropper) {
+              cropper.getCroppedCanvas().toBlob(function (blob) {
+                const formData = new FormData();
+                formData.append('profilePic', blob, 'cropped.jpg');
+
+                fetch('/user/addProfileImage', {
+                  method: 'POST',
+                  headers: { 'CSRF-Token': csrfToken },
+                  body: formData,
                 })
-                .catch(() => {
-                  Swal.fire("Failed to copy!");
-                });
+                  .then(response => response.json())
+                  .then(data => {
+                    if (data && data.success) {
+                      Swal.fire(data.message);
+                      location.reload();
+                    } else {
+                      Swal.fire(data.message);
+                    }
+                  })
+                  .catch(error => {
+                    Swal.fire("Server Error");
+                  });
+              })
             }
-          </script>
+          }
+
+          // Your existing function for removing profile image
+          function removeProfilePicture() {
+            fetch('/user/removeProfileImage', {
+              method: 'POST',
+              headers: { 'CSRF-Token': csrfToken }
+            })
+              .then(response => response.json())
+              .then(data => {
+                if (data && data.success) {
+                  Swal.fire(data.message);
+                  location.reload();
+                } else {
+                  Swal.fire(data.message);
+                }
+              }).catch(error => {
+                Swal.fire("Server error");
+              })
+          }
+
+          function copyReferralCode() {
+            console.log('copy button clicked');
+            const code = document.getElementById("referralCode").textContent.trim();
+            navigator.clipboard.writeText(code)
+              .then(() => {
+                Swal.fire("Referral code copied to clipboard!");
+              })
+              .catch(() => {
+                Swal.fire("Failed to copy!");
+              });
+          }
+
+          function closeAddModal() {
+            document.getElementById('add-address-modal').style.display = 'none'
+          }
+        </script>
 
 </body>
 

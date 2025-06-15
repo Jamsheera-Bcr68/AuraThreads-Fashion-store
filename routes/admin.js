@@ -259,17 +259,20 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 router.post("/category/add", upload.array("images", 5), async (req, res) => {
-  console.log("Uploaded files:", req.files); // Debugging
-
+  console.log("Uploaded files:", req.files); 
+  console.log('reqestbody',req.body);
+  
   if (!req.files || req.files.length === 0) {
-    req.flash("errorMessage", "No images uploaded.");
-    return res.redirect("/admin/category");
+   // req.flash("errorMessage", "No images uploaded.");
+    return res.json({success:false,message:'Image not uploaded'})
   }
 
   const { categoryName, description } = req.body;
   const isListed = req.body.isListed == "on" ? true : false;
   const imagePaths = []; // Clear this before pushing resized images
 
+  console.log('categoryName,description,isListed,imagePaths',categoryName,description,isListed,imagePaths);
+  
   try {
     // Check if category already exists
     const existingCategory = await category.findOne({
@@ -278,8 +281,8 @@ router.post("/category/add", upload.array("images", 5), async (req, res) => {
     });
 
     if (existingCategory) {
-      req.flash("errorMessage", "This Category already exists.");
-      return res.redirect("/admin/category");
+      //req.flash("errorMessage", "This Category already exists.");
+      return res.json({success:false,message:'This Category already exists.'})
     }
 
     // Resize each uploaded image and save only resized paths
@@ -304,44 +307,41 @@ router.post("/category/add", upload.array("images", 5), async (req, res) => {
     });
 
     await newCategory.save();
-    req.flash("successMessage", "Category added successfully!");
-    return res.redirect("/admin/category");
+    //req.flash("successMessage", "Category added successfully!");
+    return res.json({success:true,message:'Category added successfully!'})
   } catch (error) {
     console.error("Error when adding category:", error);
-    req.flash("errorMessage", "Error in adding Category.");
-    return res.redirect("/admin/category");
+   // req.flash("errorMessage", "Error in adding Category.");
+    return res.json({success:false,message:"Error in adding Category."})
   }
 });
 
 router.post("/category/edit/:id", async (req, res) => {
-  const { categoryName, description } = req.body;
+  console.log('From admin edit category');
+
+  const { categoryName, description, isListed } = req.body;
   const { id } = req.params;
-
-  const isListed = req.body.isListed == "on" ? true : false;
-  console.log(isListed);
-
-  try {
+try {
     const existCategory = await category.findOneAndUpdate(
       { _id: id },
       {
-        $set: { categoryName, description, isListed },
+        $set: {
+          categoryName,
+          description,
+          isListed: Boolean(isListed),
+        },
       },
-      { new: true },
+      { new: true }
     );
-    console.log("category found");
 
-    if (!existCategory) {
-      req.flash("errorMessage", "Category not found");
-      res.redirect("/admin/category");
-    }
+    return res.json({ success: true, message: "Category Updated Successfully" });
 
-    req.flash("successMessage", "Category Updated Successfully");
-    res.redirect("/admin/category");
   } catch (error) {
-    console.log(error);
-    req.flash("errorMessage", "Error While Adding Caterory");
+    console.error(error);
+    return res.json({ success: false, message: 'Internal Server Error' });
   }
 });
+
 
 router.delete("/category/delete/:id", async (req, res) => {
   const { id } = req.params;

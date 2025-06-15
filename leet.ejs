@@ -1,0 +1,204 @@
+<!-- Add Address Form (Initially Hidden) -->
+<div id="address-form" class="address-form">
+  <h3 id="address-form-title">Add New Address</h3>
+  <form id="address-form-element" action="/user/address/add" method="POST">
+    <input type="hidden" id="address-id" name="id" />
+    <div class="form-group">
+      <label for="address-label">Label (e.g., Home, Work)</label>
+      <input type="text" id="address-label" name="label">
+    </div>
+    <div class="form-group">
+      <label for="address-line1">Address Line 1</label>
+      <input type="text" id="address-line1" name="line1">
+    </div>
+    <div class="form-group">
+      <label for="address-line2">Address Line 2 (Optional)</label>
+      <input type="text" id="address-line2" name="line2">
+    </div>
+    <div class="form-group">
+      <label for="address-city">City</label>
+      <input type="text" id="address-city" name="city">
+    </div>
+    <div class="form-group">
+      <label for="address-state">State/Province</label>
+      <input type="text" id="address-state" name="state">
+    </div>
+    <div class="form-group">
+      <label for="address-zip">ZIP/Postal Code</label>
+      <input type="text" id="address-zip" name="zip">
+    </div>
+    <div class="form-group">
+      <label for="address-country">Country</label>
+      <input type="text" value="" name="country" id="address-country">
+
+    </div>
+    <div class="form-group">
+      <label for="address-phone">Phone Number</label>
+      <input type="tel" id="address-phone" name="phone">
+    </div>
+    <div class="form-group checkbox-group">
+      <input type="checkbox" id="default" name="isDefault" value="true">
+      <label for="default">Set as Default Address</label>
+    </div>
+    <div class="action-buttons">
+      <button type="button" class="btn-secondary" onclick="cancelAddressForm()">
+        Cancel
+      </button>
+      <button type="submit">Save Address</button>
+    </div>
+  </form>
+</div>
+.address-form {
+display: none; /* Initially hidden */
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+z-index: 2000;
+background: rgba(0, 0, 0, 0.5); /* Modal overlay */
+display: flex;
+justify-content: center;
+align-items: center;
+}
+.address-form form {
+background-color: white;
+padding: 30px;
+border-radius: 8px;
+width: 90%;
+max-width: 500px;
+box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+max-height: 90vh;
+overflow-y: auto;
+}
+
+<!-- Add Address Form (Initially Hidden) -->
+<div id="address-form" class="address-form">
+  <h3 id="address-form-title">Add New Address</h3>
+  <form id="address-form-element" action="/user/address/add" method="POST">
+    <input type="hidden" id="address-id" name="id" />
+    <div class="form-group">
+      <label for="address-label">Label (e.g., Home, Work)</label>
+      <input type="text" id="address-label" name="label">
+    </div>
+    <div class="form-group">
+      <label for="address-line1">Address Line 1</label>
+      <input type="text" id="address-line1" name="line1">
+    </div>
+    <div class="form-group">
+      <label for="address-line2">Address Line 2 (Optional)</label>
+      <input type="text" id="address-line2" name="line2">
+    </div>
+    <div class="form-group">
+      <label for="address-city">City</label>
+      <input type="text" id="address-city" name="city">
+    </div>
+    <div class="form-group">
+      <label for="address-state">State/Province</label>
+      <input type="text" id="address-state" name="state">
+    </div>
+    <div class="form-group">
+      <label for="address-zip">ZIP/Postal Code</label>
+      <input type="text" id="address-zip" name="zip">
+    </div>
+    <div class="form-group">
+      <label for="address-country">Country</label>
+      <input type="text" value="" name="country" id="address-country">
+
+    </div>
+    <div class="form-group">
+      <label for="address-phone">Phone Number</label>
+      <input type="tel" id="address-phone" name="phone">
+    </div>
+    <div class="form-group checkbox-group">
+      <input type="checkbox" id="default" name="isDefault" value="true">
+      <label for="default">Set as Default Address</label>
+    </div>
+    <div class="action-buttons">
+      <button type="button" class="btn-secondary" onclick="cancelAddressForm()">
+        Cancel
+      </button>
+      <button type="submit">Save Address</button>
+    </div>
+  </form>
+</div>
+
+
+<!-- Edit Address Modal -->
+
+<div id="editAddress-modal" style="width:35%;position:fixed;margin-left: 25em;" class="modal">
+  <div class="editAddressModal-content">
+
+    <div id="address-form" class="address-form">
+      <h3 id="address-form-title">edit Address</h3>
+      <div id="address-edit-form" class="address-form">
+        <h3 id="address-form-title">Edit Address</h3>
+        <form id="edit-address-form" action="/user/address/edit" method="POST">
+          <input type="hidden" id="address-id" name="addressId" />
+
+          <div class="form-group">
+            <label for="address-label">Label</label>
+            <input type="text" id="edit-address-label" name="label" />
+          </div>
+
+          <!-- Address Line 1 & 2 in one row -->
+          <div style="display: flex; gap: 1em;">
+            <div class="form-group" style="flex: 1;">
+              <label for="address-line1">Address Line 1</label>
+              <input type="text" id="edit-address-line1" name="line1" />
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label for="address-line2">Address Line 2</label>
+              <input type="text" id="edit-address-line2" name="line2" />
+            </div>
+          </div>
+
+          <!-- City & State in one row -->
+          <div style="display: flex; gap: 1em;">
+            <div class="form-group" style="flex: 1;">
+              <label for="address-city">City</label>
+              <input type="text" id="edit-address-city" name="city" />
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label for="address-state">State/Province</label>
+              <input type="text" id="edit-address-state" name="state" />
+            </div>
+          </div>
+
+          <!-- ZIP & Country in one row -->
+          <div style="display: flex; gap: 1em;">
+            <div class="form-group" style="flex: 1;">
+              <label for="address-zip">ZIP/Postal Code</label>
+              <input type="text" id="edit-address-zip" name="zip" />
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label for="address-country">Country</label>
+              <input type="text" id="edit-address-country" name="country" value="" />
+            </div>
+          </div>
+
+          <!-- Phone -->
+          <div class="form-group">
+            <label for="address-phone">Phone Number</label>
+            <input type="tel" id="edit-address-phone" name="phone" />
+          </div>
+
+          <!-- Default Checkbox -->
+          <div class="form-group checkbox-group">
+            <input type="checkbox" id="edit-default" name="isDefault" value="true" />
+            <label for="default">Set as Default Address</label>
+          </div>
+
+          <!-- Buttons -->
+          <div class="action-buttons">
+            <button type="button" class="btn-secondary" onclick="cancelEditAddressForm()">
+              Cancel
+            </button>
+            <button type="submit">Save Address</button>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>

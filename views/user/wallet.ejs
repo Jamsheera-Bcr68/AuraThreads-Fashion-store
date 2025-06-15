@@ -29,7 +29,7 @@
             <div class="tab-content active" id="overview">
                 <div class="balance-card">
                     <h3>Current Balance</h3>
-                    <div class="balance-amount"> ₹ <%= wallet.balance%>
+                    <div  class="balance-amount"> ₹ <span id="balance"><%= wallet.balance%></span> 
                     </div>
                     <div class="balance-actions">
                         <button type="button" class="btn btn-primary" data-bs-toggle="modal"
@@ -106,7 +106,7 @@
             <div class="tab-content" id="transactions">
                 <h3 class="section-header">Transaction History</h3>
 
-     -->
+
                 <table class="table">
                     <thead style="font-weight: bold;">
                         <tr>
@@ -124,7 +124,7 @@
                                     <%= tr.date.toLocaleDateString() %>
                                 </td>
                                 <td>
-                                   <span
+                                    <span
                                         style="background-color: <%= tr.type === 'debit' ? 'red' : 'green' %>; color: white;">
                                         <%= tr.type %>
                                     </span>
@@ -150,8 +150,8 @@
 
 
         <!-- Add Funds Modal -->
-        <div class="modal fade" id="addFundsModal" tabindex="-1" aria-labelledby="addFundsModalLabel"
-            aria-hidden="true">
+        <div style="z-index: 2000;margin-top: 14em;" class="modal fade" id="addFundsModal" tabindex="-1"
+            aria-labelledby="addFundsModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
 
@@ -165,7 +165,7 @@
                             <div class="mb-3">
                                 <label for="amount" class="form-label">Enter Amount</label>
                                 <input type="number" class="form-control" name="amount" id="amount"
-                                    placeholder="Enter amount in ₹" required>
+                                    placeholder="Enter amount in ₹" min="1" required>
                             </div>
                         </form>
                     </div>
@@ -223,11 +223,14 @@
                 addmoneyForm.addEventListener('submit', function (e) {
                     e.preventDefault()
                     console.log('addFundsModal submitted');
-                    const amount = document.getElementById('amount').value
+                    let amount = document.getElementById('amount').value
+                    
                     if (amount === '') {
                         Swal.fire("Enter An Amount")
                     }
-
+                    if (amount<0){
+                       return Swal.fire("Enter a Valid Amount")
+                    }
                     console.log('amount ', amount);
 
                     fetch('/user/wallet/addMoney', {
@@ -240,9 +243,22 @@
                     }).then(res => res.json())
                         .then(data => {
                             if (data && data.success) {
-                                Swal.fire(data.message)
-                                document.getElementById('amount').value = ''
+                                console.log('balance',data.balance);
                                 
+                                 document.getElementById('balance').innerHTML=data.balance
+                                Swal.fire({
+                                    icon: "success",
+                                    title: data.message,
+                                    showConfirmButton: false,
+                                    timer: 1000
+                                })
+                                document.getElementById('amount').value = ''
+                                const modalEl = document.getElementById('addFundsModal');
+                                const addFundsModal = bootstrap.Modal.getInstance(modalEl);
+                                if (addFundsModal) {
+                                    addFundsModal.hide();
+                                }
+                               
                             } else {
                                 Swal.fire(data.message)
                             }

@@ -14,7 +14,7 @@ body {
 .container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 10px;
 }
 
 /* Breadcrumbs */
@@ -549,7 +549,7 @@ body {
 body {
   background-color: #f8f9fa;
   color: #333;
-  padding: 20px;
+  
 }
 
 .container {

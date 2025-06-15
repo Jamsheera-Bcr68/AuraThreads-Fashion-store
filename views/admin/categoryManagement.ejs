@@ -1,369 +1,475 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
-    <title>Admin - Category Management</title>
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-    />
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  </head>
-  <body>
-   
 
-    <div class="container ">
-      <%- include('../partials/header.ejs') %>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Admin - Category Management</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+
+<body>
+
+
+  <div class="container ">
+    <%- include('../partials/header.ejs') %>
 
       <div class="d-flex" id="wrapper">
         <%- include('../partials/sidebar') %>
 
-        <div class="container mt-4">
-          <h2 class="text-center fw-bold mb-4">Category Management</h2>
-          <% if (successMessage.length > 0) { %>
-            <div class="alert alert-success"><%= successMessage %></div>
-        <% } %>
-        
-        <% if (errorMessage.length > 0) { %>
-            <div class="alert alert-danger"><%= errorMessage %></div>
-        <% } %> 
-        
-        <div class="searchAddButtons">
-          <div class="d-flex bg-info justify-content-end mb-3">
-           
-              
-          </div>
-          <div class="d-flex justify-content-start mb-3">
-            <button
-              class="btn btn-success fw-bold"
-              data-bs-toggle="modal"
-              data-bs-target="#addCategoryModal"
-            >
-              + Create Category
-            </button>
-          </div>
-        </div>
-          <!-- Button to Open Modal -->
-         
+          <div class="container mt-4">
+            <h2 class="text-center fw-bold mb-4">Category Management</h2>
+            <% if (successMessage.length> 0) { %>
+              <div class="alert alert-success">
+                <%= successMessage %>
+              </div>
+              <% } %>
 
-          <!-- Category Table -->
-          <div class="card p-4 shadow">
-            <h4>Existing Categories</h4>
-            <table class="table table-striped mt-3">
-              <thead class="table-dark">
-                <tr>
-                  <th>#</th>
-                  <th>Category Name</th>
-                  <th>Description</th>
-                  <th>listed</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <% categories.forEach((category, index) => { %>
-                <tr>
-                  <td><%= index + 1 %></td>
-                  <td><%= category.categoryName %></td>
-                  <td><%= category.description %></td>
-                  <td><%= category.isListed %></td>
-                  <td>
-                    <button
-                      class="btn btn-warning btn-sm"
-                      onclick="openEditModal('<%= category._id %>', `<%= category.categoryName %>`, `<%= category.description %>`,'<%= category.isListed %>' )"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onclick="deleteCategory('<%= category._id %>')"
-                      class="btn btn-danger btn-sm"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-                <% }) %>
-              </tbody>
-            </table>
+                <% if (errorMessage.length> 0) { %>
+                  <div class="alert alert-danger">
+                    <%= errorMessage %>
+                  </div>
+                  <% } %>
+
+                    <div class="searchAddButtons">
+                      <div class="d-flex bg-info justify-content-end mb-3">
+
+
+                      </div>
+                      <div class="d-flex justify-content-start mb-3">
+                        <button class="btn btn-success fw-bold" data-bs-toggle="modal"
+                          data-bs-target="#addCategoryModal">
+                          + Create Category
+                        </button>
+                      </div>
+                    </div>
+                    <!-- Button to Open Modal -->
+
+
+                    <!-- Category Table -->
+                    <div class="card p-4 shadow">
+                      <h4>Existing Categories</h4>
+                      <table class="table table-striped mt-3">
+                        <thead class="table-dark">
+                          <tr>
+                            <th>#</th>
+                            <th>Category Name</th>
+                            <th>Description</th>
+                            <th>listed</th>
+                            <th>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <% categories.forEach((category, index)=> { %>
+                            <tr id="row-<%= category._id %>">
+                              <td>
+                                <%= index + 1 %>
+                              </td>
+                              <td>
+                                <%= category.categoryName %>
+                              </td>
+                              <td>
+                                <%= category.description %>
+                              </td>
+                              <td>
+                                <%= category.isListed %>
+                              </td>
+                              <td>
+                                <button class="btn btn-warning btn-sm"
+                                  onclick="openEditModal('<%= category._id %>', `<%= category.categoryName %>`, `<%= category.description %>`,'<%= category.isListed %>' )">
+                                  Edit
+                                </button>
+                                <button onclick="deleteCategory('<%= category._id %>')" class="btn btn-danger btn-sm">
+                                  Delete
+                                </button>
+                              </td>
+                            </tr>
+                            <% }) %>
+                        </tbody>
+                      </table>
+                    </div>
           </div>
-        </div>
       </div>
-     <!--Pagination-->
-     <nav>
-      <ul class="pagination justify-content-center">
-        <!-- Previous Button -->
-        <% if (currentPage > 1) { %>
-          <li class="page-item">
-            <a class="page-link" href="?page=<%= currentPage - 1 %>&limit=5">Previous</a>
-          </li>
-        <% } else { %>
-          <li class="page-item disabled">
-            <a class="page-link" href="#" tabindex="-1">Previous</a>
-          </li>
-        <% } %>
-    
-        <!-- Page Numbers -->
-        <% for (let i = 1; i <= totalPages; i++) { %>
-          <li class="page-item <%= currentPage === i ? 'active' : '' %>">
-            <a class="page-link" href="?page=<%= i %>&limit=5"><%= i %></a>
-          </li>
-        <% } %>
-    
-        <!-- Next Button -->
-        <% if (currentPage < totalPages) { %>
-          <li class="page-item">
-            <a class="page-link" href="?page=<%= currentPage + 1 %>&limit=5">Next</a>
-          </li>
-        <% } else { %>
-          <li class="page-item disabled">
-            <a class="page-link" href="#">Next</a>
-          </li>
-        <% } %>
-      </ul>
-    </nav>
-    <!--Footer-->
+      <!--Pagination-->
+      <nav>
+        <ul class="pagination justify-content-center">
+          <!-- Previous Button -->
+          <% if (currentPage> 1) { %>
+            <li class="page-item">
+              <a class="page-link" href="?page=<%= currentPage - 1 %>&limit=5">Previous</a>
+            </li>
+            <% } else { %>
+              <li class="page-item disabled">
+                <a class="page-link" href="#" tabindex="-1">Previous</a>
+              </li>
+              <% } %>
+
+                <!-- Page Numbers -->
+                <% for (let i=1; i <=totalPages; i++) { %>
+                  <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+                    <a class="page-link" href="?page=<%= i %>&limit=5">
+                      <%= i %>
+                    </a>
+                  </li>
+                  <% } %>
+
+                    <!-- Next Button -->
+                    <% if (currentPage < totalPages) { %>
+                      <li class="page-item">
+                        <a class="page-link" href="?page=<%= currentPage + 1 %>&limit=5">Next</a>
+                      </li>
+                      <% } else { %>
+                        <li class="page-item disabled">
+                          <a class="page-link" href="#">Next</a>
+                        </li>
+                        <% } %>
+        </ul>
+      </nav>
+      <!--Footer-->
       <%- include('../partials/footer.ejs') %>
-    </div>
+  </div>
 
-    <!--edit Category Modal -->
+  <!--edit Category Modal -->
 
- 
-    <div
-      class="modal fade"
-      id="editCategoryModal"
-      tabindex="-1"
-      aria-labelledby="editCategoryModalLabel"
-      aria-hidden="true"
-    >
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="editCategoryModalLabel">
-              Edit Category
-            </h5>
-            <button
-              type="button"
-              class="btn-close"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-            ></button>
-          </div>
-          <div class="modal-body">
-            <form
-              id="editCategoryForm"
-              action="/admin/category/edit"
-              method="post"
-            >
-              <div class="mb-3">
-                <label class="form-label">Category Name</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  name="categoryName"
-                  id="editCategoryName"
-                  required
-                />
-              </div>
-              <div class="mb-3">
-                <label class="form-label">Description</label>
-                <textarea
-                  class="form-control"
-                  name="description"
-                  id="editCategoryDescription"
-                  rows="3"
-                ></textarea>
-              </div>
-              <!-- test-->
-              <div class="mb-3">
-                <label class="form-label">Is Listed</label>
-                <div class="form-check">
-                  <input
-                    type="checkbox"
-                    class="form-check-input"
-                    name="isListed"
-                    id="editCategoryIsListed"
-                  />
-                  <label class="form-check-label" for="editCategoryIsListed"
-                    >Yes</label
-                  >
-                </div>
-              </div>
 
-              <button type="submit" class="btn btn-primary">
-                Update Category
-              </button>
-            </form>
-          </div>
+  <div class="modal fade" id="editCategoryModal" tabindex="-1" aria-labelledby="editCategoryModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editCategoryModalLabel">
+            Edit Category
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="editCategoryForm" action="/admin/category/edit" method="post">
+            <div class="mb-3">
+              <label class="form-label">Category Name</label>
+              <input type="text" class="form-control" name="categoryName" id="editCategoryName" required />
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Description</label>
+              <textarea class="form-control" name="description" id="editCategoryDescription" rows="3"></textarea>
+            </div>
+            <!-- test-->
+            <div class="mb-3">
+              <label class="form-label">Is Listed</label>
+             
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input" name="isListed" id="editCategoryIsListed" />
+                <label class="form-check-label" for="editCategoryIsListed">Yes</label>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+              Update Category
+            </button>
+          </form>
         </div>
       </div>
-    </div>
-
-    <!-- Add Category Modal -->
-<div
-class="modal fade"
-id="addCategoryModal"
-tabindex="-1"
-aria-labelledby="addCategoryModalLabel"
-aria-hidden="true"
->
-<div class="modal-dialog">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h5 class="modal-title" id="addCategoryModalLabel">
-        Create New Category
-      </h5>
-      <button
-        type="button"
-        class="btn-close"
-        data-bs-dismiss="modal"
-        aria-label="Close"
-      ></button>
-    </div>
-    <div class="modal-body">
-      <form id="categoryForm" action="/admin/category/add" method="POST" enctype="multipart/form-data">
-        <div class="mb-3">
-          <label class="form-label">Category Name</label>
-          <input
-            type="text"
-            class="form-control"
-            name="categoryName"
-            required
-          />
-        </div>
-        
-        <div class="mb-3">
-          <label class="form-label">Description</label>
-          <textarea
-            class="form-control"
-            name="description"
-            rows="3"
-          ></textarea>
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label">Category Images</label>
-        
-          <input
-            type="file"
-            class="form-control"
-            name="images"
-            accept="image/*"
-            multiple
-            required
-          />
-        </div>
-        
-        <!-- Checkbox for Is Listed -->
-        <div class="mb-3">
-          <label class="form-label">Is Listed</label>
-          <div class="form-check">
-            <input
-              type="checkbox"
-              class="form-check-input"
-              name="isListed"
-              id="addCategoryIsListed"
-            />
-            <label class="form-check-label" for="addCategoryIsListed"
-              >Yes</label
-            >
-          </div>
-        </div>
-
-        <button type="submit" class="btn btn-primary">
-          Add Category
-        </button>
-      </form>
     </div>
   </div>
-</div>
-</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script>
+  <!-- Add Category Modal -->
+  <div class="modal fade" id="addCategoryModal" tabindex="-1" aria-labelledby="addCategoryModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addCategoryModalLabel">
+            Create New Category
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="categoryForm" action="/admin/category/add" method="POST" enctype="multipart/form-data">
+            <div class="mb-3">
+              <label class="form-label">Category Name</label>
+              <input id="categoryName" type="text" class="form-control" name="categoryName" required />
+            </div>
 
-      // const categoryForm=document.getElementById('categoryForm')
-      // categoryForm.addEventListener('submit',function(e){
-      //   e.preventDefault()
-      //   console.log('categoryForm submitted');
-      //   const formData=new FormData(this)
-      //   let formObject=Object.fromEntries(formData)
-      //   fetch(`/admin/category/add`,{
-      //     method:'POST',
-      //     headers:{"Content-Type":"application/json"},
-      //     body:JSON.stringify({formObject})
-      //   })
-      // }).then(res=>res.json())
-      // .then(data=>{
-      //   if(data && data.success){
-      //     Swal.fire(data.message)
-      //      var addModal = new bootstrap.Modal(
-      //     document.getElementById("editCategoryModal")
-      //   );
-      //   editModal.show();
-      // }
+            <div class="mb-3">
+              <label class="form-label">Description</label>
+              <textarea id="description" class="form-control" name="description" rows="3"></textarea>
+            </div>
 
-      //   }else{
-      //     Swal.fire(data.message)
-      //   }
-      // }).catch(err=>{
-      //   Swal.fire("server error")
-      // })
+            <div class="mb-3">
+              <label class="form-label">Category Images</label>
 
-      function deleteCategory(id) {
-        console.log("from delete cATEGORY SCRIPT" + id);
+              <input id="image" type="file" class="form-control" name="images" accept="image/*" multiple required />
+            </div>
 
-        Swal.fire({
-          title: "Are you sure?",
-          text: "You won't be able to revert this!",
-          icon: "warning",
-          showCancelButton: true,
-          confirmButtonColor: "#d33",
-          cancelButtonColor: "#3085d6",
-          confirmButtonText: "Yes, delete it!",
-        }).then((result) => {
-          if (result.isConfirmed) {
-            fetch(`/admin/category/delete/${id}`, { method: "DELETE",
-              
-             }).then(res=>res.json())
-             .then(data=>{
-              if(data && data.success){
+            <!-- Checkbox for Is Listed -->
+            <div class="mb-3">
+              <label class="form-label">Is Listed</label>
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input" name="isListed" id="addCategoryIsListed" />
+                <label class="form-check-label" for="addCategoryIsListed">Yes</label>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+              Add Category
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+
+    document.addEventListener('DOMContentLoaded', function () {
+      const categoryForm = document.getElementById('categoryForm');
+      categoryForm.addEventListener('submit', function (e) {
+        e.preventDefault()
+        console.log('category form submitted');
+
+
+        const formData = new FormData(this)
+        for (let [key, value] of formData.entries()) {
+          console.log(`${key}:`, value);
+        }
+        const categoryName = formData.get('categoryName').trim();
+
+        console.log(formData);
+        if (!categoryName) {
+          return Swal.fire({
+           
+            icon: "error", // 🔴 change icon to 'error'
+            title: "Category name cannot be empty!",
+            showConfirmButton: false,
+            timer: 1000
+          });
+
+        }else if(/^\d/.test(categoryName)){
+           return Swal.fire({
+           
+            icon: "error", // 🔴 change icon to 'error'
+            title: "Category name cannot include numbers!",
+            showConfirmButton: false,
+            timer: 1000
+          });
+        }
+        if(categoryName.length>20){
+          return Swal.fire({
+           
+            icon: "error", // 🔴 change icon to 'error'
+            title: "Category name atmost 20 charectors",
+            showConfirmButton: false,
+            timer: 1000
+          });
+        } 
+         if(categoryName.length<3){
+          return Swal.fire({
+           
+            icon: "error", // 🔴 change icon to 'error'
+            title: "Category name atleast 3 charectors",
+            showConfirmButton: false,
+            timer: 1000
+          });
+        }
+
+        fetch(`/admin/category/add`, {
+          method: 'POST',
+
+          body: formData
+        }).then(res => res.json())
+          .then(data => {
+            if (data && data.success) {
+              Swal.fire({
+
+                icon: "success",
+                title: data.message,
+                showConfirmButton: false,
+                timer: 1000
+              })
+              location.reload()
+              categoryForm.reset()
+              const modal = bootstrap.Modal.getInstance(document.getElementById('addCategoryModal'));
+              modal.hide();
+
+            } else {
+              Swal.fire(data.message)
+            }
+          }).catch(err => {
+            Swal.fire(err)
+          })
+      });
+    });
+
+
+
+
+    function deleteCategory(id) {
+      console.log("from delete cATEGORY SCRIPT" , id);
+
+      Swal.fire({
+        title: "Are you sure?",
+        text: "You won't be able to revert this!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+        confirmButtonText: "Yes, delete it!",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          fetch(`/admin/category/delete/${id}`, {
+            method: "DELETE",
+
+          }).then(res => res.json())
+            .then(data => {
+              if (data && data.success) {
+                Swal.fire({
+
+                icon: "success",
+                title: data.message,
+                showConfirmButton: false,
+                timer: 1000
+              })
+              document.getElementById(`row-${id}`).remove()
+              } else {
                 Swal.fire(data.message)
-                
-              }else{
-                Swal.fire(data.message)
+                document.getElementById('addCategoryModal').style.display = 'none'
               }
-             }).catch(error=>{
+            }).catch(error => {
               Swal.fire('Server Error')
-             })
-          }
+              document.getElementById('addCategoryModal').style.display = 'none'
+            })
+        }
+      });
+    }
+
+    //edit
+    let editCategoryId='';
+    function openEditModal(id, categoryName, description, isListed) {
+      console.log("from edit script");
+
+      editCategoryId=id
+      document.getElementById("editCategoryName").value = categoryName;
+      document.getElementById("editCategoryDescription").value = description;
+
+      const checkbox = document.getElementById("editCategoryIsListed");
+      checkbox.checked = isListed === "true" || isListed === true;
+      console.log(isListed);
+
+      document.getElementById(
+        "editCategoryForm"
+      ).action = `/admin/category/edit/${id}`;
+
+      var editModal = new bootstrap.Modal(
+        document.getElementById("editCategoryModal")
+      );
+      editModal.show();
+     
+      
+    }
+
+const editForm = document.getElementById('editCategoryForm');
+
+editForm.addEventListener('submit', function (e) {
+  e.preventDefault();
+  console.log('Edit category form submitted');
+ console.log('editCategoryId',editCategoryId);
+  const formData = new FormData(this);
+  const formObject = Object.fromEntries(formData);
+
+ 
+  formObject.isListed = formData.get('isListed') === 'on';
+console.log('formObject.isListed',formObject.isListed);
+
+  const categoryName = formData.get('categoryName').trim();
+
+  // VALIDATIONS
+  if (!categoryName) {
+    return Swal.fire({
+      icon: "error",
+      title: "Category name cannot be empty!",
+      showConfirmButton: false,
+      timer: 1000
+    });
+  }
+
+  if (/^\d/.test(categoryName)) {
+    return Swal.fire({
+      icon: "error",
+      title: "Category name cannot start with a number!",
+      showConfirmButton: false,
+      timer: 1000
+    });
+  }
+
+  if (categoryName.length > 20) {
+    return Swal.fire({
+      icon: "error",
+      title: "Category name must be at most 20 characters",
+      showConfirmButton: false,
+      timer: 1000
+    });
+  }
+
+  if (categoryName.length < 3) {
+    return Swal.fire({
+      icon: "error",
+      title: "Category name must be at least 3 characters",
+      showConfirmButton: false,
+      timer: 1000
+    });
+  }
+
+ console.log('editCategoryId',editCategoryId)
+
+  // SUBMIT
+  fetch(`/admin/category/edit/${editCategoryId}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(formObject)
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        Swal.fire({
+          icon: "success",
+          title: "Category updated successfully",
+          showConfirmButton: false,
+          timer: 1500
+        }).then(() => {
+        var editModal = new bootstrap.Modal(
+        document.getElementById("editCategoryModal")
+      );
+      editModal.hide();
+          location.reload(); 
+        });
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: data.message || "Update failed",
+          showConfirmButton: false,
+          timer: 1500
         });
       }
+    })
+    .catch(err => {
+      console.error("Error submitting edit form:", err);
+      Swal.fire({
+        icon: "error",
+        title: "Something went wrong!",
+        showConfirmButton: false,
+        timer: 1500
+      })
+    })
+})
+</script>
 
-      //edit
-      function openEditModal(id, categoryName, description, isListed) {
-        console.log("from edit script");
+  
 
-        document.getElementById("editCategoryName").value = categoryName;
-        document.getElementById("editCategoryDescription").value = description;
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
 
-        const checkbox = document.getElementById("editCategoryIsListed");
-        checkbox.checked = isListed === "true" || isListed === true;
-        console.log(isListed);
-
-        document.getElementById(
-          "editCategoryForm"
-        ).action = `/admin/category/edit/${id}`;
-
-        var editModal = new bootstrap.Modal(
-          document.getElementById("editCategoryModal")
-        );
-        editModal.show();
-      }
-
-      
-    </script>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  </body>
 </html>

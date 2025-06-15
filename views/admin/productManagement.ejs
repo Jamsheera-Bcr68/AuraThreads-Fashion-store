@@ -54,7 +54,7 @@
                       <table class="table table-bordered">
                         <thead class="table-dark">
                           <tr>
-                            <th>#</th>
+                            <th>Product Id</th>
                             <th>Image</th>
                             <th>Product Name</th>
                             <th>Price</th>
@@ -65,9 +65,9 @@
                         </thead>
                         <tbody>
                           <% products.forEach((product, index)=> { %>
-                            <tr>
+                            <tr id="row-<%= product._id %>">
                               <td>
-                                <%= index + 1 %>
+                                <%= product._id %>
                               </td>
                               <td>
                                 <img src="<%= product.images[0] %>" alt="Product Image"
@@ -160,11 +160,14 @@
               .then((data) => {
                 if (data.success) {
                   Swal.fire({
-                    title: "Deleted!",
-                    text: "Your product has been deleted.",
                     icon: "success",
+                    title: 'Product Deleted ',
+                    showConfirmButton: false,
+                    timer: 1000
                   }).then(() => {
-                    location.reload(); // Reload page after deletion
+                    const row=document.getElementById(`row-${productId}`)
+                    row.remove()
+                    //location.reload(); // Reload page after deletion
                   });
                 } else {
                   Swal.fire({

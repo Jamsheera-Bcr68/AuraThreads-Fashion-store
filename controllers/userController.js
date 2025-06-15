@@ -324,10 +324,11 @@ const getLogin = async (req, res) => {
 //Handle post login
 
 const postLogin = async (req, res) => {
-  try {
     const { email, password } = req.body;
     console.log(email, password);
 
+  try {
+  
     //finding the url to redirect
     const redirectTo = req.session.redirectTo || "/user/home";
     console.log("redirectTo", redirectTo);
@@ -2756,11 +2757,15 @@ const getWallet = async (req, res) => {
     if (!wallet) {
       return res.json({ success: false, message: "Wallet no found" });
     }
-    const cart = await Cart.findOne({ userId });
-    if (!cart) {
-      console.log("Cart not found");
-      return res.json({ success: false, message: "Cart not found" });
+    let cart=[]
+    let cartCount=0
+    if(userId){
+       cart = await Cart.findOne({ userId });
+    if (cart) {
+    cartCount=cart.length ||0
     }
+    }
+    
     const debitLength = wallet.transactions.filter(
       (transaction) => transaction.type == "debit",
     ).length;
@@ -2771,7 +2776,7 @@ const getWallet = async (req, res) => {
     const recentTransactions = wallet.transactions
       .sort((a, b) => new Date(b.date) - new Date(a.date)) // sort newest first
       .slice(0, 3);
-    const cartCount = cart.items.length || 0;
+   
     res.render("user/wallet", {
       categoryId: null,
       priceRange: null,
@@ -2817,7 +2822,7 @@ const addMoney = async (req, res) => {
       description: "Fund Added",
     });
     await wallet.save();
-    return res.json({ success: true, message: "Fund Added succesfully" });
+    return res.json({ success: true, message: "Fund Added succesfully" ,balance:wallet.balance});
   } catch (error) {
     console.log("error is ", error);
     return res.json({ success: false, message: "server error" });
