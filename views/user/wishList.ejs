@@ -17,7 +17,9 @@
 
 
     <div class="container">
-      <h1 class="page-title">My Wishlist (<%= products.length %>)</h1>
+      <h1 class="page-title">My Wishlist (<span id="count">
+          <%= products.length %>
+        </span>)</h1>
 
       <% if (products.length===0) { %>
         <!-- Empty wishlist state -->
@@ -142,7 +144,18 @@
           }).then(res => res.json())
             .then(data => {
               if (data && data.success) {
-                Swal.fire(data.message)
+                Swal.fire({
+
+                  icon: "success",
+                  title: data.message,
+                  showConfirmButton: false,
+                  timer: 1000
+                })
+                const count = document.getElementById('count').innerHTML
+                console.log(count);
+                document.getElementById('count').innerHTML = parseInt(count - 1)
+
+
                 const div = document.getElementById(`div-${productId}`)
                 if (div) {
                   div.remove()
@@ -165,7 +178,17 @@
           }).then(res => res.json())
             .then(data => {
               if (data && data.success) {
-                Swal.fire(data.message)
+                Swal.fire({
+
+                  icon: "success",
+                  title: data.message,
+                  showConfirmButton: false,
+                  timer: 1000
+                })
+                const count = document.getElementById('count').innerHTML
+                console.log(count);
+                document.getElementById('count').innerHTML = parseInt(count - 1)
+
                 const div = document.getElementById(`div-${productId}`)
                 if (div) {
                   div.remove()

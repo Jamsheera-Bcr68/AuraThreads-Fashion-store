@@ -61,6 +61,7 @@ router.get("/products", async (req, res) => {
       totalPages,
       query: query || "",
       products,
+      thisPage:'products',
       successMessage: res.locals.successMessage || "",
       errorMessage: res.locals.errorMessage || "",
     });
@@ -76,6 +77,7 @@ router.get("/products/add", async (req, res) => {
   res.render("admin/addProduct", {
     title: " Add Product",
     categories,
+    thisPage:'products'
   });
 });
 
@@ -217,6 +219,7 @@ router.get("/products/edit/:productId", async (req, res) => {
         title: "Edit Product Page",
         product,
         categories,
+        thisPage:'products'
       });
     }
   } catch (error) {

@@ -80,7 +80,9 @@ h3 {
   background-color: #e2e214;
   color: black;
 }
-
+.badge.returned {
+  background-color: #dc3545;
+}
 .badge.cancelled {
   background-color: #dc3545;
 }
@@ -143,4 +145,45 @@ h3 {
   font-weight: bold;
   border-radius: 5px;
   color: white;
+}
+/**/
+.order-container {
+    padding: 20px;
+    background: #fff;
+    border-radius: 10px;
+}
+
+.section {
+    margin-bottom: 20px;
+}
+
+.table img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 5px;
+}
+
+.badge {
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    text-transform: capitalize;
+}
+/**/
+#div-left, #div-right {
+  padding: 20px;
+}
+
+#div-right {
+ 
+  border-radius: 8px;
+}
+
+.order-container h2 {
+  margin-bottom: 25px;
+}
+
+.section h3 {
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 8px;
+  margin-bottom: 15px;
 }

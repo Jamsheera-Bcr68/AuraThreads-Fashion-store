@@ -9,6 +9,11 @@
   --warning: #ffb300;
   --info: #039be5;
 }
+table td, table th {
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
 .orders-table th {
   background: #000;
 }

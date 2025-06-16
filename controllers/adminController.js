@@ -210,7 +210,7 @@ const getOrder = async (req, res) => {
       filter,
       orders,
       currentPage: page,
-
+      thisPage:'orders',
       totalPages,
     });
   } catch (error) {
@@ -283,6 +283,7 @@ const postUpdateOrder = async (req, res) => {
   return res.json({
     success: true,
     message: "order staus updated succesfully",
+    orderStatus:order.status
   });
 };
 
@@ -379,6 +380,7 @@ const getCoupenPage = async (req, res) => {
     res.render("admin/coupenManagement", {
       title: "Admin Coupon Management",
       coupons,
+      thisPage:'coupons',
       activeCouponsCount,
       totalRedemptions: 10,
       revenueImpact: 100,
@@ -628,6 +630,7 @@ const getOffers = async (req, res) => {
       totalOffers,
       populatedOffers,
       stats,
+      thisPage:'offers',
       refferalOffers,
       offers,
       products,
@@ -920,9 +923,11 @@ const getPendings = async (req, res, next) => {
     const orders = await Order.find({
       returnRequests: { $exists: true, $ne: [] },
     });
-    //console.log('orders ', orders);
+   
+    
 
     //fetching return requests
+
     const returnRequests = [];
     const products = await Product.find();
     const users = await User.find();
@@ -947,11 +952,13 @@ const getPendings = async (req, res, next) => {
       });
     });
 
+    
     // console.log('requestedItems ', returnRequests);
 
     res.render("admin/aprovalPage", {
-      title: "Admin Approvals Management",
+      title: "Approvals Management",
       returnRequests,
+     thisPage:'pendings'
     });
   } catch (error) {
     console.log(error);
@@ -1398,43 +1405,7 @@ const getSalesReport = async (req, res, next) => {
       .limit(5);
 
     const salesDatas = [
-      // {
-      //   _id: "2025-05-01",
-      //   totalOrders: 12,
-      //   totalSales: 15000,
-      //   totalDiscount: 1200,
-      //   couponDeduction: 500
-      // },
-      // {
-      //   _id: "2025-05-02",
-      //   totalOrders: 9,
-      //   totalSales: 10250,
-      //   totalDiscount: 750,
-      //   couponDeduction: 300
-      // },
-      // {
-      //   _id: "2025-05-03",
-      //   totalOrders: 15,
-      //   totalSales: 18750,
-      //   totalDiscount: 1500,
-      //   couponDeduction: 750
-      // },
-      // {
-      //   _id: "2025-05-04",
-      //   totalOrders: 7,
-      //   totalSales: 8200,
-      //   totalDiscount: 500,
-      //   couponDeduction: 250
-      // },
-      // {
-      //   _id: "2025-05-05",
-      //   totalOrders: 11,
-      //   totalSales: 13400,
-      //   totalDiscount: 1000,
-      //   couponDeduction: 600
-      // }
-      //    ];
-      //summary
+     
     ];
 
     const orders = await Order.find({ status: "Delivered" });
@@ -1459,6 +1430,7 @@ const getSalesReport = async (req, res, next) => {
       totalSales: totalSales || 0,
       reportType,
       salesDates,
+      thisPage:'reports',
       salesDatas,
     });
   } catch (error) {

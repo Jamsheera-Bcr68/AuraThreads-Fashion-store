@@ -462,7 +462,14 @@ removeBtns.forEach((btn) =>
           .then((response) => response.json())
           .then((data) => {
             if (data && data.success) {
-              Swal.fire("Removed!", "The item has been removed.", "success");
+              Swal.fire({
+
+              icon: "success",
+              title: data.message,
+              showConfirmButton: false,
+              timer: 1000
+            })
+
               const row = document.getElementById(`row-${productId}`);
               if (row) row.remove();
             } else {

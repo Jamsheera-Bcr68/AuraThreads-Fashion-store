@@ -195,6 +195,7 @@ router.get("/dashboard", async (req, res) => {
     salesData,
     salesDates,
     recentOrders,
+    thisPage:'dashboard'
   });
 });
 
@@ -238,6 +239,7 @@ router.get("/category", async (req, res) => {
       totalPages,
       query,
       title: "Category Manamgement",
+      thisPage:'category',
       successMessage: res.locals.successMessage[0] || "",
       errorMessage: res.locals.errorMessage[0] || "",
     });
@@ -405,6 +407,7 @@ router.get("/users", async (req, res) => {
       users,
       currentPage: page,
       totalPages,
+      thisPage:'users',
       title: "User Management",
       successMessage: res.locals.successMessage || "",
       errorMessage: res.locals.errorMessage || "",
