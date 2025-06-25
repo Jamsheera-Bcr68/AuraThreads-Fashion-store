@@ -128,10 +128,22 @@ const otp = Array.from(otpInputs).map(input => input.value).join('');
   }).then(res=>res.json())
   .then(data=>{
     if(data && data.success){
-      Swal.fire(data.message)
-      window.location.href="/user/login"
+      Swal.fire({
+         icon: "success",
+          title: data.message,
+          showConfirmButton: false,
+          timer: 1000
+      }).then(()=>{
+        window.location.href="/user/login"
+      })
+      
     }else{
-      Swal.fire(data.message)
+      Swal.fire({
+        icon: "error",
+          title: data.message,
+          showConfirmButton: false,
+          timer: 1000
+      })
     }
   }).catch(err=>{
     console.log('error is ',err);

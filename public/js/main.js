@@ -208,10 +208,21 @@ jQuery(document).ready(function ($) {
           Swal.fire("Error!", data.message, "error");
         } else {
           const totalCol = document.getElementById(`col-${productId}`);
-
+          const cartItems=data.cartItems
           console.log("finalPrice", finalPrice);
-
+          
+          console.log('cartItems',cartItems);
+          
           totalCol.innerHTML = (quantity * finalPrice).toFixed(2);
+          let subTotal=document.getElementById('subTotal')
+          const originalCartTotal=cartItems.reduce((acc,item)=>acc+item.subTotal,0)
+          console.log(originalCartTotal);
+          subTotal.innerText=originalCartTotal.toFixed(2)
+          const netAmount=data.netAmount
+          const totalDiscount=data.totalDiscount
+          console.log('netAmount',netAmount,'totalDiscount',totalDiscount);
+          document.getElementById('offer').innerText=totalDiscount.toFixed(2)
+          document.getElementById('updatedCartTotal').innerText=netAmount.toFixed(2)
         }
       })
       .catch((error) => {
@@ -472,6 +483,14 @@ removeBtns.forEach((btn) =>
 
               const row = document.getElementById(`row-${productId}`);
               if (row) row.remove();
+              const cartItems=data.cartItems
+              const subTotal=cartItems.reduce((acc,item)=>acc+(item.productId.price*item.quantity),0)
+              console.log('cart items',cartItems);
+              
+              console.log('subTotal',subTotal);
+              document.getElementById('subTotal').innerText=subTotal.toFixed(2)
+              document.getElementById('offer').innerText=data.totalDiscount.toFixed(2)
+              document.getElementById('updatedCartTotal').innerText=data.netAmount.toFixed(2)
             } else {
               Swal.fire("Error!", "Failed to remove the item.", "error");
             }

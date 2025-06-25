@@ -449,9 +449,19 @@
                     }).then(response => response.json())
                         .then(data => {
                             if (data && data.success) {
-                                Swal.fire(data.message)
+                                Swal.fire({
+                                    icon: "success", // or "warning", depending on your case
+                                    title: data.message,
+                                    showConfirmButton: false,
+                                    timer: 1000
+                                });
                             } else {
-                                Swal.fire(data.message)
+                                Swal.fire({
+                                    icon: "error",
+                                    title: data.message,
+                                    showConfirmButton: false,
+                                    timer: 1000 
+                                });
                             }
                         })
                 }))

@@ -1718,21 +1718,91 @@ const deleteCart = async (req, res) => {
 
   console.log(`userId id ${userId} and product Id is ${productId}`);
   try {
-    const cart = await Cart.findOne({ userId });
+    const cart = await Cart.findOne({ userId }).populate({
+      path: "items.productId",
+      model: "Product",
+      select: "productName price images stock categoryId",
+    });
     if (!cart) {
       console.log("can't find cart");
     } else {
       console.log("cart found");
       cart.items = cart.items.filter(
-        (item) => item.productId.toString() !== productId,
+        (item) => item.productId._id?.toString() !== productId,
       );
 
       await cart.save();
+     // fetching offers
+     const offers = await Offer.find({ status: "active" });
+     cart.items.forEach((item) => {
+      const productOffer = offers.find(
+        (offer) =>
+          offer.applicableTo == "product" &&
+          offer.productId?.toString() == item.productId._id?.toString(),
+      );
+      const categoryOffer = offers.find(
+        (offer) =>
+          offer.applicableTo == "category" &&
+          offer.categoryId?.toString() == item.productId.categoryId.toString(),
+      );
+
+      let finalOffer = null;
+      let discountAmount = 0;
+      if (!categoryOffer && !productOffer) {
+      } else if (productOffer && categoryOffer) {
+        const productDiscountAmount =
+          productOffer.discountType == "amount"
+            ? productOffer.discountValue
+            : (productOffer.discountValue * item.productId.price) / 100;
+        const categoryDiscountAmount =
+          categoryOffer.discountType == "amount"
+            ? categoryOffer.discountValue
+            : (categoryOffer.discountValue * item.productId.price) / 100;
+
+        discountAmount =
+          productDiscountAmount > categoryDiscountAmount
+            ? productDiscountAmount
+            : categoryDiscountAmount;
+        finalOffer =
+          productDiscountAmount > categoryDiscountAmount
+            ? productOffer
+            : categoryOffer;
+      } else if (categoryOffer || productOffer) {
+        finalOffer = categoryOffer || productOffer;
+        discountAmount =
+          finalOffer.discountType == "amount"
+            ? finalOffer.discountValue
+            : (finalOffer.discountValue * item.productId.price) / 100;
+      }
+
+      if (finalOffer) {
+        item.discountAmount = discountAmount;
+        item.discountPrice = Math.round(item.productId.price - discountAmount);
+        item.discountType = finalOffer.discountType;
+      } else {
+        item.discountAmount = 0;
+        item.discountPrice = item.productId.price;
+        item.discountTyp = "";
+      }
+    });
+
+    const netAmount = cart.items.reduce(
+      (total, item) => total + item.discountPrice * item.quantity,
+      0,
+    );
+    const totalDiscount = cart.items.reduce(
+      (total, item) => total + item.discountAmount * item.quantity,
+      0,
+    );
+      req.session.netAmount = netAmount;
+    req.session.totalDiscount = totalDiscount;
+
       req.session.discountAmount = 0;
       req.session.totalAmount = 0;
       req.session.code = "";
       console.log("removed from cart");
-      return res.json({ success: true, message: "deleted from cart" });
+      const cartItems=cart.items
+      return res.json({ success: true, message: "deleted from cart" ,cartItems,netAmount,totalDiscount});
     }
   } catch (error) {
     console.log("error in fetching cart");
@@ -1778,7 +1848,7 @@ const updateCart = async (req, res) => {
 
     const productStock = product.stock;
     console.log("cart itmes ", cart.items);
-
+     const cartItems=cart.items
     // Find item in cart
     const item = cart.items.find(
       (item) => item.productId._id.toString() === productId,
@@ -1806,6 +1876,70 @@ const updateCart = async (req, res) => {
     // Save cart update
     await cart.save();
 
+    //fetching offers
+    const offers = await Offer.find({ status: "active" });
+     cartItems.forEach((item) => {
+      const productOffer = offers.find(
+        (offer) =>
+          offer.applicableTo == "product" &&
+          offer.productId?.toString() == item.productId._id?.toString(),
+      );
+      const categoryOffer = offers.find(
+        (offer) =>
+          offer.applicableTo == "category" &&
+          offer.categoryId?.toString() == item.productId.categoryId.toString(),
+      );
+
+      let finalOffer = null;
+      let discountAmount = 0;
+      if (!categoryOffer && !productOffer) {
+      } else if (productOffer && categoryOffer) {
+        const productDiscountAmount =
+          productOffer.discountType == "amount"
+            ? productOffer.discountValue
+            : (productOffer.discountValue * item.productId.price) / 100;
+        const categoryDiscountAmount =
+          categoryOffer.discountType == "amount"
+            ? categoryOffer.discountValue
+            : (categoryOffer.discountValue * item.productId.price) / 100;
+
+        discountAmount =
+          productDiscountAmount > categoryDiscountAmount
+            ? productDiscountAmount
+            : categoryDiscountAmount;
+        finalOffer =
+          productDiscountAmount > categoryDiscountAmount
+            ? productOffer
+            : categoryOffer;
+      } else if (categoryOffer || productOffer) {
+        finalOffer = categoryOffer || productOffer;
+        discountAmount =
+          finalOffer.discountType == "amount"
+            ? finalOffer.discountValue
+            : (finalOffer.discountValue * item.productId.price) / 100;
+      }
+
+      if (finalOffer) {
+        item.discountAmount = discountAmount;
+        item.discountPrice = Math.round(item.productId.price - discountAmount);
+        item.discountType = finalOffer.discountType;
+      } else {
+        item.discountAmount = 0;
+        item.discountPrice = item.productId.price;
+        item.discountTyp = "";
+      }
+    });
+
+    const netAmount = cart.items.reduce(
+      (total, item) => total + item.discountPrice * item.quantity,
+      0,
+    );
+    const totalDiscount = cart.items.reduce(
+      (total, item) => total + item.discountAmount * item.quantity,
+      0,
+    );
+      req.session.netAmount = netAmount;
+    req.session.totalDiscount = totalDiscount;
     req.session.discountAmount = 0;
     req.session.totalAmount = 0;
     req.session.code = "";
@@ -1813,7 +1947,7 @@ const updateCart = async (req, res) => {
 
     return res
       .status(200)
-      .json({ success: true, message: "Cart updated successfully" });
+      .json({ success: true, message: "Cart updated successfully" ,cartItems,netAmount,totalDiscount});
   } catch (error) {
     console.error("Error updating cart:", error);
     return res.status(500).json({ success: false, message: "Server error" });
