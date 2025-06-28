@@ -156,7 +156,7 @@ jQuery(document).ready(function ($) {
           const finalPrice = button.getAttribute("data-finalPrice");
           updateQuantity(quantity, productId, productStock, finalPrice);
         } else {
-          inputField.value = 0;
+          inputField.value = 1;
         }
       });
     });
@@ -484,6 +484,10 @@ removeBtns.forEach((btn) =>
               const row = document.getElementById(`row-${productId}`);
               if (row) row.remove();
               const cartItems=data.cartItems
+              const count=cartItems.length ||0
+              if(count==0){
+                document.getElementById('cartHead').textContent='Your cart is empty.'
+              }
               const subTotal=cartItems.reduce((acc,item)=>acc+(item.productId.price*item.quantity),0)
               console.log('cart items',cartItems);
               

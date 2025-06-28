@@ -17,6 +17,7 @@
     <p id="timer">01:00</p>
 
     <form id="otpForm" action="/user/verifyOtp" method="POST">
+
       <div class="otp-inputs">
         <input class="otp-field" type="text" name="otp[]" maxlength="1" required />
         <input class="otp-field" type="text" name="otp[]" maxlength="1" required />
@@ -30,6 +31,7 @@
       </div>
 
     </form>
+     <input type="hidden" id="redirectTo" name="redirectTo" value="<%= redirectTo || '/user/account' %>">
   </div>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script>
@@ -139,7 +141,10 @@
               showConfirmButton: false,
               timer: 1000
             });
-            window.location.href = "/user/account"
+            const redirectTo=document.getElementById('redirectTo').value
+            console.log('redirectTo');
+            
+            window.location.href = redirectTo||"/user/account"
           } else {
             Swal.fire(data.message)
           }

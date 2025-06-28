@@ -36,16 +36,11 @@
                             </div>
                             <div class="stat-card">
                                 <h3>Active Offers</h3>
-                                <p>
+                                <p id="activeCount">
                                     <%= stats.activeOffers %>
                                 </p>
                             </div>
-                            <div class="stat-card">
-                                <h3>Pending Approval</h3>
-                                <p>
-                                    <%= stats.pendingOffers %>
-                                </p>
-                            </div>
+
                             <div class="stat-card">
                                 <h3>Expired Offers</h3>
                                 <p>
@@ -58,21 +53,15 @@
                         <div class="offers-section">
                             <div class="section-header">
                                 <h2 class="section-title"></h2>
-                                <button class="btn btn-primary" id="addOfferBtn"><i class="fas fa-plus"></i> Add New
+                                <button class="btn btn-success" id="addOfferBtn"><i class="fas fa-plus"></i> Add New
                                     Offer</button>
                             </div>
-                            <div class="section-header">
-                                <h2 class="section-title">All Offers</h2>
-                                <h2><a href="/admin/referalOffers"></a></h2>
-                                <!-- <button class="btn btn-primary" id="referralOfferbtn" data-bs-toggle="modal"
-                                    data-bs-target="#referralModal"><i class="fas fa-plus"></i>Add Referral
-                                    Offer</button> -->
-                            </div>
+
                             <div class="table-wrapper">
                                 <table>
                                     <thead>
                                         <tr>
-                                            <th>No.</th>
+
                                             <th>ID</th>
                                             <th>Offer Name</th>
                                             <th>Offer On</th>
@@ -86,9 +75,7 @@
                                     <tbody>
                                         <% populatedOffers.forEach(function(offer,index) { %>
                                             <tr>
-                                                <td>
-                                                    <%= index+1 %>
-                                                </td>
+
                                                 <td>OFF<%= offer.id.slice(-4) %>
                                                 </td>
                                                 <td>
@@ -108,7 +95,8 @@
                                                     <%= offer.endDate.toISOString().substring(0, 10) %> %>
                                                 </td>
                                                 <td>
-                                                    <span class="status status-<%= offer.status.toLowerCase() %>">
+                                                    <span id="status-<%= offer._id %>"
+                                                        class="status status-<%= offer.status.toLowerCase() %>">
                                                         <%= offer.status %>
                                                     </span>
                                                 </td>
@@ -118,7 +106,8 @@
                                                             class="fas fa-edit"></i></button>
                                                     <button data-id="<%= offer._id %>"
                                                         class="btn btn-danger action-btn delete-btn"
-                                                        <%=offer.status==='inactive' ? 'disabled' : '' %>>
+                                                        <%=(offer.status==='inactive' || offer.status==='expired' )
+                                                        ? 'disabled' : '' %>>
                                                         <i class="fas fa-trash-alt"></i>
                                                     </button>
                                                 </td>
@@ -130,7 +119,6 @@
                         </div>
                     </div>
             </div>
-
 
         </div>
         <!--Pagination-->
@@ -198,14 +186,14 @@
                                 <label for="discountType">Discount Type</label>
                                 <select name="discountType" id="discountType" required>
                                     <option value="percentage">Percentage (%)</option>
-                                    <option value="fixed">Fixed Amount</option>
+                                    <option value="amount">Fixed Amount</option>
                                 </select>
                             </div>
 
                             <!-- Discount Value -->
                             <div class="form-group">
                                 <label for="discountValue">Discount Value</label>
-                                <input type="number" name="discountValue" id="discountValue" required>
+                                <input type="number" name="discountValue" id="discountValue" min="0" required>
                             </div>
 
                             <!-- Start Date -->
@@ -225,7 +213,7 @@
                                 <label for="status">Status</label>
                                 <select name="status" id="status" required>
                                     <option value="active">Active</option>
-                                    <option value="pending">Pending</option>
+                                    <option id="expiredstatus" hidden value="expired">Expired</option>
                                     <option value="inactive">Inactive</option>
                                 </select>
                             </div>
@@ -293,9 +281,9 @@
                     </div>
                 </div>
             </div>
-            <!--add refferal offer modal-->
+
             <!-- Referral Offer Modal -->
-            <div class="modal fade" id="referralModal" tabindex="-1" aria-labelledby="referralModalLabel"
+            <!-- <div class="modal fade" id="referralModal" tabindex="-1" aria-labelledby="referralModalLabel"
                 aria-hidden="true">
                 <div class="modal-dialog">
                     <form id="refferalForm" action="/admin/referral-offer" method="POST">
@@ -344,7 +332,7 @@
                         </div>
                     </form>
                 </div>
-            </div>
+            </div> -->
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
             <script>
@@ -401,14 +389,40 @@
                     const productId = document.getElementById('productId').value;
                     const categoryId = document.getElementById('categoryId').value;
 
-                    if (!offerName || !offerDescription || !discountType || !discountValue || !startDate || !endDate || !status || !offerOn || (!productId && !categoryId)) {
+                    if (!offerName.trim() || !offerDescription || !discountType || !discountValue || !startDate || !endDate || !status || !offerOn || (!productId && !categoryId)) {
                         Swal.fire("All fields are required");
                         return;
                     }
+                    if (/^\d/.test(offerName)) {
+                        Swal.fire("Offer name cannot start with numbers");
+                        return;
+                    }
+                    if (offerName.length < 3) {
+                        Swal.fire("Offer name Should contin atleast 3 charectors");
+                        return;
+                    }
+                    if (offerName.length > 15) {
+                        Swal.fire("Offer name does not contain more than 15 charectors");
+                        return;
+                    }
+                    if (parseInt(discountValue) < 0) {
+                        return Swal.fire("Discount value should greater than zero")
+                    }
+
+                    if (new Date(startDate) > new Date(endDate)) {
+                        Swal.fire("Enter Proper End Date");
+                        return;
+                    }
+                    const currentDate = new Date()
+                    if (currentDate > new Date(endDate)) {
+                        Swal.fire("Enter Proper End Date");
+                        return;
+                    }
+                    console.log('offerDescription', offerDescription);
 
                     const formObject = {
                         offerName,
-                        offerDiscription: offerDescription,
+                        description: offerDescription,
                         discountType,
                         discountValue,
                         startDate,
@@ -428,9 +442,21 @@
                         body: JSON.stringify(formObject)
                     }).then(res => res.json())
                         .then(data => {
-                            Swal.fire(data.message);
-                            if (data.success) {
-                                offerModal.classList.remove('active');
+
+                            if (data && data.success) {
+                                Swal.fire({
+                                    icon: "success",
+                                    title: data.message,
+                                    showConfirmButton: false,
+                                    timer: 1000
+                                }).then(() => {
+                                    offerModal.classList.remove('active');
+                                    location.reload()
+                                });
+
+                            } else {
+                                Swal.fire(data.message)
+
                             }
                         }).catch(() => {
                             Swal.fire("Server error");
@@ -454,15 +480,33 @@
                             .then(res => res.json())
                             .then(data => {
                                 if (data && data.success) {
+                                    const expiredstatus = document.getElementById('expiredstatus')
+
                                     const thisOffer = data.offer;
+                                    if (thisOffer.status == 'expired') {
+                                        expiredstatus.style.display = 'block'
+                                    }
                                     document.getElementById('offerName').value = thisOffer.offerName;
                                     document.getElementById('offerDesc').value = thisOffer.description;
+
                                     document.getElementById('discountType').value = thisOffer.discountType;
+                                    console.log(thisOffer);
+
                                     document.getElementById('discountValue').value = thisOffer.discountValue;
                                     document.getElementById('startDate').value = thisOffer.startDate?.split('T')[0];
                                     document.getElementById('endDate').value = thisOffer.endDate?.split('T')[0];
                                     document.getElementById('offerOn').value = thisOffer.applicableTo;
                                     document.getElementById('status').value = thisOffer.status;
+
+                                    if (thisOffer.applicableTo === 'product') {
+                                        document.getElementById('productSelect').style.display = 'block';
+                                        document.getElementById('categorySelect').style.display = 'none';
+                                        document.getElementById('productId').value = thisOffer.productId; // ✅ Set selected product
+                                    } else if (thisOffer.applicableTo === 'category') {
+                                        document.getElementById('categorySelect').style.display = 'block';
+                                        document.getElementById('productSelect').style.display = 'none';
+                                        document.getElementById('categoryId').value = thisOffer.categoryId; // ✅ Set selected category
+                                    }
                                 } else {
                                     Swal.fire(data.message);
                                 }
@@ -473,26 +517,67 @@
                 });
 
                 // Delete offer
-                let deleteOfferId;
+
                 deleteBtns.forEach(button => {
                     button.addEventListener('click', () => {
-                        deleteModal.classList.add('active');
-                        deleteOfferId = button.getAttribute('data-id');
-                        const row = button.closest('tr');
+                        let offerId = button.getAttribute('data-id');
+                        Swal.fire({
+                            title: "Do you want to remove this offer?",
+                            text: "You won't be able to revert this!",
+                            icon: "warning",
+                            showCancelButton: true,
+                            confirmButtonColor: "#3085d6",
+                            cancelButtonColor: "#d33",
+                            confirmButtonText: "Yes, remove it!"
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                fetch(`/admin/offer/delete/${offerId}`, { method: "DELETE" })
+                                    .then(res => res.json())
+                                    .then(data => {
+                                        if (data && data.success) {
+                                            Swal.fire({
+                                                icon: "success",
+                                                title: data.message,
+                                                showConfirmButton: false,
+                                                timer: 1000
+                                            })
+                                            button.disabled = true;
+                                            const status = document.getElementById(`status-${offerId}`)
+                                            status.style.background = 'rgba(243, 156, 18, 0.2)'
+                                            status.style.color = '#d35400'
+                                            const activeCountPara = document.getElementById('activeCount')
+                                            let activeCount = parseInt(activeCountPara.innerHTML)
+                                            console.log(activeCount, 'activeCount');
+                                            activeCount = activeCount - 1
+                                            activeCountPara.innerHTML = activeCount
 
-                        confirmDeleteBtn.onclick = () => {
-                            fetch(`/admin/offer/delete/${deleteOfferId}`, { method: "DELETE" })
-                                .then(res => res.json())
-                                .then(data => {
-                                    Swal.fire(data.message);
-                                    if (data.success) {
-                                        row.remove();
-                                        deleteModal.classList.remove('active');
-                                    }
-                                }).catch(() => {
-                                    Swal.fire("Server Error");
-                                });
-                        };
+                                        } else {
+                                            Swal.fire(data.message)
+                                        }
+                                    }).catch(() => {
+                                        Swal.fire("Server Error");
+                                    });
+
+                            }
+                        });
+
+                        // deleteModal.classList.add('active');
+                        // deleteOfferId = button.getAttribute('data-id');
+                        // const row = button.closest('tr');
+
+                        // confirmDeleteBtn.onclick = () => {
+                        //     fetch(`/admin/offer/delete/${deleteOfferId}`, { method: "DELETE" })
+                        //         .then(res => res.json())
+                        //         .then(data => {
+                        //             Swal.fire(data.message);
+                        //             if (data.success) {
+                        //                 row.remove();
+                        //                 deleteModal.classList.remove('active');
+                        //             }
+                        //         }).catch(() => {
+                        //             Swal.fire("Server Error");
+                        //         });
+                        // };
                     });
                 });
 
@@ -530,37 +615,38 @@
                     });
                 });
 
-                const referralOfferbtn = document.getElementById('referralOfferbtn')
-                referralOfferbtn.addEventListener('click', function () {
-                    console.log('referralOfferbtn clicked');
-                    const addModal = new bootstrap.Modal(document.getElementById('referralModal'));
-                    addModal.show()
-                })
+                // const referralOfferbtn = document.getElementById('referralOfferbtn')
+                // referralOfferbtn.addEventListener('click', function () {
+                //     console.log('referralOfferbtn clicked');
+                //     const addModal = new bootstrap.Modal(document.getElementById('referralModal'));
+                //     addModal.show()
+                // })
 
-                const refferalForm = document.getElementById('refferalForm')
-                refferalForm.addEventListener('submit', function (e) {
-                    e.preventDefault()
-                    console.log('refferalForm submited');
-                    const formData = new FormData(this)
-                    const formObject = Object.fromEntries(formData)
-                    console.log('formObject ', formObject);
+                // const refferalForm = document.getElementById('refferalForm')
+                // refferalForm.addEventListener('submit', function (e) {
+                //     e.preventDefault()
+                //     console.log('refferalForm submited');
+                //     const formData = new FormData(this)
+                //     const formObject = Object.fromEntries(formData)
+                //     console.log('formObject ', formObject);
 
-                    fetch('/admin/addrefferalOffer', {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(formObject)
-                    }).then(res => res.json())
-                        .then(data => {
-                            if (data && data.success) {
-                                Swal.fire(data.message)
-                                addModal.hide();
-                            } else {
-                                Swal.message
-                            }
-                        }).catch(error => {
-                            Swal.fire("Server Error")
-                        })
-                })
+                //     fetch('/admin/addrefferalOffer', {
+                //         method: "POST",
+                //         headers: { "Content-Type": "application/json" },
+                //         body: JSON.stringify(formObject)
+                //     }).then(res => res.json())
+                //         .then(data => {
+                //             if (data && data.success) {
+                //                 Swal.fire(data.message)
+                //                 addModal.hide();
+                //             } else {
+                //                 Swal.message
+                //             }
+                //         }).catch(error => {
+                //             Swal.fire("Server Error")
+                //         })
+                // })
+
             </script>
 
 </body>

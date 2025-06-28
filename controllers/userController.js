@@ -1125,7 +1125,7 @@ const addAddress = async (req, res) => {
       await newAddress.save();
       console.log("adress saved as default");
 
-      return res.status(201).json({ message: "Address added successfully" });
+      return res.json({success:true, message: "New Address added successfully",address:newAddress });
     } else {
       const newAddress = new Address({
         userId,
@@ -1140,7 +1140,7 @@ const addAddress = async (req, res) => {
       });
       await newAddress.save();
       console.log("adress is saves as not default");
-      return res.status(201).json({ message: "Address added successfully" });
+      return res.status(201).json({success:true, message: "Address added successfully" });
     }
   } catch (error) {
     console.log("error in fetching adress", error);
@@ -1283,7 +1283,10 @@ const updateUser = async (req, res) => {
 
 const getEmailChangeOtp = async (req, res, next) => {
   try {
-    res.render("user/emailChangeotp");
+    const redirectTo=req.query.redirectTo ||'/user/account'
+    console.log('redirectTo',redirectTo);
+    
+    res.render("user/emailChangeotp",{redirectTo});
   } catch (error) {
     console.log(error);
     throw Error({ status: 500, message: "server error" });
@@ -1516,7 +1519,7 @@ const getCart = async (req, res) => {
     cartCount = cart.items.length;
     title =
       cart.items.length > 0
-        ? `Displaying your ${cartCount} cart itmes`
+        ? `Displaying your  cart itmes`
         : "Your cart is empty";
 
     let cartTotal = cart.items.reduce(
@@ -2073,7 +2076,7 @@ const getCheckout = async (req, res) => {
     cartItems,
     shippingCharge,
     taxAmount,
-
+     couponCode: req.session.code || "",
     couponDiscountAmount: req.session.discountAmount || 0,
     offerDiscountAmount: req.session.totalDiscount || 0,
     totalAmount,
@@ -2643,7 +2646,8 @@ const applyCoupon = async (req, res) => {
         message: "You reached your this coupen usage limit",
       });
     }
-
+    console.log('userId',userId,'coupenCode',code);
+    
     //check it is used by the same user
     const isUsed = await Order.findOne({
       userId,
@@ -2664,6 +2668,8 @@ const applyCoupon = async (req, res) => {
       discountAmount = req.session.totalAmount * (coupon.discountValue / 100);
     }
 
+    console.log('req.session.netAmount',req.session.netAmount,'coupon.discountValue',coupon.discountValue);
+    
     const finalAmount = req.session.netAmount - coupon.discountValue;
     console.log("finalAmount ", finalAmount);
 

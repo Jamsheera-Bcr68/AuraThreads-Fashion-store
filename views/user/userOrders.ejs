@@ -34,8 +34,8 @@
                     <tr style="background-color: #cbb6ac;">
                         <th>Order No.</th>
                         <th>Order ID</th>
-                        <th>Items</th>
-                        <th>Date</th>
+                        <th>Order Date</th>
+                        <th>Delivery date</th>
                         <th>Total</th>
                         <th>Status</th>
                         <th>Actions</th>
@@ -50,17 +50,15 @@
                             <td>
                                 <div style="display: flex; flex-direction: column; gap: 4px; color: green;">
                                    
-                                    <div><strong>Items:</strong> 
-                                        <%= Array.isArray(order.items) ? order.items.length : 1 %>
-                                    </div>
-                                    <div><strong>Placed:</strong> <%= new Date(order.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) %></div>
+                                   
+                                    <div> <%= new Date(order.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) %></div>
                                     <% if (order.estimatedDelivery) { %>
                                         <div><strong>Est. Delivery:</strong> <%= new Date(order.estimatedDelivery).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) %></div>
                                     <% } %>
                                 </div>
                             </td>
             
-                            <td><%= new Date(order.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) %></td>
+                            <td><%= new Date(order.deliveryDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) %></td>
                             
                             <td style="color: red;"> ₹ <%= order.finalAmount.toFixed(2) %></td>
                             
@@ -76,6 +74,8 @@
                               
                                   <% if (order.status === 'cancelled') { %>
                                     <button class="btn btn-sm btn-secondary" disabled>Cancelled</button>
+                                  <% }else if (order.status === 'returned') { %>
+                                    <button  class="btn btn-sm text-danger btn-cancel" disabled>Returned</button>
                                   <% } else if (order.status === 'Processing') { %>
                                     <button onclick="cancelOrder('<%= order._id %>', this)" class="btn btn-sm bg-danger text-white btn-cancel">Cancel</button>
                                   <% } else if (order.status === 'Shipped' || order.status === 'Delivered') { %>
@@ -173,11 +173,12 @@
                 if (data && data.success) {
                     console.log(' Cancellation successful');
                     
-                    Swal.fire({
-                        title: "Cancelled!",
-                        text: "Your order has been cancelled.",
-                        icon: "success"
-                    });
+                  Swal.fire({
+                icon: "success",
+                title: "Order Cancelled",
+                showConfirmButton: false,
+                timer: 1000
+              })
 
                     if (btn) {
                         btn.disabled = true;

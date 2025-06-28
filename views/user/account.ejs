@@ -155,66 +155,135 @@
             </form>
           </div>
 
-          <!-- Address Management Section -->
-          <div style="color: black;font-weight: 100;" id="address-management" class="content-section hide">
-            <h2 class="section-title" style="text-align: center; margin-top: 2em;">Saved Addresses</h2>
+          <section id="addressSection">
+            <!-- Address Management Section -->
+            <div style="color: black;font-weight: bold;" id="address-management" class="content-section hide">
+              <h2 class="section-title" style="text-align: center; margin-top: 2em;">Saved Addresses</h2>
 
-            <div id="address-list" class="container">
-              <% if (addresses && addresses.length> 0) { %>
-                <div class="row">
-                  <% addresses.forEach(function(address, index) { %>
-                    <!-- Address Card -->
-                    <div class="col-md-6 mb-4">
-                      <div id="div-<%= address._id %>" class="address-card">
+              <div id="address-list" class="container">
+                <% if (addresses && addresses.length> 0) { %>
+                  <div class="row">
+                    <% addresses.forEach(function(address, index) { %>
+                      <!-- Address Card -->
+                      <div id="div-<%= address._id %>" class="col-md-6 mb-4">
+                        <div class="address-card">
 
-                        <% if (address.isDefault) { %>
-                          <h5>Default Address</h5>
-                          <% } %>
-                            <h4>
-                              <%= address.label %>
-                            </h4>
-                            <p>
-                              <%= address.line1 %>
-                                <%= address.line2 ? ', ' + address.line2 : '' %>
-                            </p>
-                            <p>
-                              <%= address.city %>, <%= address.state %>
-                                  <%= address.zip %>
-                            </p>
-                            <p>
-                              <%= address.country %>
-                            </p>
-                            <p>Phone: <%= address.phone %>
-                            </p>
-                            <button style="font-weight: bold;" class="edit-btn"
-                              onclick="editAddress('<%= address._id %>', '<%= address.label %>', '<%= address.line1 %>', '<%= address.line2 %>', '<%= address.city %>', '<%= address.state %>', '<%= address.zip %>', '<%= address.country %>', '<%= address.phone %>', '<%= address.isDefault ? true :false %>')">
-                              Edit
-                            </button>
+                          <% if (address.isDefault) { %>
+                            <h5>Default Address</h5>
+                            <% } %>
+                              <h4>
+                                <%= address.label %>
+                              </h4>
+                              <p>
+                                <%= address.line1 %>
+                                  <%= address.line2 ? ', ' + address.line2 : '' %>
+                              </p>
+                              <p>
+                                <%= address.city %>, <%= address.state %>
+                                    <%= address.zip %>
+                              </p>
+                              <p>
+                                <%= address.country %>
+                              </p>
+                              <p>Phone: <%= address.phone %>
+                              </p>
+                              <button style="font-weight: bold;" class="edit-btn"
+                                onclick="editAddress('<%= address._id %>', '<%= address.label %>', '<%= address.line1 %>', '<%= address.line2 %>', '<%= address.city %>', '<%= address.state %>', '<%= address.zip %>', '<%= address.country %>', '<%= address.phone %>', '<%= address.isDefault ? true :false %>')">
+                                Edit
+                              </button>
 
-                            <button style="font-weight: bold;" class="delete-btn"
-                              onclick="deleteAddress('<%= address._id %>')">
-                              Delete
-                            </button>
+                              <button style="font-weight: bold;" class="delete-btn"
+                                onclick="deleteAddress('<%= address._id %>')">
+                                Delete
+                              </button>
+                        </div>
+
+
                       </div>
 
+                      <% }); %>
+                  </div>
+                  <% } else { %>
+                    <p style="font-weight: bold;color: red;text-align: center;">You don't have any saved addresses yet.
+                    </p>
+                    <% } %>
+              </div>
 
+              <button style="border-radius: 5px;margin-left: 37em;"
+                class="add-address-btn bg-success text-white fw-bold" onclick="showAddAddressModal()">
+                Add New Address
+              </button>
+            </div>
+          </section>
+
+          <section id="orderSection">
+            <!-- Order History Section -->
+            <div id="order-history" class="content-section hide">
+
+              <!--cut from here-->
+              <% if (orders && orders.length> 0) { %>
+                <h2 style="color: rgb(6, 104, 55);font-weight: bold;" class="section-title">Order History</h2>
+                <% orders.forEach(function(order) { %>
+                  <!-- Order Card -->
+                  <div class="order-card">
+                    <div class="order-header">
+                      <div>
+                        <strong style="font-weight: bold;color: black;">Order #<%= order._id %></strong>
+                        <div style="color: black;font-weight: bold;">
+                          Placed on: <%= new Date(order.createdAt).toLocaleDateString() %>
+                        </div>
+                      </div>
+                      <div>
+                        <span style="color: black;font-weight: bold;" class="status">
+                          <%= order.status %>
+                        </span>
+                        <button class="btn-sm bg-success" onclick="showOrderDetails('<%= order._id %>')">
+                          View Details
+                        </button>
+                        <% if(order && order.status=='Delivered' ){ %>
+                          <button class="btn-sm btn-secondary" disabled>
+                            Cancell
+                          </button>
+                          <% } else if(order && order.status=='returned' ){ %>
+                            <button class="btn-sm btn-secondary" disabled>
+                              Returned
+                            </button>
+                            <% }else if(order && order.status !=='cancelled' ) { %>
+
+                              <button class="btn-sm cancel-btn" onclick="cancelOrder('<%= order._id %>', this)">
+                                Cancel Order
+                              </button>
+                              <% } else if (order.status==='cancelled' ) { %>
+                                <button class="btn-sm btn-secondary" disabled>
+                                  Cancelled
+                                </button>
+                                <% } %>
+                      </div>
                     </div>
 
-                    <% }); %>
-                </div>
-                <% } else { %>
-                  <p style="font-weight: bold;color: red;text-align: center;">You don't have any saved addresses yet.
-                  </p>
-                  <% } %>
+                    <div class="order-items">
+                      <div style="color: rgb(18, 102, 24);font-weight: bold;">
+                        <%= Array.isArray(order.items) ? order.items.length : 1 %> item<%= Array.isArray(order.items) &&
+                            order.items.length> 1 ? 's' : '' %> |
+                            Total: ₹ <%= order.finalAmount.toFixed(2) %>
+                      </div>
+                      <% if (order.estimatedDelivery) { %>
+                        <div style="color: black;font-weight: bold;">
+                          Estimated delivery: <%= new Date(order.estimatedDelivery).toLocaleDateString() %>
+                        </div>
+                        <% } %>
+                    </div>
+                  </div>
+                  <% }); %>
+                    <% } else { %>
+                      <p style="font-weight: bold;color: red;">You haven't placed any orders yet.</p>
+                      <% } %>
+
+                        <!--To here -->
+
             </div>
 
-
-          </div>
-
-          <button style="border-radius: 5px;margin-left: 37em;" class="add-address-btn bg-success text-white fw-bold"
-            onclick="showAddAddressModal()">
-            Add New Address
-          </button>
+          </section>
         </div>
 
         <!-- Address Modal -->
@@ -367,71 +436,7 @@
 
 
 
-        <!-- Order History Section -->
-        <div id="order-history" class="content-section hide">
 
-          <!--cut from here-->
-          <% if (orders && orders.length> 0) { %>
-            <h2 style="color: rgb(6, 104, 55);font-weight: bold;" class="section-title">Order History</h2>
-            <% orders.forEach(function(order) { %>
-              <!-- Order Card -->
-              <div class="order-card">
-                <div class="order-header">
-                  <div>
-                    <strong style="font-weight: bold;color: black;">Order #<%= order._id %></strong>
-                    <div style="color: black;font-weight: bold;">
-                      Placed on: <%= new Date(order.createdAt).toLocaleDateString() %>
-                    </div>
-                  </div>
-                  <div>
-                    <span style="color: black;font-weight: bold;" class="status">
-                      <%= order.status %>
-                    </span>
-                    <button class="btn-sm bg-success" onclick="showOrderDetails('<%= order._id %>')">
-                      View Details
-                    </button>
-                    <% if(order && order.status=='Delivered' ){ %>
-                      <button class="btn-sm btn-secondary" disabled>
-                        Cancell
-                      </button>
-                      <% } else if(order && order.status=='returned' ){ %>
-                        <button class="btn-sm btn-secondary" disabled>
-                          Returned
-                        </button>
-                        <% }else if(order && order.status !=='cancelled' ) { %>
-
-                          <button class="btn-sm cancel-btn" onclick="cancelOrder('<%= order._id %>', this)">
-                            Cancel Order
-                          </button>
-                          <% } else if (order.status==='cancelled' ) { %>
-                            <button class="btn-sm btn-secondary" disabled>
-                              Cancelled
-                            </button>
-                            <% } %>
-                  </div>
-                </div>
-
-                <div class="order-items">
-                  <div style="color: rgb(18, 102, 24);font-weight: bold;">
-                    <%= Array.isArray(order.items) ? order.items.length : 1 %> item<%= Array.isArray(order.items) &&
-                        order.items.length> 1 ? 's' : '' %> |
-                        Total: ₹ <%= order.finalAmount.toFixed(2) %>
-                  </div>
-                  <% if (order.estimatedDelivery) { %>
-                    <div style="color: black;font-weight: bold;">
-                      Estimated delivery: <%= new Date(order.estimatedDelivery).toLocaleDateString() %>
-                    </div>
-                    <% } %>
-                </div>
-              </div>
-              <% }); %>
-                <% } else { %>
-                  <p style="font-weight: bold;color: red;">You haven't placed any orders yet.</p>
-                  <% } %>
-
-                    <!--To here -->
-
-        </div>
 
         <!-- Forgot Password Modal -->
         <div id="forgot-password-modal" class="modal">
@@ -528,9 +533,10 @@
           const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
           // Initialize the page
           document.addEventListener("DOMContentLoaded", function () {
-            // Show the profile details section by default
-            showSection("profile-details");
-
+            const lastSection = localStorage.getItem("activeSection") || "profile-details";
+            showSection(lastSection);
+            
+           
             // Add event listener for cancel reason dropdown
             var cancelReasonSelect = document.getElementById("cancel-reason");
             if (cancelReasonSelect) {
@@ -591,7 +597,7 @@
                 if (data.newEmail) {
                   console.log('new emial', data.newEmail);
 
-                  window.location.href = '/user/emailChangeOtp'
+                  window.location.href = '/user/emailChangeOtp?redirectTo=/user/account'
                 }
               } else {
                 Swal.fire(data.message);
@@ -727,8 +733,12 @@
                     title: data.message,
                     showConfirmButton: false,
                     timer: 1000
+                  }).then(() => {
+                    location.reload()
                   })
                   closeAddModal()
+
+
                 } else {
                   Swal.fire(data.message)
                   closeAddModal()
@@ -767,6 +777,7 @@
 
             // Add active class to the clicked link
             event.target.classList.add("active");
+            localStorage.setItem("activeSection", sectionId);
           }
 
           // Address Management Functions
@@ -818,16 +829,16 @@
 
             const label = formObject.label.trim()
             if (!label) {
-             
+
               return Swal.fire("Label is required")
 
             }
             if (/^\d/.test(label)) {
-             
+
               return Swal.fire("Label cannot start with numbers")
             }
             if (label.length < 3) {
-             
+
               return Swal.fire("Label should contain  atleast 3 charectors")
             }
 
@@ -835,15 +846,15 @@
             console.log("line1");
 
             if (!line1) {
-              
+
               return Swal.fire('Address line cannot be empty')
             }
             if (/^\d/.test(line1) || /^\d/.test(formObject.line2)) {
-              
+
               return Swal.fire("Address lines cannot start with numbers")
             }
             if (line1.length < 3) {
-             
+
               return Swal.fire("AddressLine should contain atleast 3 charectors")
             }
 
@@ -851,67 +862,67 @@
             const city = formObject.city.trim()
             console.log("city");
             if (!city) {
-              
+
               return Swal.fire('City cannot be empty')
             }
             if (/^\d/.test(city)) {
-              
+
               return Swal.fire("City cannot start with numbers")
             }
             if (city.length < 3) {
-             
+
               return Swal.fire("City should contain atleast 3 charectors")
             }
 
             const country = formObject.country.trim()
             console.log("country");
             if (!country) {
-             
+
               return Swal.fire("Country Cannot be empty")
             }
             if (/^\d/.test(country)) {
-              
+
               return Swal.fire("Country cannot start with numbers")
             }
             if (country.length < 3) {
 
-              
+
               return Swal.fire("Country should contain atleast 3 charectors")
             }
 
             const state = formObject.state.trim()
             console.log("state");
             if (!state) {
-              
+
               return Swal.fire("State Cannot be empty")
             }
             if (/^\d/.test(state)) {
-              
+
               return Swal.fire("State cannot start with numbers")
             }
             if (state.length < 3) {
-              
+
               return Swal.fire("State should contain atleast 3 charectors")
             }
 
             const post = formObject.zip.trim()
             console.log("post");
             if (!post) {
-              
+
               return Swal.fire("Post Cannot be empty")
             }
             if (!/^\d+$/.test(post)) {
-             
+
               return Swal.fire("Invalid post code")
             }
 
 
             if (formObject.phone.length < 10 || formObject.phone.length > 12) {
-             
+
               return Swal.fire('Invalid mobile number')
             }
             if (!/^\d+$/.test(formObject.phone)) {
-              
+
               return Swal.fire("Invalid mobile number")
             }
 
@@ -1268,6 +1279,35 @@
           function closeAddModal() {
             document.getElementById('add-address-modal').style.display = 'none'
           }
+
+          function appendAddressCard(address) {
+            console.log('from append address');
+
+            const row = document.querySelector("#address-list .row");
+
+            const card = document.createElement("div");
+            card.className = "col-md-6 mb-4";
+            card.innerHTML = `
+    <div id="div-${address._id}" class="address-card">
+      ${address.isDefault ? "<h5>Default Address</h5>" : ""}
+      <h4>${address.label}</h4>
+      <p>${address.line1}${address.line2 ? ", " + address.line2 : ""}</p>
+      <p>${address.city}, ${address.state} ${address.zip}</p>
+      <p>${address.country}</p>
+      <p>Phone: ${address.phone}</p>
+      <button style="font-weight: bold;" class="edit-btn"
+        onclick="editAddress('${address._id}', '${address.label}', '${address.line1}', '${address.line2}', '${address.city}', '${address.state}', '${address.zip}', '${address.country}', '${address.phone}', ${address.isDefault})">
+        Edit
+      </button>
+      <button style="font-weight: bold;" class="delete-btn" onclick="deleteAddress('${address._id}')">
+        Delete
+      </button>
+    </div>
+  `;
+
+            row.appendChild(card);
+          }
+
         </script>
 
 </body>

@@ -395,3 +395,29 @@ select {
 body.modal-open {
   overflow: hidden;
 }
+.form-group{
+  color: black;
+}
+#toggleEditBtn ,#submitBtn{
+  margin-top: 10px;
+  background:green;
+  color: white; 
+  border-radius: 5px;
+  width: 50px;
+  border: 0;
+}
+#submitBtn{
+  margin-right: 5px;
+}
+#toggleEditBtn:hover{
+  background: rgb(14, 70, 14);
+}
+#submitBtn:hover{
+  background: rgb(14, 70, 14);
+}
+.button-wrapper {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 10px;
+  }
+

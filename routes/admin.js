@@ -433,15 +433,15 @@ router.patch("/block-user/:userId", async (req, res) => {
     );
 
     if (!blockUser) {
-      req.flash("errorMessage", "user not found");
-      res.redirect("/users");
+      console.log('User not found');
+      return res.json({success:false,message:"User not found"})
     }
-    req.flash("succesMessage", "user not found");
-    res.redirect("/users");
+    console.log('Status updated');
+      return res.json({success:true,message:"User Status updated successfully"})
   } catch (error) {
-    console.log("error in blocking user");
-    req.flash("errorMessage", "error in blocking user");
-    res.redirect("/users");
+   
+    console.log('Server Error');
+      return res.status(500).json({success:false,message:"Internal Server error"})
   }
 });
 

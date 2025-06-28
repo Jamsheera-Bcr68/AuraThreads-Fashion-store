@@ -210,7 +210,7 @@ const getOrder = async (req, res) => {
       filter,
       orders,
       currentPage: page,
-      thisPage:'orders',
+      thisPage: 'orders',
       totalPages,
     });
   } catch (error) {
@@ -283,7 +283,7 @@ const postUpdateOrder = async (req, res) => {
   return res.json({
     success: true,
     message: "order staus updated succesfully",
-    orderStatus:order.status
+    orderStatus: order.status
   });
 };
 
@@ -365,6 +365,7 @@ const getCoupenPage = async (req, res) => {
       return res.json({ success: false, message: "Coupens not found" });
     }
     const activeCouponsCount = await Coupen.countDocuments({ isActive: true });
+    const expiredCount = await Coupen.countDocuments({ isActive: false });
     const totalCoupons = await Coupen.countDocuments();
     const totalPages = Math.floor(totalCoupons / limit);
 
@@ -380,11 +381,11 @@ const getCoupenPage = async (req, res) => {
     res.render("admin/coupenManagement", {
       title: "Admin Coupon Management",
       coupons,
-      thisPage:'coupons',
+      thisPage: 'coupons',
       activeCouponsCount,
       totalRedemptions: 10,
       revenueImpact: 100,
-      expiringSoonCount: 5,
+      expiredCount,
       currentPage: page,
       skip,
       limit,
@@ -428,7 +429,19 @@ const addCoupen = async (req, res) => {
 
       return res.json({ success: false, message: "Coupen already exist" });
     }
+    const date = new Date()
+    console.log('Todate', date);
 
+    if (endDate < date) {
+      console.log("Invalid Expiry Date");
+
+      return res.json({ success: false, message: "Invalid Expiry Date" });
+    }
+    if (endDate < startDate) {
+      console.log("Expiry date should be greater than start Date ");
+
+      return res.json({ success: false, message: "Expiry date should be greater than start Date " });
+    }
     const newCoupen = new Coupen({
       coupenCode,
       description,
@@ -529,7 +542,7 @@ const removeCoupon = async (req, res) => {
     await coupon.save();
     console.log("Coupen removed suucesfully");
     return res.json({
-      success: false,
+      success: true,
       message: "Coupen removed  suuccessfully",
     });
   } catch (error) {
@@ -543,16 +556,27 @@ const applyCoupon = async (req, res) => {
   console.log("applyCoupon");
   try {
     const couponId = req.params.couponId;
+    const coupen = await Coupen.findOne({ _id: couponId })
+    console.log('coupen', coupen);
+
+    const currentDate = new Date()
+    console.log(currentDate);
+    const expiryDate = new Date(coupen.expiryDate)
+    if (expiryDate < currentDate) {
+      console.log('This coupon is expired');
+
+      return res.json({ success: false, message: "This coupon is expired" })
+    }
     const coupon = await Coupen.findByIdAndUpdate(
       couponId,
       { $set: { isActive: true } },
       { new: true }, // optional: returns the updated document
     );
     await coupon.save();
-    console.log("Coupen Applied suucesfully");
+    console.log("Coupen Applied succesfully");
     return res.json({
-      success: false,
-      message: "Coupen Applied  suuccessfully",
+      success: true,
+      message: "Coupen Applied  successfully",
     });
   } catch (error) {
     console.log("error is ", error);
@@ -586,7 +610,7 @@ const getOffers = async (req, res) => {
     const products = await Product.find({ isDeleted: false });
     const categories = await Category.find({ isDeleted: false });
     const offers = await Offer.find()
-      .sort({ startDate: -1 })
+      .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
 
@@ -630,7 +654,7 @@ const getOffers = async (req, res) => {
       totalOffers,
       populatedOffers,
       stats,
-      thisPage:'offers',
+      thisPage: 'offers',
       refferalOffers,
       offers,
       products,
@@ -649,9 +673,20 @@ const addOffer = async (req, res) => {
     const formObject = req.body;
     console.log("form Object ", formObject);
 
+    console.log('formObject.offerName', formObject.offerName);
+
+    const offerName = formObject.offerName
+
+    const offerExist = await Offer.findOne({ offerName: new RegExp(`^${offerName}$`, 'i') })
+    console.log('offerExist', offerExist);
+
+    if (offerExist) {
+      return res.json({ success: false, message: "Offer Already Exist" })
+    }
+
     const offer = new Offer({
       offerName: formObject.offerName,
-      description: formObject.offerDesc,
+      description: formObject.description,
       discountType:
         formObject.discountType == "percentage" ? "percentage" : "amount",
       discountValue: formObject.discountValue,
@@ -665,7 +700,7 @@ const addOffer = async (req, res) => {
     });
 
     await offer.save();
-    return res.json({ success: false, message: "Offer Created successfully" });
+    return res.json({ success: true, message: "Offer Created successfully" });
   } catch (error) {
     console.log("error is ", error);
     return res.json({ success: false, message: "Error in Making offer" });
@@ -676,10 +711,13 @@ const deleteOffer = async (req, res) => {
   console.log("from delete offer");
   try {
     const offerId = req.params.offerId;
+
     if (!offerId) {
       console.log("Offer id not found");
       return res.json({ success: false, message: "Offer id is missing" });
     }
+    console.log('offer id', offerId, 'type of offerid', typeof (offerId));
+
     const offer = await Offer.findOne({ _id: offerId });
     if (!offer) {
       console.log("Offer not found");
@@ -735,7 +773,7 @@ const editOffer = async (req, res) => {
     }
     const {
       offerName,
-      offerDesc,
+      description,
       discountType,
       discountValue,
       startDate,
@@ -747,7 +785,7 @@ const editOffer = async (req, res) => {
     } = req.body;
 
     offer.offerName = offerName || offer.offerName;
-    (offer.description = offerDesc || offer.description),
+    (offer.description = description || offer.description),
       (offer.discountType =
         discountType == "percentage" ? "percentage" : "amount"),
       (offer.discountValue = discountValue || offer.discountValue),
@@ -923,8 +961,8 @@ const getPendings = async (req, res, next) => {
     const orders = await Order.find({
       returnRequests: { $exists: true, $ne: [] },
     });
-   
-    
+
+
 
     //fetching return requests
 
@@ -952,13 +990,13 @@ const getPendings = async (req, res, next) => {
       });
     });
 
-    
+
     // console.log('requestedItems ', returnRequests);
 
     res.render("admin/aprovalPage", {
       title: "Approvals Management",
       returnRequests,
-     thisPage:'pendings'
+      thisPage: 'pendings'
     });
   } catch (error) {
     console.log(error);
@@ -1405,7 +1443,7 @@ const getSalesReport = async (req, res, next) => {
       .limit(5);
 
     const salesDatas = [
-     
+
     ];
 
     const orders = await Order.find({ status: "Delivered" });
@@ -1430,7 +1468,7 @@ const getSalesReport = async (req, res, next) => {
       totalSales: totalSales || 0,
       reportType,
       salesDates,
-      thisPage:'reports',
+      thisPage: 'reports',
       salesDatas,
     });
   } catch (error) {
@@ -2012,17 +2050,62 @@ const downloadSaleReportExcel = async (req, res, next) => {
       { header: "Total Sales", key: "total", width: 15 },
     ];
 
+    let grandTotal = 0;
+    let grandDiscount = 0;
+    let grandOrderCount = 0;
+
     // Add data rows
+    // salesData.forEach((entry) => {
+
+    //   const discount =
+    //     Number(entry.offerDeduction || 0) + Number(entry.couponDeduction || 0);
+    //   const total = Number(entry.totalSales);
+
+    //   grandDiscount += discount;
+    //   grandTotal += total;
+    //   grandOrderCount += entry.orderCount;
+
+    //   worksheet.addRow({
+    //     date: entry._id,
+    //     totalDiscount: (
+    //       Number(entry.offerDeduction || 0) + Number(entry.couponDeduction || 0)
+    //     ).toFixed(2),
+    //     orderCount: entry.orderCount,
+    //     total: entry.totalSales.toFixed(2),
+    //   });
+    // });
+
     salesData.forEach((entry) => {
-      worksheet.addRow({
-        date: entry._id,
-        totalDiscount: (
-          Number(entry.offerDeduction || 0) + Number(entry.couponDeduction || 0)
-        ).toFixed(2),
-        orderCount: entry.orderCount,
-        total: entry.totalSales.toFixed(2),
-      });
-    });
+  const discount =
+    Number(entry.offerDeduction || 0) + Number(entry.couponDeduction || 0);
+  const total = Number(entry.totalSales || 0);
+  const orders = Number(entry.orderCount || 0);
+
+  grandDiscount += discount;
+  grandTotal += total;
+  grandOrderCount += orders;
+
+  worksheet.addRow({
+    date: entry._id,
+    totalDiscount: discount.toFixed(2),
+    orderCount: orders,
+    total: total.toFixed(2),
+  });
+});
+
+worksheet.addRow({}); // empty row for spacing
+
+worksheet.addRow({
+  date: 'TOTAL',
+  totalDiscount: grandDiscount.toFixed(2),
+  orderCount: grandOrderCount,
+  total: grandTotal.toFixed(2),
+});
+
+const totalRowIndex = worksheet.lastRow.number;
+const totalRow = worksheet.getRow(totalRowIndex);
+totalRow.font = { bold: true };
+totalRow.commit();
 
     // Set response headers
     res.setHeader(

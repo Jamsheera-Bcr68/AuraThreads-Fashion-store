@@ -51,7 +51,7 @@
                   <th>Name</th>
                   <th>Email</th>
                   <th>Phone</th>
-                  <th>Role</th>
+                 
                   <th>Status</th>
                   <th>Actions</th>
                 </tr>
@@ -63,7 +63,7 @@
                   <td><%= user.fullName %></td>
                   <td><%= user.email %></td>
                   <td><%= user.phone %></td>
-                  <td><%= user.role %></td>
+                  
                   <td>
                     <% if (user.isActive) { %>
                     <span class="badge text-success bg-warning">Active</span>
@@ -156,7 +156,7 @@
           </div>
       </div>
   </div> 
-
+ <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
       
       async function toggleStatus(userId, isActive) {
@@ -179,7 +179,7 @@
             confirmButtonColor: "#3085d6",
             cancelButtonColor: "#d33",
             confirmButtonText: `Yes, ${action} it!`,
-          });
+          })
 
           if (!result.isConfirmed) return; // If user cancels, stop execution
 
@@ -190,13 +190,21 @@
              
             },
             body: JSON.stringify({ isActive: newStatus }),
-          });
+          }).then(res=>res.json())
+          .then(data=>{
+            if(data && data.success){
+               console.log("Status updated successfully!");
+           Swal.fire({
+              title: "Success!",
+              text: `User has been ${
+                newStatus ? "activated" : "blocked"
+              } successfully.`,
+              icon: "success",
+              timer: 1000,
+              showConfirmButton: false,
+            });
 
-          if (response.ok) {
-            console.log("Status updated successfully!");
-           
-            
-            const button = document.getElementById(`status-btn-${userId}`);
+           const button = document.getElementById(`status-btn-${userId}`);
             if (button) {
               button.textContent = newStatus ? "Block" : "UnBlock";
               button.className = `btn btn-sm ${
@@ -216,69 +224,20 @@
                 newStatus ? "text-success bg-warning" : "text-danger bg-warning"
               }`;
             }
-
-            //  Show success message
-            Swal.fire({
-              title: "Success!",
-              text: `User has been ${
-                newStatus ? "activated" : "blocked"
-              } successfully.`,
-              icon: "success",
-              timer: 2000,
-              showConfirmButton: false,
-            });
-            
-          }
-        } catch (error) {
-          console.log(error);
-        }
-      }
-
-      // edit handling
-      function editUser(userId,userName,email,phone){
-        document.getElementById("editUserId").value = userId;
-        document.getElementById('editUserName').value=userName
-        document.getElementById('editUserEmail').value=email
-        document.getElementById('editPhoneNumber').value=phone
-
-          //show modal
-        var myModal = new bootstrap.Modal(document.getElementById("editUserModal"));
-        myModal.show();
-      }
-      //handle form submission
-
-      document.getElementById('editUserForm').addEventListener('submit',async function(e){
-        const userId=document.getElementById('editUserId').value
-      const userName=document.getElementById('editUserName').value
-      const email=document.getElementById('editUserEmail').value
-      const phone=document.getElementById('editPhoneNumber').value
-
-      try {
-        const responce=await fetch(`/admin/users/edit/${userId}`,
-          {method:"PATCH",
-          headers:{"Content-Type": "application/json",
-           
-          },
-          body: JSON.stringify({ userName, email,phone }),
-          }
-        )
-        if (response.ok) {
-                Swal.fire("Success!", "User details updated successfully!", "success");
-                setTimeout(() => location.reload(), 2000);
-            } else {
-                throw new Error("Failed to update user.");
             }
+          }).catch(err=>{
+            console.log(error);
+            Swal.fire("Internal Server Error")
+          })
+        }catch(err){
+          console.log(err)
+        }
 
-
-      } catch (error) {
-        console.error("Error updating user:", error);
-            Swal.fire("Error!", "Something went wrong while updating user.", "error");
       }
-      })
-      
+     
       
     </script>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+   
   </body>
 </html>

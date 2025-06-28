@@ -21,27 +21,28 @@
                     </div>
 
                     <div class="statistics">
+                        <div >
+                            <!-- <h3>Total Redemptions</h3>
+                            <p>
+                                <%= totalRedemptions %>
+                            </p> -->
+                        </div>
                         <div style="background-color: rgba(50, 118, 62, 0.153);" class="stat-card">
                             <h3>Active Coupons</h3>
                             <p>
                                 <%= activeCouponsCount %>
                             </p>
                         </div>
-                        <div style="background-color: rgba(50, 118, 62, 0.153);" class="stat-card">
-                            <h3>Total Redemptions</h3>
-                            <p>
-                                <%= totalRedemptions %>
-                            </p>
-                        </div>
-                        <div style="background-color: rgba(50, 118, 62, 0.153);" class="stat-card">
+                        
+                        <!-- <div style="background-color: rgba(50, 118, 62, 0.153);" class="stat-card">
                             <h3>Revenue Impact</h3>
                             <p>₹ <%= revenueImpact %>
                             </p>
-                        </div>
+                        </div> -->
                         <div style="background-color: rgba(50, 118, 62, 0.153);" class="stat-card">
-                            <h3>Expiring Soon</h3>
+                            <h3>Expired Coupons</h3>
                             <p>
-                                <%= expiringSoonCount %>
+                                <%= expiredCount %>
                             </p>
                         </div>
                     </div>
@@ -50,13 +51,13 @@
                         <table>
                             <thead class="bg-dark text-white">
                                 <tr>
-                                    <th>No:</th>
+
                                     <th>Code</th>
                                     <th>Discount</th>
                                     <th>Type</th>
-                                    <th>Limit</th>
-                                    <th>Used</th>
-                                    <th>Start.</th>
+                                    <th>Mini-Amount</th>
+
+                                    <th>Start</th>
                                     <th>Expires</th>
                                     <th>Status</th>
                                     <th>Actions</th>
@@ -66,9 +67,7 @@
                             <tbody>
                                 <% coupons.forEach((coupon,index)=> { %>
                                     <tr>
-                                        <td>
-                                            <%= index+1 %>
-                                        </td>
+
                                         <td>
                                             <%= coupon. coupenCode%>
                                         </td>
@@ -79,11 +78,9 @@
                                         <td>
                                             <%= coupon.discountType %>
                                         </td>
+
                                         <td>
-                                            <%= coupon.usageLimit===0 ? 'Unlimited' : coupon.usageLimit %>
-                                        </td>
-                                        <td>
-                                            <%= coupon.used || 0 %>
+                                            <%= coupon.minPurchase %>
                                         </td>
                                         <td>
                                             <%= new Date(coupon.startDate).toLocaleDateString('en-IN', { year: 'numeric'
@@ -94,20 +91,32 @@
                                                 year: 'numeric' , month: 'short' , day: 'numeric' }) %>
                                         </td>
                                         <td>
-                                            <span
+                                            <span id="status-<%= coupon._id %>"
                                                 class="status <%= coupon.isActive ? 'status-active' : 'status-inactive' %>">
                                                 <%= coupon.isActive ? 'Active' : 'Inactive' %>
                                             </span>
                                         </td>
                                         <td class="actions">
-                                            <button class="btn" onclick="editCoupon('<%= coupon._id %>')">Edit</button>
+                                            <button id="edtBtn-<%= coupon._id %>" class="btn bg-info text-white"
+                                                onclick="editCoupon('<%= coupon._id %>')">Edit</button>
                                             <% if (coupon.isActive) { %>
-                                                <button class="btn btn-danger"
-                                                    onclick="removeCoupon('<%= coupon.coupenCode %>','<%= coupon._id %>')">Remove</button>
+                                                <button id="removeBtn-<%= coupon._id %>" class="btn btn-danger"
+                                                    onclick="removeCoupon('<%= coupon.code %>', '<%= coupon._id %>')">Remove</button>
+
+                                                <button id="applyBtn-<%= coupon._id %>" class="btn btn-success"
+                                                    style="display: none;"
+                                                    onclick="applyCoupon('<%= coupon.code %>', '<%= coupon._id %>')">Apply</button>
+
                                                 <% } else { %>
-                                                    <button class="btn btn-success"
-                                                        onclick="applyCoupon('<%= coupon.code %>','<%= coupon._id %>')">Apply</button>
+                                                    <button id="applyBtn-<%= coupon._id %>" class="btn btn-success"
+                                                        onclick="applyCoupon('<%= coupon.code %>', '<%= coupon._id %>')">Apply</button>
+
+                                                    <button id="removeBtn-<%= coupon._id %>" class="btn btn-danger"
+                                                        style="display: none;"
+                                                        onclick="removeCoupon('<%= coupon.code %>', '<%= coupon._id %>')">Remove</button>
                                                     <% } %>
+
+
                                         </td>
                                     </tr>
                                     <% }) %>
@@ -117,42 +126,43 @@
                     <!--Pagination-->
                     <nav>
                         <ul class="pagination justify-content-center">
-                          <!-- Previous Button -->
-                          <% if (currentPage > 1) { %>
-                            <li class="page-item">
-                              <a class="page-link" href="?page=<%= currentPage - 1 %>&limit=5">Previous</a>
-                            </li>
-                            <% } else { %>
-                              <li class="page-item disabled">
-                                <a class="page-link" href="#" tabindex="-1">Previous</a>
-                              </li>
-                              <% } %>
-                    
-                                <!-- Page Numbers -->
-                                <% for (let i=1; i <=totalPages; i++) { %>
-                                  <li class="page-item <%= currentPage === i ? 'active' : '' %>">
-                                    <a class="page-link" href="?page=<%= i %>&limit=5">
-                                      <%= i %>
-                                    </a>
-                                  </li>
-                                  <% } %>
-                    
-                                    <!-- Next Button -->
-                                    <% if (currentPage < totalPages) { %>
-                                      <li class="page-item">
-                                        <a class="page-link" href="?page=<%= currentPage + 1 %>&limit=5">Next</a>
-                                      </li>
-                                      <% } else { %>
-                                        <li class="page-item disabled">
-                                          <a class="page-link" href="#">Next</a>
-                                        </li>
-                                        <% } %>
+                            <!-- Previous Button -->
+                            <% if (currentPage> 1) { %>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=<%= currentPage - 1 %>&limit=5">Previous</a>
+                                </li>
+                                <% } else { %>
+                                    <li class="page-item disabled">
+                                        <a class="page-link" href="#" tabindex="-1">Previous</a>
+                                    </li>
+                                    <% } %>
+
+                                        <!-- Page Numbers -->
+                                        <% for (let i=1; i <=totalPages; i++) { %>
+                                            <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+                                                <a class="page-link" href="?page=<%= i %>&limit=5">
+                                                    <%= i %>
+                                                </a>
+                                            </li>
+                                            <% } %>
+
+                                                <!-- Next Button -->
+                                                <% if (currentPage < totalPages) { %>
+                                                    <li class="page-item">
+                                                        <a class="page-link"
+                                                            href="?page=<%= currentPage + 1 %>&limit=5">Next</a>
+                                                    </li>
+                                                    <% } else { %>
+                                                        <li class="page-item disabled">
+                                                            <a class="page-link" href="#">Next</a>
+                                                        </li>
+                                                        <% } %>
                         </ul>
-                      </nav>
+                    </nav>
 
-                    <%- include('../partials/footer') %>
+                    
                 </div>
-
+               
 
 
                 <!-- Add/Edit Coupon Modal -->
@@ -163,7 +173,7 @@
                             <span class="close">&times;</span>
                         </div>
                         <form id="couponForm">
-                           
+
                             <div class="form-group">
                                 <label for="code">Coupon Code</label>
                                 <input name="coupenCode" type="text" id="code" placeholder="Enter coupon code" required>
@@ -174,7 +184,7 @@
                                     <select id="discountType" name="discountType">
                                         <option value="percentage">Percentage</option>
                                         <option value="fixed">Fixed Amount</option>
-                                     
+
                                     </select>
                                 </div>
                                 <div class="form-group">
@@ -194,21 +204,22 @@
                                 </div>
                             </div>
                             <div class="form-row">
-                                <div class="form-group">
-                                    <label for="usageLimit">Usage Limit</label>
-                                    <input type="number" id="usageLimit" name="usageLimit" placeholder="Enter limit">
-                                </div>
+
+
+                                <input hidden type="number" id="usageLimit" name="usageLimit" value="1">
+
                                 <div class="form-group">
                                     <label for="minOrder">Minimum Order Amount</label>
                                     <input type="number" id="minOrder" name="minOrder"
                                         placeholder="Enter minimum amount">
                                 </div>
+                                <div class="form-group">
+                                    <label for="description">Description</label>
+                                    <textarea id="description" name="description" rows="3"
+                                        placeholder="Enter coupon description"></textarea>
+                                </div>
                             </div>
-                            <div class="form-group">
-                                <label for="description">Description</label>
-                                <textarea id="description" name="description" rows="3"
-                                    placeholder="Enter coupon description"></textarea>
-                            </div>
+
                             <div class="status-group">
                                 <label class="status-label">Status</label>
                                 <div class="status-checkbox-wrapper">
@@ -228,9 +239,10 @@
 
 
         </div>
+         <%- include('../partials/footer') %>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
-            
+
             // Modal functionality
             const modal = document.getElementById("couponModal");
             const addCouponBtn = document.getElementById("addCouponBtn");
@@ -279,7 +291,19 @@
                 };
                 isActive: document.getElementById('isActive').value
                 console.log('isActive ', isActive);
-
+                console.log('form data',formData);
+                
+                if(new Date(formData.startDate)>new Date(formData.endDate)){
+                    return Swal.fire('Start date cannot be greater than expiry date')
+                }
+                const date=new Date()
+                if(new Date(formData.endDate)<date){
+                    return Swal.fire('Enter Proper expiry date date')
+                }
+                
+                if(parseInt(formData.discountValue)>parseInt(formData.minOrder)&& formData.discountType=='fixed'){
+                     return Swal.fire('Discount value should not be greater than minimum order amount ')
+                }
                 const url = couponId
                     ? `/admin/editCoupon/${couponId}`
                     : `/admin/addCoupon`;
@@ -291,15 +315,23 @@
                 //  send this data to backend
                 fetch(url, {
                     method,
-                    headers: { "Content-Type": "application/json",
-                    
-                     },
+                    headers: {
+                        "Content-Type": "application/json",
+
+                    },
                     body: JSON.stringify(formData)
                 }).then(res => res.json())
                     .then(data => {
                         if (data && data.success) {
-                            Swal.fire(data.message)
-                            location.reload()
+                            Swal.fire({
+                                icon: "success",
+                                title: data.message,
+                                showConfirmButton: false,
+                                timer: 1000
+                            }).then(() => {
+                                location.reload()
+                            })
+
                         } else {
                             Swal.fire(data.message)
                         }
@@ -371,8 +403,10 @@
             }
 
             function removeCoupon(coupenCode, coupenId) {
+                console.log('from remove coupon');
+
                 Swal.fire({
-                    title: `Are you sure to remove this coupen ${coupenCode} ? `,
+                    title: `Are you sure to remove this coupon ${coupenCode} ? `,
                     text: "You can be able to revert this whenever you want!",
                     icon: "warning",
                     showCancelButton: true,
@@ -381,18 +415,31 @@
                     confirmButtonText: "Yes, Remove it!"
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        fetch(`/admin/removeCoupon/${coupenId}`, { method: "DELETE",
-                            
-                         })
+                        fetch(`/admin/removeCoupon/${coupenId}`, {
+                            method: "DELETE",
+
+                        })
                             .then(res => res.json())
                             .then(data => {
                                 if (data && data.success) {
                                     Swal.fire({
-                                        title: "Removed!",
-                                        text: "Your Coupen has been Removed.",
-                                        icon: "success"
-                                    });
-                                    location.reload()
+                                        icon: "success",
+                                        title: data.message,
+                                        showConfirmButton: false,
+                                        timer: 1000
+                                    }).then(() => {
+                                        const rmvBtn = document.getElementById(`removeBtn-${coupenId}`)
+                                        rmvBtn.style.display = 'none'
+                                        const aplBtn = document.getElementById(`applyBtn-${coupenId}`)
+                                        aplBtn.style.display='block'
+
+                                         const status=document.getElementById(`status-${coupenId}`)
+                                        status.innerHTML='Inactive'
+                                        status.style.background='#feeaea'
+                                        status.style.color='#e74c3c'
+
+                                    })
+
                                 } else {
                                     Swal.fire(data.message)
                                 }
@@ -408,29 +455,42 @@
 
             }
 
-            function applyCoupon(coupenCode,couponId) {
+            function applyCoupon(coupenCode, couponId) {
+                console.log('from  function applyCoupon');
+
                 Swal.fire({
-                    title: `Are you sure to Apply this coupen ${coupenCode} ? `,
+                    title: `Are you sure to Apply this coupon ${coupenCode} ? `,
                     text: "You can be able to Remove this whenever you want!",
-                    
+
                     showCancelButton: true,
                     confirmButtonColor: "#28a745",
                     cancelButtonColor: "#d33",
                     confirmButtonText: "Yes, Apply  it!"
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        fetch(`/admin/applyCoupon/${couponId}`, { method: "PUT",
-                           
-                         })
+                        fetch(`/admin/applyCoupon/${couponId}`, {
+                            method: "PUT",
+
+                        })
                             .then(res => res.json())
                             .then(data => {
                                 if (data && data.success) {
                                     Swal.fire({
-                                        title: "Applied!",
-                                        text: "Your Coupen has been Applied.",
-                                        icon: "success"
-                                    });
-                                       location.reload()
+                                        icon: "success",
+                                        title: data.message,
+                                        showConfirmButton: false,
+                                        timer: 1000
+                                    }).then(() => {
+                                        const aplBtn = document.getElementById(`applyBtn-${couponId}`)
+                                        aplBtn.style.display = 'none'
+                                        const rmvBtn = document.getElementById(`removeBtn-${couponId}`)
+                                        rmvBtn.style.display = 'block'
+                                        const status=document.getElementById(`status-${couponId}`)
+                                        status.innerHTML='Active'
+                                        status.style.background='#e8f7f0'
+                                        status.style.color='#27ae60'
+                                    })
+
                                 } else {
                                     Swal.fire(data.message)
                                 }

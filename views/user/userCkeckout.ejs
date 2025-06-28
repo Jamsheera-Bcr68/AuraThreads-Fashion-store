@@ -22,27 +22,35 @@
 
         <!-- Contact Info -->
         <div class="form-section">
-          <u>
-            <h3 style="font-weight: bold; color: green;margin-top: 1 em;">Contact Information</h3>
-          </u>
+          <h3 style="font-weight: bold; color: green; margin-top: 1em;">Contact Information</h3>
 
-          <div class="form-group">
-            <label for="email">Email Address</label>
-            <input type="email" id="email" placeholder="<%= user?.email || 'Email Address' %>"
-              value="<%= typeof email !== 'undefined' ? email : '' %>">
-          </div>
+          <form id="contactForm" action="">
+            <div id="contactInfo" class="editable-mode">
+              <div class="form-group">
+                <label for="email">Email Address</label>
+                <input name="email" type="email" id="email" placeholder="<%= user?.email || 'Email Address' %>"
+                  value="<%= typeof email !== 'undefined' ? email : (user?.email || '') %>" disabled>
+              </div>
 
-          <div class="form-group">
-            <label for="phone">Phone Number</label>
-            <input type="tel" id="phone" placeholder="<%= user?.phone || 'Phone Number' %>"
-              value="<%= typeof phone !== 'undefined' ? phone : '' %>">
-          </div>
+              <div class="form-group">
+                <label for="phone">Phone Number</label>
+                <input name="phone" type="tel" id="phone" placeholder="<%= user?.phone || 'Phone Number' %>"
+                  value="<%= typeof phone !== 'undefined' ? phone :(user?.phone || '') %>" disabled>
+              </div>
 
-          <div class="form-group">
-            <label for="fullname">Full Name</label>
-            <input type="text" id="fullname" placeholder="<%= user?.fullName || 'Your Full Name' %>"
-              value="<%= typeof fullname !== 'undefined' ? fullname : '' %>">
-          </div>
+              <div class="form-group">
+                <label for="fullname">Full Name</label>
+                <input name="fullName" type="text" id="fullname" placeholder="<%= user?.fullName || 'Your Full Name' %>"
+                  value="<%= typeof fullname !== 'undefined' ? fullname : (user?.fullName || '') %>" disabled>
+              </div>
+            </div>
+            <div class="button-wrapper">
+              <button type="submit" id="submitBtn" style="margin-top: 10px; display: none;">Submit</button>
+              <button type="button" id="toggleEditBtn">Edit</button>
+            </div>
+
+          </form>
+
         </div>
 
         <!-- Shipping Addresses -->
@@ -61,9 +69,7 @@
                     <p><strong>Label:</strong>
                       <%= address.label %>
                     </p>
-                    <p><strong>Street:</strong>
-                      <%= address.street %>
-                    </p>
+
                     <p><strong>Line 1:</strong>
                       <%= address.line1 || '-' %>
                     </p>
@@ -166,10 +172,12 @@
 
 
         <div style="display: flex;">
-          <input type="text" id="coupon" placeholder="Enter Coupon code"
+          <input type="text" id="coupon" value="<%= couponCode ||'' %>" placeholder="Enter Coupon code"
             style="flex: 1; padding: 10px; border: 1px solid #ccc; border-right: none; border-radius: 4px 0 0 4px;">
-          <button id="coupenBtn"
-            style="padding: 10px 16px; background-color: #104615; color: white; border: none; border-radius: 0 4px 4px 0; cursor: pointer;">Apply</button>
+          <button id="coupenBtn" data-applied="<%= couponCode ? 'true' : 'false' %>"
+            style="padding: 10px 16px; background-color: <%= couponCode ? '#cc0000' : '#104615' %>; color: white; border: none; border-radius: 0 4px 4px 0; cursor: pointer;">
+            <%= couponCode ? 'Remove' : 'Apply' %>
+          </button>
 
         </div>
       </div>
@@ -312,7 +320,7 @@
           <label for="address-state">State/Province</label>
           <input type="text" id="address-state" name="state">
         </div>
-         <input type="hidden" name="_csrf" value="<%= csrfToken %>"> 
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
 
         <div class="form-group">
           <label for="address-zip">ZIP/Postal Code</label>
@@ -386,6 +394,35 @@
             }
           });
         });
+
+        //profile for  submission
+        const toggleBtn = document.getElementById('toggleEditBtn');
+        const inputs = document.querySelectorAll('#contactInfo input');
+        let isEditable = false;
+
+        toggleBtn.addEventListener('click', () => {
+          isEditable = !isEditable;
+          console.log('toggleEditBtn clicked');
+
+          inputs.forEach(input => {
+            input.disabled = !isEditable;
+          });
+
+          toggleBtn.textContent = isEditable ? 'Cancel' : 'Edit';
+          submitBtn.style.display = isEditable ? 'inline-block' : 'none';
+
+
+          if (!isEditable) {
+
+            console.log("Saved values:", {
+              email: document.getElementById('email').value,
+              phone: document.getElementById('phone').value,
+              fullname: document.getElementById('fullname').value
+            });
+          }
+        });
+
+
       });
 
       const placeorderform = document.getElementById('productCheckoutForm')
@@ -527,14 +564,17 @@
       })
 
 
-      let isApplied = false;
+
       const coupenBtn = document.getElementById('coupenBtn');
+      let isApplied = coupenBtn.dataset.applied === 'true';
 
       coupenBtn.addEventListener('click', function () {
         const code = document.getElementById('coupon').value;
         console.log('Apply coupon button clicked');
         console.log('Code is:', code);
-
+        if (code == '') {
+          Swal.fire('Enter a Coupon Code')
+        }
         // If coupon already applied, remove it
         if (isApplied) {
           fetch('/user/removeCoupon', {
@@ -545,7 +585,13 @@
           })
             .then((res) => res.json())
             .then((data) => {
-              Swal.fire(data.message || "Coupon removed successfully!");
+              Swal.fire({
+                icon: "success",
+                title: data.message || "Coupon removed successfully!",
+                showConfirmButton: false,
+                timer: 1000
+              })
+
               this.textContent = 'Apply';
               this.style.backgroundColor = '#104615';
               document.getElementById('discountAmount').innerText = '0';
@@ -571,15 +617,20 @@
         })
           .then((res) => res.json())
           .then((data) => {
-            Swal.fire(data.message);
+
             if (data.success) {
               document.getElementById('discountAmount').innerText = data.discountAmount;
               document.getElementById('finalAmount').innerText = data.finalAmount;
               // Fix: this was previously using innerText on an input field (wrong), use .value
               document.getElementById('coupon').value = code;
-
+              Swal.fire({
+                icon: "success",
+                title: data.message,
+                showConfirmButton: false,
+                timer: 1000
+              })
               this.textContent = 'Remove';
-              this.style.backgroundColor = 'red';
+              this.style.backgroundColor = '#cc0000';
               isApplied = true;
             } else {
               document.getElementById('coupon').value = '';
@@ -601,15 +652,21 @@
       function closeCouponModal() {
         document.getElementById('couponModal').style.display = 'none'
       }
-      window.onclick(function (e) {
+      window.onclick = function (e) {
         const modal = document.getElementById('couponModal')
         if (e.target == modal) {
           modal.style.display = 'none'
         }
-      })
+      }
       function copyCoupon(code) {
         navigator.clipboard.writeText(code).then(() => {
-          Swal.fire("Coupon code copied: " + code);
+          Swal.fire({
+            icon: "success",
+            title: "Coupon code copied: ", code,
+            showConfirmButton: false,
+            timer: 1000
+          })
+
         }).catch(err => {
           console.error("Copy failed: ", err);
           Swal.fire("Failed to copy coupon code.");
@@ -633,41 +690,41 @@
         }
       };
 
-        const addAddressForm = document.getElementById('addAddressForm');
+      const addAddressForm = document.getElementById('addAddressForm');
 
-     
 
-// addAddressForm.onsubmit = function (e) {
-//   e.preventDefault();  // Prevent normal form submission
-//   console.log('addAddressForm submitted');
 
-//   const formData = new FormData(this);
-//   const formObject = Object.fromEntries(formData);
-//   console.log('form data', formObject);
+      // addAddressForm.onsubmit = function (e) {
+      //   e.preventDefault();  // Prevent normal form submission
+      //   console.log('addAddressForm submitted');
 
-//   fetch('/user/address/add', {
-//     method: "POST",
-//     headers: {
-//       "Content-Type": "application/json",
-//       'CSRF-Token': formObject._csrf  // Use _csrf from hidden input if needed
-//     },
-//     body: JSON.stringify(formObject)
-//   }).then(res => res.json())
-//     .then(data => {
-//       if (data && data.message) {
-//         Swal.fire(data.message);
-//         // Optional: refresh address list or close modal
-//       } else {
-//         Swal.fire("Error: " + (data.message || "Unknown error"));
-//       }
-//     }).catch(error => {
-//       console.error(error);
-//       Swal.fire("Server Error");
-//     });
-// }
+      //   const formData = new FormData(this);
+      //   const formObject = Object.fromEntries(formData);
+      //   console.log('form data', formObject);
 
-        
-      
+      //   fetch('/user/address/add', {
+      //     method: "POST",
+      //     headers: {
+      //       "Content-Type": "application/json",
+      //       'CSRF-Token': formObject._csrf  // Use _csrf from hidden input if needed
+      //     },
+      //     body: JSON.stringify(formObject)
+      //   }).then(res => res.json())
+      //     .then(data => {
+      //       if (data && data.message) {
+      //         Swal.fire(data.message);
+      //         // Optional: refresh address list or close modal
+      //       } else {
+      //         Swal.fire("Error: " + (data.message || "Unknown error"));
+      //       }
+      //     }).catch(error => {
+      //       console.error(error);
+      //       Swal.fire("Server Error");
+      //     });
+      // }
+
+
+
 
       // const addAddressForm = document.getElementById('addAddressForm')
       // addAddressForm.addEventListener('submit', function (e) {
@@ -694,6 +751,70 @@
       //       Swal.fire("Server Error")
       //     })
       // })
+
+      const contactForm = document.getElementById('contactForm')
+      contactForm.addEventListener('submit', async function (e) {
+        e.preventDefault()
+        console.log('contactForm submitted');
+
+
+        // Enable all inputs temporarily
+        const inputs = this.querySelectorAll('input');
+        inputs.forEach(input => input.disabled = false);
+
+        const formData = new FormData(this)
+
+        const formObject = Object.fromEntries(formData)
+        console.log('form data', formObject);
+
+        try {
+          const response = await fetch('/user/profile/update', {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              'CSRF-Token': csrfToken
+            },
+            body: JSON.stringify(formObject)
+          });
+
+          const data = await response.json();
+
+          if (data && data.success) {
+
+            Swal.fire({
+              icon: "success",
+              title: data.message,
+              showConfirmButton: false,
+              timer: 1000
+            }).then(() => {
+              const toggleBtn = document.getElementById('toggleEditBtn');
+              const submitBtn = document.getElementById('submitBtn');
+              const inputs = document.querySelectorAll('#contactInfo input');
+
+              // Disable all fields again
+              inputs.forEach(input => input.disabled = true);
+
+              // Reset button state
+              toggleBtn.textContent = 'Edit';
+              submitBtn.style.display = 'none';
+
+              // Optional: reset the toggle flag
+              isEditable = false;
+            })
+
+            if (data.newEmail) {
+              console.log('new emial', data.newEmail);
+
+              window.location.href = '/user/emailChangeOtp?redirectTo=/user/checkout'
+            }
+          } else {
+            Swal.fire(data.message);
+          }
+        } catch (error) {
+          Swal.fire('Something went wrong. Please try again.');
+          console.error('Fetch error:', error);
+        }
+      })
 
     </script>
 
