@@ -67,7 +67,7 @@
                           <% products.forEach((product, index)=> { %>
                             <tr id="row-<%= product._id %>">
                               <td>
-                                <%= product._id %>
+                               #PRD<%= product._id.toString().slice(-6) %>
                               </td>
                               <td>
                                 <img src="<%= product.images[0] %>" alt="Product Image"

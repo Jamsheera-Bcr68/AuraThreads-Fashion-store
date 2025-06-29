@@ -27,11 +27,20 @@
         <!-- Hidden field for orderId -->
         <input type="hidden" name="orderId" value="<%= order._id %>">
 
-        <% if (order.status==='Delivered' ) { %>
-          <p><strong>Order Status: Delivered</strong></p>
-          <select name="status" disabled style="display: none;">
+        <% if (order.status==='Delivered'||order.status==='cancelled' ) { %>
+           <% if(order.status==='cancelled'){ %>
+            <p><strong>Order Status: Cancelled</strong></p>
+             <select name="status" disabled style="display: none;">
+            <option value="cancelled" selected>Cancelled</option>
+          </select>
+          <% } else{ %>
+             <p><strong>Order Status: Delivered</strong></p>
+              <select name="status" disabled style="display: none;">
             <option value="Delivered" selected>Delivered</option>
           </select>
+          <% } %>
+         
+         
           <button type="submit" disabled style="display: none;">Update</button>
           <% } else { %>
             <select name="status" required>
@@ -40,7 +49,7 @@
               <option value="Processing" <%=order.status==='Processing' ? 'selected' : '' %>>Processing</option>
               <option value="Shipped" <%=order.status==='Shipped' ? 'selected' : '' %>>Shipped</option>
               <option value="Delivered" <%=order.status==='Delivered' ? 'selected' : '' %>>Delivered</option>
-              <option value="Cancelled" <%=order.status==='Cancelled' ? 'selected' : '' %>>Cancelled</option>
+              <option value="cancelled" <%=order.status==='cancelled' ? 'selected' : '' %>>Cancelled</option>
             </select>
             <button type="submit">Update</button>
             <% } %>

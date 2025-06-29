@@ -276,14 +276,18 @@ router.post("/category/add", upload.array("images", 5), async (req, res) => {
   console.log('categoryName,description,isListed,imagePaths',categoryName,description,isListed,imagePaths);
   
   try {
+    if(imagePaths.length<0){
+      return res.json({success:false,message:'Image is not uploaded'})
+    }
     // Check if category already exists
     const existingCategory = await category.findOne({
       categoryName,
-      isDeleted: false,
+
     });
 
     if (existingCategory) {
-      //req.flash("errorMessage", "This Category already exists.");
+      console.log('category already exsting');
+      
       return res.json({success:false,message:'This Category already exists.'})
     }
 
@@ -309,11 +313,11 @@ router.post("/category/add", upload.array("images", 5), async (req, res) => {
     });
 
     await newCategory.save();
-    //req.flash("successMessage", "Category added successfully!");
+    
     return res.json({success:true,message:'Category added successfully!'})
   } catch (error) {
     console.error("Error when adding category:", error);
-   // req.flash("errorMessage", "Error in adding Category.");
+   
     return res.json({success:false,message:"Error in adding Category."})
   }
 });
@@ -449,7 +453,7 @@ router.get("/orders", adminController.getOrder);
 router.get("/orderDetails/:orderId", adminController.getOrderDetails);
 router.get("/updateOrder/:orderId", adminController.getUpdateOrder);
 router.post("/updateOrder", adminController.postUpdateOrder);
-router.delete("/deleteOrder/:orderId", adminController.deleteOrder);
+router.delete("/cancelOrder/:orderId", adminController.cancelOrder);
 router.post("/logout", adminController.postLogout);
 
 //admin coupenMangement

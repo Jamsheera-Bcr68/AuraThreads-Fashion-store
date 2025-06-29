@@ -191,6 +191,8 @@ const getOrder = async (req, res) => {
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
+
+     
     const activeOrders = await Order.find({
       status: { $nin: ["cancelled", "returned"] },
     });
@@ -201,7 +203,7 @@ const getOrder = async (req, res) => {
       }
     }
 
-    console.log("activeOrders ", activeOrders);
+    //console.log("activeOrders ", activeOrders);
 
     console.log("orders are ", orders);
     return res.render("admin/orders", {
@@ -278,18 +280,20 @@ const postUpdateOrder = async (req, res) => {
     return res.json({ success: false, message: "Order not found" });
   }
   order.status = formObject.status;
+ let activeitems=order.items.filter(item=>item.status==='active')
+ activeitems.forEach(item=>item.status=order.status)
   await order.save();
   console.log("order staus updated succesfully");
   return res.json({
     success: true,
-    message: "order staus updated succesfully",
+    message: "order status updated succesfully",
     orderStatus: order.status
   });
 };
 
 //admin delete order
-const deleteOrder = async (req, res) => {
-  console.log("from admin order delete route");
+const cancelOrder = async (req, res) => {
+  console.log("from admin order Cancel route");
 
   try {
     const orderId = req.params.orderId;
@@ -330,7 +334,7 @@ const deleteOrder = async (req, res) => {
       console.log(`after restoring ${product.productName} is ${product.stock}`);
     }
 
-    return res.json({ success: true, message: "order cancelled successfully" });
+    return res.json({ success: true, message: "Order cancelled successfully" });
   } catch (error) {
     console.log("error in fetching order");
     return res.json({ success: false, message: "error in fetching order" });
@@ -2136,7 +2140,7 @@ module.exports = {
   getOrderDetails,
   getUpdateOrder,
   postUpdateOrder,
-  deleteOrder,
+  cancelOrder,
   postLogout,
   getCoupenPage,
   addCoupen,

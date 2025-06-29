@@ -27,8 +27,10 @@
               </thead>
               <tbody>
                 <% returnRequests.forEach(req => { %>
-                  <tr><td>ORD<%= req.orderId %></td>
-                <td><%= req.userEmail %></td>
+                  <tr>
+                    
+                    <td>#ORD<%= req.orderId.toString().slice(-6) %></td>
+                     <td><%= req.userEmail %></td>
                     <td><%= req.productName %></td>
                     <td><%= req.reason %></td>
                     <td><%= req.requestedDate.toLocaleDateString() %></td>
@@ -83,7 +85,13 @@
       })
       .then(res => res.json())
       .then(data => {
-        Swal.fire(data.message).then(() => location.reload()); // refresh after approval
+        Swal.fire({
+           icon: "success",
+          title: data.message,
+          showConfirmButton: false,
+          timer: 1000
+        })
+        .then(() => location.reload()); // refresh after approval
       })
       .catch(error => {
         console.log(error);

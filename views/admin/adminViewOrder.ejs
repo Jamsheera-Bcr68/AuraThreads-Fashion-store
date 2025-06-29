@@ -12,11 +12,11 @@
 
     <div class="section">
       <h3>User Info</h3>
-      <p><strong>Name:</strong> <%= user.fullName %></p>
-      <p><strong>Email:</strong> <%= user.email %></p>
-      <p><strong>Phone:</strong> <%= user.phone %></p>
+      <p><strong>Name:</strong> <%= user?.fullName %></p>
+      <p><strong>Email:</strong> <%= user?.email %></p>
+      <p><strong>Phone:</strong> <%= user?.phone %></p>
     </div>
-    <div style="font-weight: bold;"><p>Order Status:<span  class="<%= order.status %>">  <%= order.status %></span> </p></div>
+    <div style="font-weight: bold;"><p>Order Status:<span style="border-radius: 10px;"  class="<%= order.status %>">  <%= order.status %></span> </p></div>
     <div class="section">
       <h3>Shipping Address</h3>
       <p>

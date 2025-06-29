@@ -293,7 +293,7 @@
     </div>
 
   </div>
-
+  <!--Add address madal-->
   <div id="modal-overlay" class="modal-overlay" style="display: none;">
     <div id="address-form" class="address-form-modal">
       <h3 id="address-form-title">Add New Address</h3>
@@ -335,7 +335,7 @@
           <label for="address-phone">Phone Number</label>
           <input type="tel" id="address-phone" name="phone">
         </div>
-        <div class="form-group checkbox-group">
+        <div hidden class="form-group checkbox-group">
           <input type="checkbox" id="default" name="isDefault" value="true">
           <label for="default">Set as Default Address</label>
         </div>
@@ -573,10 +573,12 @@
         console.log('Apply coupon button clicked');
         console.log('Code is:', code);
         if (code == '') {
-          Swal.fire('Enter a Coupon Code')
+         return Swal.fire('Enter a Coupon Code')
         }
         // If coupon already applied, remove it
         if (isApplied) {
+          console.log(isApplied);
+          
           fetch('/user/removeCoupon', {
             method: 'GET',
             headers: {
@@ -591,11 +593,11 @@
                 showConfirmButton: false,
                 timer: 1000
               })
-
+              document.getElementById('finalAmount').innerText = data.finalAmount;
               this.textContent = 'Apply';
               this.style.backgroundColor = '#104615';
               document.getElementById('discountAmount').innerText = '0';
-              document.getElementById('finalAmount').innerText = data.originalAmount || ''; // fallback if undefined
+              // fallback if undefined
               document.getElementById('coupon').value = ''; // Clear input field
               isApplied = false;
             })
@@ -605,7 +607,8 @@
             });
           return;
         }
-
+        console.log(isApplied);
+        
         // If not applied, apply the coupon
         fetch('/user/applyCoupon', {
           method: 'POST',
@@ -621,7 +624,7 @@
             if (data.success) {
               document.getElementById('discountAmount').innerText = data.discountAmount;
               document.getElementById('finalAmount').innerText = data.finalAmount;
-              // Fix: this was previously using innerText on an input field (wrong), use .value
+              
               document.getElementById('coupon').value = code;
               Swal.fire({
                 icon: "success",
@@ -633,6 +636,7 @@
               this.style.backgroundColor = '#cc0000';
               isApplied = true;
             } else {
+              Swal.fire(data.message)
               document.getElementById('coupon').value = '';
             }
           })

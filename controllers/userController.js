@@ -1113,6 +1113,7 @@ const addAddress = async (req, res) => {
       await Address.updateMany({ userId }, { isDefault: false });
       const newAddress = new Address({
         userId,
+        label,
         line1,
         line2,
         phone,
@@ -1255,7 +1256,7 @@ const updateUser = async (req, res) => {
       user.save();
       if (email == user.email) {
         console.log("user saved succes fully");
-        return res.json({ success: true, message: "user profile updated" });
+        return res.json({ success: true, message: "user profile updated" ,fullName});
       } else {
         const otp = generateOTP();
         otpStore[email] = { otp, expiresAt: Date.now() + 1 * 60 * 1000 }; // 1-minute expiry
@@ -2618,7 +2619,7 @@ const applyCoupon = async (req, res) => {
     console.log("code is ", code);
 
     const coupon = await Coupon.findOne({ coupenCode: code });
-    console.log("coupeon is ", coupon);
+    console.log("coupon is ", coupon);
 
     if (!coupon) {
       console.log("Coupon not found");
@@ -2656,6 +2657,8 @@ const applyCoupon = async (req, res) => {
     console.log("Is used is ", isUsed);
 
     if (isUsed) {
+      console.log('this code is alredy used');
+      
       return res.json({
         success: false,
         message: "You have already used this coupon",
@@ -3334,9 +3337,12 @@ const removeCoupon = async (req, res, next) => {
       req.session.discountAmount = 0;
       req.session.finalAmount = req.session.netAmount; // revert back to original
       req.session.code = "";
+      console.log('final amount',req.session.finalAmount );
+      
       return res.json({
         success: true,
         message: "Coupon removed successfully",
+        finalAmount:req.session.finalAmount 
       });
     } catch (error) {
       console.log("Error removing coupon:", error);

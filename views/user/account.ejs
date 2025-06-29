@@ -94,7 +94,7 @@
             </div>
           </div>
 
-          <h3 class="user-name">
+          <h3 id="fullName" class="user-name">
             <%= user.fullName %>
           </h3>
           <ul class="sidebar-links">
@@ -535,8 +535,10 @@
           document.addEventListener("DOMContentLoaded", function () {
             const lastSection = localStorage.getItem("activeSection") || "profile-details";
             showSection(lastSection);
-            
-           
+
+
+
+
             // Add event listener for cancel reason dropdown
             var cancelReasonSelect = document.getElementById("cancel-reason");
             if (cancelReasonSelect) {
@@ -593,7 +595,8 @@
                   showConfirmButton: false,
                   timer: 1000
                 });
-
+                const fullname=document.getElementById('fullName')
+                fullname.innerText=data.fullName
                 if (data.newEmail) {
                   console.log('new emial', data.newEmail);
 
@@ -778,6 +781,7 @@
             // Add active class to the clicked link
             event.target.classList.add("active");
             localStorage.setItem("activeSection", sectionId);
+
           }
 
           // Address Management Functions
@@ -1232,8 +1236,16 @@
                   .then(response => response.json())
                   .then(data => {
                     if (data && data.success) {
-                      Swal.fire(data.message);
-                      location.reload();
+                      Swal.fire({
+
+                        icon: "success",
+                        title: data.message,
+                        showConfirmButton: false,
+                        timer: 1000
+                      }).then(() => {
+                        location.reload();
+                      })
+
                     } else {
                       Swal.fire(data.message);
                     }
@@ -1269,7 +1281,13 @@
             const code = document.getElementById("referralCode").textContent.trim();
             navigator.clipboard.writeText(code)
               .then(() => {
-                Swal.fire("Referral code copied to clipboard!");
+                Swal.fire({
+                  icon: "success",
+                  title:"Referral code copied to clipboard!" ,
+                  showConfirmButton: false,
+                  timer: 1000
+                })
+               
               })
               .catch(() => {
                 Swal.fire("Failed to copy!");

@@ -11,9 +11,13 @@
 </head>
 
 <body>
+<style>
+  .catImg{
+    height: 55px;
+  }
+</style>
 
-
-  <div class="container ms-3">
+  <div class="container">
     <%- include('../partials/header.ejs') %>
 
       <div class="d-flex" id="wrapper">
@@ -54,8 +58,9 @@
                       <table class="table table-striped mt-3">
                         <thead class="table-dark">
                           <tr>
-                            <th>#</th>
+                            <th>Category Id</th>
                             <th>Category Name</th>
+                            <th>Image</th>
                             <th>Description</th>
                             <th>listed</th>
                             <th>Actions</th>
@@ -65,11 +70,12 @@
                           <% categories.forEach((category, index)=> { %>
                             <tr id="row-<%= category._id %>">
                               <td>
-                                <%= index + 1 %>
+                               #CAT<%= category._id.toString().slice(-6) %>
                               </td>
                               <td>
                                 <%= category.categoryName %>
                               </td>
+                              <td><img class="catImg" src="/<%= category.images[0] %>" alt=""></td>
                               <td>
                                 <%= category.description %>
                               </td>
@@ -287,8 +293,10 @@
                 title: data.message,
                 showConfirmButton: false,
                 timer: 1000
+              }).then(()=>{
+                location.reload()
               })
-              location.reload()
+              
               categoryForm.reset()
               const modal = bootstrap.Modal.getInstance(document.getElementById('addCategoryModal'));
               modal.hide();
@@ -438,7 +446,7 @@ console.log('formObject.isListed',formObject.isListed);
           icon: "success",
           title: "Category updated successfully",
           showConfirmButton: false,
-          timer: 1500
+          timer: 1000
         }).then(() => {
         var editModal = new bootstrap.Modal(
         document.getElementById("editCategoryModal")
@@ -451,7 +459,7 @@ console.log('formObject.isListed',formObject.isListed);
           icon: "error",
           title: data.message || "Update failed",
           showConfirmButton: false,
-          timer: 1500
+          timer: 1000
         });
       }
     })
@@ -461,7 +469,7 @@ console.log('formObject.isListed',formObject.isListed);
         icon: "error",
         title: "Something went wrong!",
         showConfirmButton: false,
-        timer: 1500
+        timer: 1000
       })
     })
 })

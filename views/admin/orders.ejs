@@ -46,7 +46,7 @@
                                                 <tr>
                                                     <td>
                                                         <%= index+1 %>
-                                                    <td>#<%= order._id %>
+                                                    <td>#ORD<%= order._id.toString().slice(-6) %>
                                                     </td>
                                                     <td>
                                                         <% if(order.userId){ %>
@@ -60,7 +60,7 @@
                                                     </td>
                                                     <td>₹<%= order.finalAmount.toFixed(2) %>
                                                     </td>
-                                                    <td><span class="status <%= order.status %>">
+                                                    <td><span id="status-<%= order._id %>" class="status <%= order.status %>">
                                                             <%= order.status.charAt(0).toUpperCase() +
                                                                 order.status.slice(1) %>
                                                         </span></td>
@@ -68,10 +68,19 @@
                                                         <button class="btn btn-view btn-info"
                                                             onclick="openOrderDetails('<%= order._id %>')">View
                                                         </button>
-                                                        <button class="btn btn-edit btn-warning"
-                                                            onclick="openUpdateStatus('<%= order._id %>')">Edit</button>
-                                                        <button class="btn btn-delete btn-danger"
-                                                            onclick="deleteOrder('<%= order._id %>')">Cancel
+                                                        <button id="edt-btn-<%= order._id %>" class="btn btn-edit btn-warning"
+                                                            onclick="openUpdateStatus('<%= order._id %>')" <% if
+                                                            (order.status==='cancelled' || order.status==='returned' ) {
+                                                            %> style="background:white;" disabled <% } %>>
+                                                                Edit
+                                                        </button>
+                                                        <button id="dlt-btn-<%= order._id %>" class="btn btn-delete btn-danger text-dark"
+                                                            onclick="cancelOrder('<%= order._id %>' )" <%
+                                                            if(order.status=='cancelled' || order.status==='returned'
+                                                            ||order.status=='Delivered' ){%>
+                                                            style="background:white;" disabled <% } %>
+                                                                }>
+                                                                Cancel
                                                         </button>
                                                     </td>
                                                 </tr>
@@ -145,7 +154,7 @@
                 console.log('Admin edit order button clicked,order id is ', orderId);
                 window.location.href = `/admin/updateOrder/${orderId}`
             }
-            function deleteOrder(orderId) {
+            function cancelOrder(orderId) {
                 console.log("order delete button clicked");
 
                 Swal.fire({
@@ -159,13 +168,28 @@
                     cancelButtonText: 'No, keep it'
                 }).then(result => {
                     if (result.isConfirmed) {
-                        fetch(`/admin/deleteOrder/${orderId}`, {
+                        fetch(`/admin/cancelOrder/${orderId}`, {
                             method: "DELETE",
 
                         }).then(res => res.json())
                             .then(data => {
                                 if (data && data.success) {
-                                    Swal.fire(data.message)
+                                    Swal.fire({
+                                        icon: "success",
+                                        title: data.message,
+                                        showConfirmButton: false,
+                                        timer: 1000
+                                    })
+                                    const dltbtn=document.getElementById(`dlt-btn-${orderId}`)
+                                    dltbtn.disabled=true
+                                    dltbtn.style.background='white'
+                                    const edtbtn=document.getElementById(`edt-btn-${orderId}`)
+                                    edtbtn.disabled=true
+                                    edtbtn.style.background='white'
+                                    const status=document.getElementById(`status-${orderId}`)
+                                    status.style.background='#f8d7da'
+                                    status.style.color='#721c24'
+                                    status.innerText='Cancelled'
                                 } else {
                                     Swal.fire(data.message)
                                 }
