@@ -89,6 +89,13 @@ app.get(
 
 app.use("/product", productRoute);
 app.use("/search", searchRoute);
+
+app.use((req, res, next) => {
+  const err = new Error("Page Not Found");
+  err.status = 404;
+  next(err); // Pass to errorHandler
+});
+
 app.use(errorHandler);
 
 const HOST = '0.0.0.0';
