@@ -18,18 +18,18 @@
                 <%- include('../partials/sidebar') %>
 
                     <div style="width: 100%;
-  max-width: 100vw;" class="container p-4 ">
+                            max-width: 100vw;" class="container  ">
                         <!-- Orders Section -->
                         <div class="orders-container p-4">
                             <div class="orders-header">
-                                <h2>Order Management</h2>
+                              
                             </div>
 
 
                             <!-- Orders Table -->
                             <div class="table-responsive">
-                                <table class="orders-table">
-                                    <thead style="background-color: black;color: white;">
+                                <table class="orders-table table-striped">
+                                    <thead class="table-primary">
                                         <tr>
                                             <th>No:</th>
                                             <th>Order ID</th>
@@ -145,7 +145,7 @@
 
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
-            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            // const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
             function openOrderDetails(orderId) {
                 console.log('Admin edit rder button clicked,order id is ', orderId);
                 window.location.href = `/admin/orderDetails/${orderId}`

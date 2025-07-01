@@ -1,7 +1,7 @@
 /* Base */
 body {
   line-height: 1.7;
-  color: #1944a9;
+  color: #05070b;
   font-weight: 300;
   font-size: 16px;
 }
@@ -139,7 +139,7 @@ a:hover {
 
 .site-section-heading {
   font-size: 30px;
-  color: #7971ea;
+  color: #8c4790;
   font-weight: bold;
   position: relative;
 }
@@ -150,7 +150,7 @@ a:hover {
   position: absolute;
   width: 40px;
   height: 2px;
-  background: #7971ea;
+  background: #8c4790;
 }
 .site-section-heading.text-center:before {
   content: "";
@@ -162,7 +162,7 @@ a:hover {
   position: absolute;
   width: 40px;
   height: 2px;
-  background: #7971ea;
+  background: #8c4790;
 }
 
 .border-top {
@@ -219,10 +219,10 @@ a:hover {
   text-decoration: none;
 }
 .site-navbar .site-logo a {
-  text-transform: uppercase;
+  
   color: #25262a;
   letter-spacing: 0.2em;
-  font-size: 20px;
+  font-size: 30px;
   padding-left: 10px;
   padding-right: 10px;
   border: 2px solid #25262a;
@@ -295,7 +295,7 @@ a:hover {
   margin-bottom: 0;
 }
 .site-navbar .site-navigation .site-menu .active > a {
-  color: #7971ea;
+  color: #8c4790;
 }
 .site-navbar .site-navigation .site-menu a {
   text-decoration: none !important;
@@ -674,7 +674,7 @@ a:hover {
 }
 .site-blocks-1 .icon span {
   position: relative;
-  color: #7971ea;
+  color: #8c4790;
   top: -10px;
   font-size: 50px;
   display: inline-block;
@@ -1057,6 +1057,6 @@ a:hover {
   border-radius: 17px;
 }
 .showMore a {
-  color: #7971ea;
+  color: #8c4790;
   text-decoration: none;
 }

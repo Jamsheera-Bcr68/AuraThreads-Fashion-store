@@ -20,7 +20,7 @@ body {
 .container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
+ 
 }
 
 .wallet-header {
@@ -29,7 +29,7 @@ body {
 
 .wallet-title {
   font-size: 28px;
-  color: #333;
+  color: #8c4790;
   font-weight: 600;
   margin-bottom: 10px;
 }
@@ -76,8 +76,8 @@ body {
 
 /* Overview Tab */
 .balance-card {
-  background: linear-gradient(135deg, #9c27b0, #673ab7);
-  color: white;
+  background: grey;
+  color: #8c4790;
   border-radius: 12px;
   padding: 24px;
   margin-bottom: 24px;
@@ -111,11 +111,13 @@ body {
   text-decoration: none;
   display: inline-block;
   text-align: center;
+  margin-left: 4.5em;
 }
 
 .btn-primary {
   background-color: white;
   color: #9c27b0;
+  
 }
 
 .btn-secondary {
@@ -128,11 +130,13 @@ body {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-.summary-cards {
+/* .summary-cards {
+  background: #eef8f5;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 16px;
   margin-bottom: 32px;
+  height: 50px;
 }
 
 @media (max-width: 768px) {
@@ -142,9 +146,11 @@ body {
 }
 
 .summary-card {
-  background-color: #ffffff;
+  background-color: #eef8f5;
   border-radius: 8px;
-  padding: 20px;
+ height:200px;
+ width: 20%;
+ align-items: center;
   text-align: center;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
@@ -152,7 +158,7 @@ body {
 .summary-card h4 {
   margin: 0 0 8px 0;
   font-size: 16px;
-  color: #666;
+  color: #8c4790;
   font-weight: 500;
 }
 
@@ -160,7 +166,39 @@ body {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
-  color: #333;
+  color: #8c4790;
+} */
+
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.summary-card {
+  background-color: #eef8f5;
+  border-radius: 8px;
+  height: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+  padding: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.summary-card h4, .summary-card h3 {
+  margin-bottom: 8px;
+  font-size: 18px;
+  color: #8c4790;
+  font-weight: 600;
+}
+
+.summary-card p {
+  font-size: 28px;
+  font-weight: 600;
+  color: #140d14;
 }
 
 .tier-badge {

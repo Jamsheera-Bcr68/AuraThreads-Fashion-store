@@ -151,7 +151,8 @@ table {
 }
 
 thead tr {
-  background-color: var(--light);
+  background-color: #cfe2ff;
+color: black;
 }
 
 th,
@@ -163,7 +164,7 @@ td {
 
 th {
   font-weight: 600;
-  color: var(--dark);
+  color: black
 }
 
 tbody tr:hover {

@@ -15,6 +15,7 @@
   .catImg{
     height: 55px;
   }
+ 
 </style>
 
   <div class="container">
@@ -24,7 +25,7 @@
         <%- include('../partials/sidebar') %>
 
           <div class="container mt-4">
-            <h2 class="text-center fw-bold mb-4">Category Management</h2>
+            
             <% if (successMessage.length> 0) { %>
               <div class="alert alert-success">
                 <%= successMessage %>
@@ -50,14 +51,14 @@
                       </div>
                     </div>
                     <!-- Button to Open Modal -->
-                   <h4 class="ms-4">Existing Categories</h4>
+                   
 
                     <!-- Category Table -->
                     <div class="card ms-4  shadow">
                     
-                      <table class="table table-striped mt-3">
-                        <thead class="table-dark">
-                          <tr>
+                      <table class="table table-striped ">
+                        <thead class="table-primary">
+                          <tr >
                             <th>Category Id</th>
                             <th>Category Name</th>
                             <th>Image</th>

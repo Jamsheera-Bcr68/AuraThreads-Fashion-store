@@ -2,37 +2,48 @@
 <style>
   
     #sidebar-wrapper{
-      
+     
       width: 18%;
         min-width: 200px; 
-      background:white;
+      background:rgb(224, 222, 222);
   .list-group-item{
     margin-top: 2px;
     background:rgb(224, 222, 222);
     color:rgb(35, 15, 15) ;
-    border-radius: 5px;
+    border-radius: 15px;
     border: white;
      white-space: nowrap;      
     overflow: hidden;        
     text-overflow: ellipsis;
+    margin-left: 5px;
+    height: 2.5em;
+    
   }
+  }
+ .list-group{
+  margin-top: 2em;
+  height: max-content;
+ }
+  .active{
+    background-color: rgb(149 180 227) !important;
+    color: white  !important;
+  }
+  #item{
+    width: 95%;
   }
  
-  .active{
-    background-color: white !important;
-  }
-
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-<div class=" border-right" id="sidebar-wrapper">
-  <div class="list-group list-group-flush">
-    <a href="/admin/dashboard" class="list-group-item list-group-item-action fw-bold <%= thisPage === 'dashboard' ? 'active' : '' %>" ><i class="fas fa-tachometer-alt"></i> Dashboard</a>
-    <a href="/admin/category" class="list-group-item list-group-item-action  fw-bold <%= thisPage === 'category' ? 'active' : '' %>"><i class="fa-solid fa-sitemap"></i> Category</a>
+<div  class=" border-right" id="sidebar-wrapper">
+  <div id="item" class="list-group list-group-flush">
+   
+    <a href="/admin/dashboard" class="list-group-item list-group-item-action  <%= thisPage === 'dashboard' ? 'active' : '' %>" ><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+    <a href="/admin/category" class="list-group-item list-group-item-action  <%= thisPage === 'category' ? 'active' : '' %>"><i class="fa-solid fa-sitemap"></i> Category</a>
     <a href="/product/products" class="list-group-item list-group-item-action fw-bold <%= thisPage === 'products' ? 'active' : '' %>"><i class="fa-solid fa-sitemap"></i> Products</a>
     <a href="/admin/orders" class="list-group-item list-group-item-action  fw-bold <%= thisPage === 'orders' ? 'active' : '' %>"> <span><i class="fa-solid fa-truck"></i> Orders</span></a>
     <a href="/admin/users" class="list-group-item list-group-item-action  fw-bold <%= thisPage === 'users' ? 'active' : '' %>"><i class="fas fa-users"></i><span> Users</span></a>
     <a href="/admin/coupens" class="list-group-item list-group-item-action  fw-bold <%= thisPage === 'coupons' ? 'active' : '' %>"><i class="fa-solid fa-clipboard-check"></i> Coupons</a>
-    <a href="/admin/reports" class="list-group-item list-group-item-action  fw-bold <%= thisPage === 'reports' ? 'active' : '' %>"><i class="fas fa-chart-line"></i>  Reports</a>
+    <!-- <a href="/admin/reports" class="list-group-item list-group-item-action  fw-bold <%= thisPage === 'reports' ? 'active' : '' %>"><i class="fas fa-chart-line"></i>  Reports</a> -->
     <!-- <a href="../admin/banners" class="list-group-item list-group-item-action  fw-bold"><i class="fa-regular fa-flag"></i> Banners</a> -->
     <!-- <a href="../admin/transactions" class="list-group-item list-group-item-action  fw-bold"><i class="fa-regular fa-credit-card"></i> Transactions</a> -->
     <a href="/admin/offers" class="list-group-item list-group-item-action fw-bold <%= thisPage === 'offers' ? 'active' : '' %>"><i class="fas fa-tags"></i> Offers</a>

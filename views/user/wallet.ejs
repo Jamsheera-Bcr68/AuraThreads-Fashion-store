@@ -26,13 +26,14 @@
             </div>
 
             <!-- Overview Tab -->
-            <div class="tab-content active" id="overview">
-                <div class="balance-card">
+            <div class=" tab-content active" id="overview">
+                <!-- <div style="align-content: space-between;" class="row">
+                 <div style="background-color: #eef8f5;"  class="col-md-3 mb-3 balance-card summary-card text-center">
                     <h3>Current Balance</h3>
                     <div  class="balance-amount"> ₹ <span id="balance"><%= wallet.balance%></span> 
                     </div>
-                    <div class="balance-actions">
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                    <div class="balance-actions ">
+                        <button style="background-color: #8c4790;color: white;margin-left: 4.5em;" type="button" class="btn" data-bs-toggle="modal"
                             data-bs-target="#addFundsModal">
                             Add Funds
                         </button>
@@ -41,20 +42,57 @@
                     </div>
                 </div>
 
-                <div class="summary-cards">
-                    <div class="summary-card">
+              
+                    <div class="col-md-3  balance-card  summary-card">
                         <h4>Total Transactions</h4>
                         <p>
                             <%= wallet.transactions.length %>
                         </p>
 
                     </div>
+                    <div class="col-md-3  balance-card summary-card">
+                        <h4>Total Debits</h4>
+                        <p>
+                            <%= debitLength %>
+                        </p>
+                    </div>
+                    <div class="col-md-3  balance-card summary-card">
+                        <h4>Total Credits</h4>
+                        <p>
+                            <%= creditLength %>
+                        </p>
+                    </div>
+               </div>
+                 -->
+
+                <div class="summary-cards">
+                    <div class="summary-card text-center">
+                        <h3>Current Balance</h3>
+                        <div class="balance-amount">₹ <span id="balance">
+                                <%= wallet.balance %>
+                            </span></div>
+                        <div class="balance-actions">
+                            <button style="background-color: #8c4790; color: white;" type="button" class="btn mt-2"
+                                data-bs-toggle="modal" data-bs-target="#addFundsModal">
+                                Add Funds
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="summary-card">
+                        <h4>Total Transactions</h4>
+                        <p>
+                            <%= wallet.transactions.length %>
+                        </p>
+                    </div>
+
                     <div class="summary-card">
                         <h4>Total Debits</h4>
                         <p>
                             <%= debitLength %>
                         </p>
                     </div>
+
                     <div class="summary-card">
                         <h4>Total Credits</h4>
                         <p>
@@ -63,8 +101,9 @@
                     </div>
                 </div>
 
-                <div class="section-header">
-                    <h3>Recent Transactions</h3>
+
+                <div class="section-header mt-5 fw-bold">
+                    <h3 style="color: #8c4790;">Recent Transactions</h3>
                     <a href="#" class="view-all" data-tab-link="transactions">View All</a>
                 </div>
 
@@ -224,12 +263,12 @@
                     e.preventDefault()
                     console.log('addFundsModal submitted');
                     let amount = document.getElementById('amount').value
-                    
+
                     if (amount === '') {
                         Swal.fire("Enter An Amount")
                     }
-                    if (amount<0){
-                       return Swal.fire("Enter a Valid Amount")
+                    if (amount < 0) {
+                        return Swal.fire("Enter a Valid Amount")
                     }
                     console.log('amount ', amount);
 
@@ -243,9 +282,9 @@
                     }).then(res => res.json())
                         .then(data => {
                             if (data && data.success) {
-                                console.log('balance',data.balance);
-                                
-                                 document.getElementById('balance').innerHTML=data.balance
+                                console.log('balance', data.balance);
+
+                                document.getElementById('balance').innerHTML = data.balance
                                 Swal.fire({
                                     icon: "success",
                                     title: data.message,
@@ -258,7 +297,7 @@
                                 if (addFundsModal) {
                                     addFundsModal.hide();
                                 }
-                               
+
                             } else {
                                 Swal.fire(data.message)
                             }

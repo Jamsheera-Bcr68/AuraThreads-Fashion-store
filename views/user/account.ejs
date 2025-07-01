@@ -947,6 +947,8 @@
                     title: data.message,
                     showConfirmButton: false,
                     timer: 1000
+                  }).then(()=>{
+                    location.reload()
                   })
                   const modalElement = document.getElementById('editAddressModal');
                   const editModal = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);

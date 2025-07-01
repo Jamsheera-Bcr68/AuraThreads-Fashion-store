@@ -13,16 +13,16 @@
   <header>
     <%- include('../partials/userHeader') %>
   </header>
-
+<div><h1 style="text-align: center; font-weight: bold; color: green;">Checkout Information</h1></div>
   <div class="container" style="display: flex;max-width: 1500 px;">
-
-    <div class="checkout-container" style="width: 50%; background: #fdfcfc; border-radius: 10px;">
+    
+    <div class="col-md-6 col-12 checkout-container" style="width: 50%; background: #fdfcfc; border-radius: 10px;">
       <div class="checkout-form">
-        <h2 style="text-align: center; font-weight: bold; color: green;">Checkout Information</h2>
+       
 
         <!-- Contact Info -->
         <div class="form-section">
-          <h3 style="font-weight: bold; color: green; margin-top: 1em;">Contact Information</h3>
+          <h3 style="text-align: center;;font-weight: bold;  margin-top: 1em;">Contact Information</h3>
 
           <form id="contactForm" action="">
             <div id="contactInfo" class="editable-mode">
@@ -55,7 +55,7 @@
 
         <!-- Shipping Addresses -->
         <div class="form-section">
-          <h3 style="font-weight: bold; color: green;">Shipping Addresses</h3><span> <button
+          <h3 style="font-weight: bold;">Shipping Addresses</h3><span> <button
               onclick="oppenAddressModal()" id="addAdressBtn">Add Adress</button></span>
           <p>Select your address</p>
 
@@ -70,21 +70,20 @@
                       <%= address.label %>
                     </p>
 
-                    <p><strong>Line 1:</strong>
+                    <p>
                       <%= address.line1 || '-' %>
                     </p>
-                    <p><strong>City:</strong>
+                    <p>
                       <%= address.city %>
                     </p>
-                    <p><strong>State:</strong>
-                      <%= address.state %>
+                    <p>
+                      <%= address.state %>,
+                      <%= address.country %>
                     </p>
                     <p><strong>ZIP:</strong>
                       <%= address.zip %>
                     </p>
-                    <p><strong>Country:</strong>
-                      <%= address.country %>
-                    </p>
+                    
                   </label>
                 </div>
                 <% }); %>
@@ -97,9 +96,9 @@
       </div>
     </div>
 
-    <div class="order-container"
-      style="width: 45%;margin-left: 3em; background: #fdfcfc; border-radius: 10px; padding: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.05);">
-      <h2 style="font-weight: bold; color: green;">Order Summary</h2>
+    <div class="col-md-6 col-12 order-container"
+      style="width: 45%;margin-left: 3em; background: #fdfcfc;margin-top: 2em; border-radius: 10px; padding: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.05);">
+      <h2 style="text-align: center;font-weight: bold; color: rgb(16, 21, 16);">Order Summary</h2>
       <table style="width: 100%; border-collapse: collapse; font-weight: bold;">
         <thead>
           <tr style="border-bottom: 1px solid #eee;">
@@ -694,7 +693,7 @@
         }
       };
 
-      const addAddressForm = document.getElementById('addAddressForm');
+      //const addAddressForm = document.getElementById('addAddressForm');
 
 
 
@@ -730,31 +729,40 @@
 
 
 
-      // const addAddressForm = document.getElementById('addAddressForm')
-      // addAddressForm.addEventListener('submit', function (e) {
-      //    e.preventDefault()
-      //   console.log('addAddressForm submitted');
-      //   const formData = new FormData(this)
-      //   const formObject = Object.fromEntries(formData)
-      //   console.log('form data', formObject);
-      //   fetch('/user/address/add', {
-      //     method: "POST",
-      //     headers: {
-      //       "Content-Type": "application/json",
-      //       'CSRF-Token': csrfToken
-      //     },
-      //     body: JSON.stringify(formObject)
-      //   }).then(res => res.json())
-      //     .then(data => {
-      //       if (data && data.success) {
-      //         Swal.fire(data.message)
-      //       } else {
-      //         Swal.fire(data.message)
-      //       }
-      //     }).catch(error => {
-      //       Swal.fire("Server Error")
-      //     })
-      // })
+      const addAddressForm = document.getElementById('addAddressForm')
+      addAddressForm.addEventListener('submit', function (e) {
+         e.preventDefault()
+        console.log('addAddressForm submitted');
+        const formData = new FormData(this)
+        const formObject = Object.fromEntries(formData)
+        console.log('form data', formObject);
+        fetch('/user/address/add', {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            'CSRF-Token': csrfToken
+          },
+          body: JSON.stringify(formObject)
+        }).then(res => res.json())
+          .then(data => {
+            if (data && data.success) {
+               Swal.fire({
+
+                icon: "success",
+                title: data.message,
+                showConfirmButton: false,
+                timer: 1000
+              }).then(()=>{
+                location.reload()
+              })
+              cancelAddressForm()
+            } else {
+              Swal.fire(data.message)
+            }
+          }).catch(error => {
+            Swal.fire("Server Error")
+          })
+      })
 
       const contactForm = document.getElementById('contactForm')
       contactForm.addEventListener('submit', async function (e) {

@@ -96,16 +96,7 @@ body {
 }
 
 /* Header */
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 20px;
-  background-color: white;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  border-radius: 5px;
-  margin-bottom: 20px;
-}
+
 
 .menu-toggle {
   font-size: 24px;
@@ -204,7 +195,7 @@ body {
 }
 
 .orders-table th {
-  background-color: #070707;
+  background-color: #cfe2ff;
   font-weight: 600;
 }
 

@@ -167,6 +167,8 @@ const searchProducts = async (req, res) => {
 const getOrder = async (req, res) => {
   console.log("from admin get order page");
   try {
+    
+    
     //dummy datas
     const adminUser = {
       name: "Admin User",
@@ -176,7 +178,7 @@ const getOrder = async (req, res) => {
     const filter = {
       status: "all",
       date: "",
-      search: "",
+      search:'',
     };
     let page = parseInt(req.query.page) || 1;
     limit = parseInt(req.query.limit) || 5;

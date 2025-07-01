@@ -11,30 +11,71 @@
   <link rel="stylesheet" href="/css/admin.css">
 </head>
 <body>
-  <style>
-    .header{
-      background:rgb(27, 32, 42);
-    }</style>
-  <nav class="navbar header navbar-expand-lg navbar-dark ">
-    <a class="navbar-brand title" href="/"><%= title %> </a>
+  
+<style>
+  .header {
+    background: rgb(232, 235, 240);
+    font-size: large !important;
+  }
 
-    <!--search bar-->
-    <div class="product-search-bar ms-5 bg-white d-flex  align-items-center ">
-      <input type="text" id="searchInput" class="form-control " placeholder="Search" />
-  
-      <!-- Search Button -->
-      <button class="searchbtn btn btn-white mx-1" id="searchbtn" onclick="searchProducts()">🔍</button>
-  
-      <!-- Clear Button -->
-      <button class="clearbtn btn btn-white" id="clearbtn" onclick="clearSearch()">✖</button>
+  .product-search-bar input {
+    width: 150px;
+  }
+
+  @media (min-width: 576px) {
+    .product-search-bar input {
+      width: 250px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .product-search-bar {
+      flex-direction: column;
+      align-items: stretch;
+      width: 100%;
+      padding: 0.5rem;
+    }
+
+    .product-search-bar input,
+    .product-search-bar button {
+      width: 100%;
+      margin-bottom: 0.5rem;
+    }
+
+    .product-search-bar button:last-child {
+      margin-bottom: 0;
+    }
+  }
+</style>
+
+<nav class="navbar header navbar-expand-lg navbar-light">
+  <div class="container-fluid">
+    <h2 class="navbar-brand text-dark fw-bold"><%= title %></h2>
+
+    <!-- Toggler -->
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarContent">
+
+      <!-- Search bar -->
+      <div class="product-search-bar bg-white d-flex align-items-center ms-lg-5 my-2 my-lg-0 p-1 rounded">
+        <input type="text" id="searchInput" class="form-control" placeholder="Search" />
+        <button class="searchbtn btn btn-white mx-1" id="searchbtn" onclick="searchProducts()">🔍</button>
+        <button class="clearbtn btn btn-white" id="clearbtn" onclick="clearSearch()">✖</button>
+      </div>
+
+      <!-- Logout Button -->
+      <div class="ms-lg-auto mt-2 mt-lg-0">
+        <button id="logoutBtn" type="button" class="btn btn-danger">Logout</button>
+      </div>
+    </div>
   </div>
-  
-  <!--logout button-->
-    <div class="ms-auto">
-      <button id="logoutBtn" type="button" style="margin-right: 1rem;" class="btn btn-danger">Logout</button>
-  </div>
-  </nav>
-  
+</nav>
+
+
   <script src="/js/management.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 

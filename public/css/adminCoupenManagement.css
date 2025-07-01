@@ -96,8 +96,8 @@ td {
   border-bottom: 1px solid #e0e0e0;
 }
 th {
-  background-color: #f8f9fa;
-  color: #2c3e50;
+  background: #cfe2ff !important;
+  color: #080e14;
   font-weight: 600;
 }
 tr:hover {
@@ -220,6 +220,7 @@ tr:hover {
   font-size: 24px;
   font-weight: 600;
   color: #2c3e50;
+  height: 30px;
 }
 .addbtnDiv {
   margin-top: 2em;

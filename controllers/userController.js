@@ -1107,7 +1107,11 @@ const addAddress = async (req, res) => {
   try {
     const userId = req.session.user._id;
     console.log("user is ", userId);
-
+    const address=await Address.find({userId})
+    
+    if(address.length=4){
+      return res.json({success:false,message:"You can only add 4 addresses"})
+    }
     // If isDefault is true, update all other addresses to false for the same user
     if (isDefault) {
       await Address.updateMany({ userId }, { isDefault: false });
@@ -1163,7 +1167,7 @@ const editAddress = async (req, res) => {
   console.log(`is defsult is ${isDefault}`);
   const userId = req.session.user._id;
   try {
-    console.log("euser id is ", userId);
+    console.log("user id is ", userId);
 
     const address = await Address.findOne({
       _id: new mongoose.Types.ObjectId(addressId),
