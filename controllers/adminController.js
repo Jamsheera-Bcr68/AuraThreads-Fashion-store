@@ -777,6 +777,7 @@ const editOffer = async (req, res) => {
       console.log("Offer not found");
       return res.json({ success: false, success: "Offer  is not found" });
     }
+
     const {
       offerName,
       description,
@@ -789,6 +790,16 @@ const editOffer = async (req, res) => {
       categoryId,
       offerOn,
     } = req.body;
+
+    const offerExist = await Offer.findOne({
+      offerName,
+      _id: { $ne: new mongoose.Types.ObjectId(offerId) }
+    });
+    if(offerExist){
+      console.log('Offers already exist');
+      return res.json({success:false,message:"Offer already exist"})
+      
+    }
 
     offer.offerName = offerName || offer.offerName;
     (offer.description = description || offer.description),
@@ -812,17 +823,16 @@ const editOffer = async (req, res) => {
 };
 
 const addrefferalOffer = async (req, res, next) => {
-  console.log("from addrefferalOffer");
+   console.log("from addrefferalOffer");
   try {
     const bonusAmount = req.body.bonusAmount;
-    const minOrderAmount = req.body.minOrderAmount;
+     const minOrderAmount = req.body.minOrderAmount;
     const rewardType = req.body.rewardType;
-    const status = req.body.status == "enabled" ? "active" : "inactive";
-    if (
+     const status = req.body.status == "enabled" ? "active" : "inactive";
+     if (
       status == "" ||
       rewardType == "" ||
-      minOrderAmount == "" ||
-      bonusAmount == ""
+     minOrderAmount == "" ||    bonusAmount == ""
     ) {
       console.log("all field are required");
       throw new Error("All fields are required");

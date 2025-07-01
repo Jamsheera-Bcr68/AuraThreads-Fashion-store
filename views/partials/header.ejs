@@ -62,7 +62,8 @@
 
       <!-- Search bar -->
       <div class="product-search-bar bg-white d-flex align-items-center ms-lg-5 my-2 my-lg-0 p-1 rounded">
-        <input type="text" id="searchInput" class="form-control" placeholder="Search" />
+        <input type="text" id="searchInput" class="form-control" placeholder="Search" value="<%= typeof query !== 'undefined' ? query : '' %>">
+
         <button class="searchbtn btn btn-white mx-1" id="searchbtn" onclick="searchProducts()">🔍</button>
         <button class="clearbtn btn btn-white" id="clearbtn" onclick="clearSearch()">✖</button>
       </div>
@@ -83,6 +84,7 @@
   
    function clearSearch(){
     document.getElementById('searchInput').value=''
+    searchProducts()
    }
     async function searchProducts() {
     const query = document.getElementById('searchInput').value;

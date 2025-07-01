@@ -14,8 +14,8 @@ const errorHandler = require("./middleweres/errorHandler");
 const cookieParser = require("cookie-parser");
 const morgan = require("morgan");
 
-app.use(express.urlencoded({ extended: true, limit: "1mb" }));
-app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+app.use(express.json({ limit: "10mb" }));
 dbConnect();
 app.use(cookieParser());
 //app.use(morgan('dev'));

@@ -29,13 +29,16 @@
                                         <div class="col-md-6 mb-3">
                                             <label class="form-label">Category</label>
                                             <select class="form-select" name="categoryId" required>
-                                                <option value="">Select Category</option>
+                                                <option disabled>Select Category</option>
                                                 <% categories.forEach(category=> { %>
-                                                    <option value="<%= category._id %>">
+                                                    <option value="<%= category._id %>"
+                                                        <%=category._id.toString()===product.categoryId.toString()
+                                                        ? 'selected' : '' %>>
                                                         <%= category.categoryName %>
                                                     </option>
                                                     <% }) %>
                                             </select>
+
                                         </div>
                                         <div class="col-md-6 mb-3">
                                             <label class="form-label">Stock</label>
@@ -102,15 +105,15 @@
             const formData = new FormData(this)
 
             const images = formData.getAll('images');
-           console.log('Images:', images);
+            console.log('Images:', images);
 
-           if(images.length>5){
-             return Swal.fire({
+            if (images.length > 5) {
+                return Swal.fire({
                     icon: 'error',
-                  
+
                     text: "you can upload only upto 5 images"
                 });
-           }
+            }
             const formObject = Object.fromEntries(formData);
             console.log(formObject);
 
@@ -175,13 +178,13 @@
                 });
             }
             const productId = formObject.productId
-           
-            
+
+
             fetch(`/product/products/edit/${productId}`, {
                 method: 'POST',
-                
+
                 body: formData,
-             
+
             }).then(res => res.json())
                 .then(data => {
                     if (data && data.success) {
@@ -191,7 +194,7 @@
                             showConfirmButton: false,
                             timer: 1000
                         })
-                        window.location.href='/product/products'
+                        window.location.href = '/product/products'
                     } else {
                         Swal.fire({
                             icon: "error",
@@ -200,7 +203,7 @@
                             timer: 1000
                         })
                     }
-                }).catch(err=>{
+                }).catch(err => {
                     Swal.fire('Server Error')
                 })
         })

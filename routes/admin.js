@@ -328,6 +328,18 @@ router.post("/category/edit/:id",adminAuth, async (req, res) => {
   const { categoryName, description, isListed } = req.body;
   const { id } = req.params;
 try {
+const mongoose = require('mongoose');
+const categoryexist = await category.findOne({
+  categoryName,
+  _id: { $ne: new mongoose.Types.ObjectId(id) }
+});
+
+  console.log('Category exist',categoryexist);
+  if(categoryexist){
+    console.log('category already exist');
+   return res.json({success:false,message:"Category already exist"})
+  }
+  
     const existCategory = await category.findOneAndUpdate(
       { _id: id },
       {

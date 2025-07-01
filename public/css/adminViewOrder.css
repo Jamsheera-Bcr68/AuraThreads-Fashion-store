@@ -52,8 +52,8 @@ p {
 }
 
 .table th {
-  background: #538de3;
-  color: #fff;
+  background: #cfe2ff;
+  color: black
 }
 
 select {
@@ -65,8 +65,8 @@ select {
 }
 
 button {
-  background-color: #3498db;
-  color: white;
+  background-color: #cfe2ff;
+  color: black;
   padding: 8px 14px;
   border: none;
   border-radius: 6px;

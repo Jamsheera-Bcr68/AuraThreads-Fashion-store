@@ -161,7 +161,7 @@
             <div class="modal" id="offerModal">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h2 id="modalTitle">Add New Offer</h2>
+                        <h2 style="color: black;" id="modalTitle">Add New Offer</h2>
                         <button class="close">&times;</button>
                     </div>
 
@@ -400,8 +400,8 @@
                         Swal.fire("Offer name Should contin atleast 3 charectors");
                         return;
                     }
-                    if (offerName.length > 15) {
-                        Swal.fire("Offer name does not contain more than 15 charectors");
+                    if (offerName.length > 20) {
+                        Swal.fire("Offer name does not contain more than 20 charectors");
                         return;
                     }
                     if (parseInt(discountValue) < 0) {
@@ -536,7 +536,7 @@
                                         if (data && data.success) {
                                             Swal.fire({
                                                 icon: "success",
-                                                title: data.message,
+                                                title:'Offer Removed Successfully',
                                                 showConfirmButton: false,
                                                 timer: 1000
                                             })
@@ -544,12 +544,8 @@
                                             const status = document.getElementById(`status-${offerId}`)
                                             status.style.background = 'rgba(243, 156, 18, 0.2)'
                                             status.style.color = '#d35400'
-                                            const activeCountPara = document.getElementById('activeCount')
-                                            let activeCount = parseInt(activeCountPara.innerHTML)
-                                            console.log(activeCount, 'activeCount');
-                                            activeCount = activeCount - 1
-                                            activeCountPara.innerHTML = activeCount
-
+                                            status.innerText='inactive'
+                                          
                                         } else {
                                             Swal.fire(data.message)
                                         }

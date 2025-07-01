@@ -238,7 +238,7 @@ router.post(
       console.log('req.body',req.body)
       
       if (!req.body) {
-        throw new Error("Request body is empty");
+        throw new Error("No product data ");
       }
 
       const imagePaths = req.files.map((file) => "/uploads/" + file.filename);
@@ -252,6 +252,12 @@ router.post(
       console.log("Product name is:", productName);
       console.log("Product ID is:", productId);
       console.log("Product stock is:", stock);
+
+      const productExist=await Product.findOne({productName,_id:{$ne: new mongoose.Types.ObjectId(productId)}})
+      if(productExist){
+        console.log('product exist');
+        return res.json({success:false,message:"Product name is already exist"})
+      }
 
       const productToUpdate = await Product.findOne({ _id: productId });
       if (!productToUpdate) {

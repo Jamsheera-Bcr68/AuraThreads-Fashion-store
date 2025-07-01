@@ -1109,7 +1109,7 @@ const addAddress = async (req, res) => {
     console.log("user is ", userId);
     const address=await Address.find({userId})
     
-    if(address.length=4){
+    if(address.length==4){
       return res.json({success:false,message:"You can only add 4 addresses"})
     }
     // If isDefault is true, update all other addresses to false for the same user
@@ -1291,7 +1291,7 @@ const getEmailChangeOtp = async (req, res, next) => {
     const redirectTo=req.query.redirectTo ||'/user/account'
     console.log('redirectTo',redirectTo);
     
-    res.render("user/emailChangeotp",{redirectTo});
+    res.render("user/emailChangeOtp",{redirectTo});
   } catch (error) {
     console.log(error);
     throw Error({ status: 500, message: "server error" });
@@ -2644,13 +2644,7 @@ const applyCoupon = async (req, res) => {
         message: `You Should Purchse for minimum ${coupon.minPurchase} to get this coupon`,
       });
     }
-    if (coupon.usageLimit < 1) {
-      console.log("You reached your this coupen usage limit");
-      return res.json({
-        success: false,
-        message: "You reached your this coupen usage limit",
-      });
-    }
+  
     console.log('userId',userId,'coupenCode',code);
     
     //check it is used by the same user

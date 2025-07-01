@@ -409,7 +409,12 @@
                                         if (data && data.success) {
                                             heart.classList.remove('fas', 'wishlist-true');
                                             heart.classList.add('far'); // Make it outline
-                                            Swal.fire(data.message);
+                                            Swal.fire({
+                                                icon: "success",
+                                                title: data.message,
+                                                showConfirmButton: false,
+                                                timer: 1000
+                                            })
                                         } else {
                                             Swal.fire(data.message);
                                         }
@@ -460,7 +465,7 @@
                                     icon: "error",
                                     title: data.message,
                                     showConfirmButton: false,
-                                    timer: 1000 
+                                    timer: 1000
                                 });
                             }
                         })

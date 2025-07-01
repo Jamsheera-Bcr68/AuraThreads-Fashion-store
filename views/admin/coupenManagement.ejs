@@ -22,29 +22,11 @@
 
                     <div class="statistics">
                         <div >
-                            <!-- <h3>Total Redemptions</h3>
-                            <p>
-                                <%= totalRedemptions %>
-                            </p> -->
+                         
                         </div>
-                        <!-- <div style="background-color: rgba(50, 118, 62, 0.153);" class="stat-card">
-                            <h3>Active Coupons</h3>
-                            <p>
-                                <%= activeCouponsCount %>
-                            </p>
-                        </div> -->
-                        
-                        <!-- <div style="background-color: rgba(50, 118, 62, 0.153);" class="stat-card">
-                            <h3>Revenue Impact</h3>
-                            <p>₹ <%= revenueImpact %>
-                            </p>
-                        </div> -->
-                        <!-- <div style="background-color: rgba(50, 118, 62, 0.153);" class="stat-card">
-                            <h3>Expired Coupons</h3>
-                            <p>
-                                <%= expiredCount %>
-                            </p>
-                        </div> -->
+                     
+                     
+                    
                     </div>
 
                     <div class="card">
@@ -190,7 +172,7 @@
                                 <div class="form-group">
                                     <label for="discountValue">Discount Value</label>
                                     <input type="number" id="discountValue" name="discountValue"
-                                        placeholder="Enter value">
+                                        placeholder="Enter value" min="0" required>
                                 </div>
                             </div>
                             <div class="form-row">
@@ -211,7 +193,7 @@
                                 <div class="form-group">
                                     <label for="minOrder">Minimum Order Amount</label>
                                     <input type="number" id="minOrder" name="minOrder"
-                                        placeholder="Enter minimum amount">
+                                        placeholder="Enter minimum amount" min="0" required>
                                 </div>
                                 <div class="form-group">
                                     <label for="description">Description</label>

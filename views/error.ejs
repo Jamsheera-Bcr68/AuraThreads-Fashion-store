@@ -56,7 +56,10 @@
   <div class="error-container">
     <h3>Error <%= status %></h3>
     <p><%= message %></p>
-    <a href="/user/home">Go back to Home</a>
+ <button onclick="window.history.back()" class="btn btn-secondary">
+  ⬅️ Go Back
+</button>
+
   </div>
 </body>
 </html>
