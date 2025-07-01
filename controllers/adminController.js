@@ -167,8 +167,8 @@ const searchProducts = async (req, res) => {
 const getOrder = async (req, res) => {
   console.log("from admin get order page");
   try {
-    
-    
+
+
     //dummy datas
     const adminUser = {
       name: "Admin User",
@@ -178,7 +178,7 @@ const getOrder = async (req, res) => {
     const filter = {
       status: "all",
       date: "",
-      search:'',
+      search: '',
     };
     let page = parseInt(req.query.page) || 1;
     limit = parseInt(req.query.limit) || 5;
@@ -194,7 +194,7 @@ const getOrder = async (req, res) => {
       .skip(skip)
       .limit(limit);
 
-     
+
     const activeOrders = await Order.find({
       status: { $nin: ["cancelled", "returned"] },
     });
@@ -282,8 +282,8 @@ const postUpdateOrder = async (req, res) => {
     return res.json({ success: false, message: "Order not found" });
   }
   order.status = formObject.status;
- let activeitems=order.items.filter(item=>item.status==='active')
- activeitems.forEach(item=>item.status=order.status)
+  let activeitems = order.items.filter(item => item.status === 'active')
+  activeitems.forEach(item => item.status = order.status)
   await order.save();
   console.log("order staus updated succesfully");
   return res.json({
@@ -1912,7 +1912,9 @@ const downloadSaleReportpdf = async (req, res, next) => {
         return res.status(500).send("Failed to generate PDF");
       }
 
-      return res.download(pdfPath, "SalesReport.pdf", (err) => {
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", "attachment; filename=SalesReport.pdf");
+      return res.sendFile(pdfPath, "SalesReport.pdf", (err) => {
         if (err) {
           console.error("Download error:", err);
           return res.status(500).send("Error downloading file.");
@@ -2082,36 +2084,36 @@ const downloadSaleReportExcel = async (req, res, next) => {
     // });
 
     salesData.forEach((entry) => {
-  const discount =
-    Number(entry.offerDeduction || 0) + Number(entry.couponDeduction || 0);
-  const total = Number(entry.totalSales || 0);
-  const orders = Number(entry.orderCount || 0);
+      const discount =
+        Number(entry.offerDeduction || 0) + Number(entry.couponDeduction || 0);
+      const total = Number(entry.totalSales || 0);
+      const orders = Number(entry.orderCount || 0);
 
-  grandDiscount += discount;
-  grandTotal += total;
-  grandOrderCount += orders;
+      grandDiscount += discount;
+      grandTotal += total;
+      grandOrderCount += orders;
 
-  worksheet.addRow({
-    date: entry._id,
-    totalDiscount: discount.toFixed(2),
-    orderCount: orders,
-    total: total.toFixed(2),
-  });
-});
+      worksheet.addRow({
+        date: entry._id,
+        totalDiscount: discount.toFixed(2),
+        orderCount: orders,
+        total: total.toFixed(2),
+      });
+    });
 
-worksheet.addRow({}); // empty row for spacing
+    worksheet.addRow({}); // empty row for spacing
 
-worksheet.addRow({
-  date: 'TOTAL',
-  totalDiscount: grandDiscount.toFixed(2),
-  orderCount: grandOrderCount,
-  total: grandTotal.toFixed(2),
-});
+    worksheet.addRow({
+      date: 'TOTAL',
+      totalDiscount: grandDiscount.toFixed(2),
+      orderCount: grandOrderCount,
+      total: grandTotal.toFixed(2),
+    });
 
-const totalRowIndex = worksheet.lastRow.number;
-const totalRow = worksheet.getRow(totalRowIndex);
-totalRow.font = { bold: true };
-totalRow.commit();
+    const totalRowIndex = worksheet.lastRow.number;
+    const totalRow = worksheet.getRow(totalRowIndex);
+    totalRow.font = { bold: true };
+    totalRow.commit();
 
     // Set response headers
     res.setHeader(
