@@ -1899,7 +1899,7 @@ const downloadSaleReportpdf = async (req, res, next) => {
     console.log("sales data", salesData);
 
     const htmlContent = await ejs.renderFile(
-      path.join(__dirname, "..", "views", "admin", "salesReportPdf.ejs"),
+      path.join(__dirname, "..", "views", "admin", "salesReportpdf.ejs"),
       {
         chartImage,
         salesData,
