@@ -93,9 +93,9 @@ const getSetPassword = async (req, res) => {
   console.log("user found ", user);
   const email = user.email;
 
-  console.log("email is ", email);
-
-  res.render("user/setPassword", { email });
+  console.log("email is ", email,'show alert is true');
+ 
+  res.render("user/setPassword",  { showAlert: true, email});
 };
 
 //post set password
@@ -2101,6 +2101,9 @@ const placeOrder = async (req, res) => {
     //validatiing essential fields
     const useWallet = req.body.useWallet;
     console.log("useWallet ", useWallet);
+    if(useWallet){
+      paymentMethod='wallet'
+    }
 
     const userId = req.session.user._id;
     const cart = await Cart.findOne({ userId });

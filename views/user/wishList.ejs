@@ -144,6 +144,7 @@
           }).then(res => res.json())
             .then(data => {
               if (data && data.success) {
+
                 Swal.fire({
 
                   icon: "success",
@@ -151,6 +152,7 @@
                   showConfirmButton: false,
                   timer: 1000
                 })
+                
                 const count = document.getElementById('count').innerHTML
                 console.log(count);
                 document.getElementById('count').innerHTML = parseInt(count - 1)

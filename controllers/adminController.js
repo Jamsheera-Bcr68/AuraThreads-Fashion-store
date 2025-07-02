@@ -1806,7 +1806,7 @@ const downloadSaleReportpdf = async (req, res, next) => {
   console.log("downloadSaleReportpdf");
   try {
     const { chartImage, startDate, endDate, reportType } = req.body;
-    // console.log('chartImage,startDate,endDate,reportType',chartImage,startDate,endDate,reportType);
+    
     //getiing salesdata
     console.log("reportType", reportType);
     //////
@@ -1922,14 +1922,24 @@ const downloadSaleReportpdf = async (req, res, next) => {
         return res.status(500).send("Failed to generate PDF");
       }
 
-      res.setHeader("Content-Type", "application/pdf");
-      res.setHeader("Content-Disposition", "attachment; filename=SalesReport.pdf");
-      return res.sendFile(pdfPath, "SalesReport.pdf", (err) => {
-        if (err) {
-          console.error("Download error:", err);
-          return res.status(500).send("Error downloading file.");
-        }
-      });
+       setTimeout(() => {
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", "attachment; filename=SalesReport.pdf");
+    res.sendFile(pdfPath, (err) => {
+      if (err) {
+        console.error("Download error:", err);
+        return res.status(500).send("Error downloading file.");
+      }
+    });
+  }, 300);
+      // res.setHeader("Content-Type", "application/pdf");
+      // res.setHeader("Content-Disposition", "attachment; filename=SalesReport.pdf");
+      // return res.sendFile(pdfPath, "SalesReport.pdf", (err) => {
+      //   if (err) {
+      //     console.error("Download error:", err);
+      //     return res.status(500).send("Error downloading file.");
+      //   }
+      // });
     });
   } catch (error) {
     console.error(error);
