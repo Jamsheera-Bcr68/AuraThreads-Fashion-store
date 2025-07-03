@@ -369,22 +369,47 @@
                     const startDate = reportType === 'custom' ? startDateInput.value : null;
                     const endDate = reportType === 'custom' ? endDateInput.value : null;
 
-                    fetch('/admin/downloadSaleReportpdf', {
-                        method: "POST",
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
+                    // fetch('/admin/downloadSaleReportpdf', {
+                    //     method: "POST",
+                    //     headers: { 'Content-Type': 'application/json' },
+                    //     body: JSON.stringify({
 
-                            startDate, endDate, reportType
-                        })
-                    }).then(res => res.blob())
-                        .then(blob => {
-                            const url = window.URL.createObjectURL(blob);
-                            const a = document.createElement('a');
-                            a.href = url;
-                            a.download = 'SalesReport.pdf';
-                            a.click()
-                        })
-                })
+                    //         startDate, endDate, reportType
+                    //     })
+                    // }).then(res => res.blob())
+                    //     .then(blob => {
+                    //         const url = window.URL.createObjectURL(blob);
+                    //         const a = document.createElement('a');
+                    //         a.href = url;
+                    //         a.download = 'SalesReport.pdf';
+                    //         a.click()
+                    //     })
+                
+                    fetch('/admin/downloadSaleReportpdf', {
+  method: "POST",
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ startDate, endDate, reportType })
+})
+.then(response => {
+  if (!response.ok) throw new Error("PDF download failed");
+  return response.blob();
+})
+.then(blob => {
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'SalesReport.pdf';
+  document.body.appendChild(a); // Required for Firefox
+  a.click();
+  a.remove();
+  window.URL.revokeObjectURL(url);
+})
+.catch(err => {
+  console.error("Download error:", err);
+  alert("Failed to download PDF.");
+});
+
+              })
 
 
             </script>

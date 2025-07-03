@@ -14,7 +14,7 @@ const Wallet = require("../model/walletModel");
 const ejs = require("ejs");
 const path = require("path");
 const fs = require("fs");
-const pdf = require("html-pdf");
+const puppeteer = require('puppeteer')
 const ExcelJS = require("exceljs");
 
 const Razorpay = require("razorpay");
@@ -798,10 +798,10 @@ const editOffer = async (req, res) => {
       offerName,
       _id: { $ne: new mongoose.Types.ObjectId(offerId) }
     });
-    if(offerExist){
+    if (offerExist) {
       console.log('Offers already exist');
-      return res.json({success:false,message:"Offer already exist"})
-      
+      return res.json({ success: false, message: "Offer already exist" })
+
     }
 
     offer.offerName = offerName || offer.offerName;
@@ -826,16 +826,16 @@ const editOffer = async (req, res) => {
 };
 
 const addrefferalOffer = async (req, res, next) => {
-   console.log("from addrefferalOffer");
+  console.log("from addrefferalOffer");
   try {
     const bonusAmount = req.body.bonusAmount;
-     const minOrderAmount = req.body.minOrderAmount;
+    const minOrderAmount = req.body.minOrderAmount;
     const rewardType = req.body.rewardType;
-     const status = req.body.status == "enabled" ? "active" : "inactive";
-     if (
+    const status = req.body.status == "enabled" ? "active" : "inactive";
+    if (
       status == "" ||
       rewardType == "" ||
-     minOrderAmount == "" ||    bonusAmount == ""
+      minOrderAmount == "" || bonusAmount == ""
     ) {
       console.log("all field are required");
       throw new Error("All fields are required");
@@ -1809,7 +1809,7 @@ const downloadSaleReportpdf = async (req, res, next) => {
   console.log("downloadSaleReportpdf");
   try {
     const { chartImage, startDate, endDate, reportType } = req.body;
-    
+
     //getiing salesdata
     console.log("reportType", reportType);
     //////
@@ -1916,42 +1916,24 @@ const downloadSaleReportpdf = async (req, res, next) => {
     if (!fs.existsSync(downloadsDir)) {
       fs.mkdirSync(downloadsDir, { recursive: true });
     }
+   
 
-    const pdfPath = path.join(downloadsDir, "SalesReport.pdf");
-    pdf.create(htmlContent).toBuffer((err,buffer)=>{
-      if(err){
-        console.error('PDF creation error',err)
-        return res.status(500).send("Failed to generate PDF")
-      }
-      res.setHeader("Content-Type","application/pdf")
-      res.setHeader("Content-Disposition","attachment;filename=SalesReport.pdf")
-      res.send(buffer)
-    })
-  //   pdf.create(htmlContent).toFile(pdfPath, (err, result) => {
-  //     if (err) {
-  //       console.error("PDF creation error:", err);
-  //       return res.status(500).send("Failed to generate PDF");
-  //     }
+    const browser = await puppeteer.launch({
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    });
+    const page = await browser.newPage();
+    await page.setContent(htmlContent, { waitUntil: "networkidle0" });
+    const pdfBuffer = await page.pdf({ format: "A4", printBackground: true });
+    await browser.close();
 
-  //      setTimeout(() => {
-  //   res.setHeader("Content-Type", "application/pdf");
-  //   res.setHeader("Content-Disposition", "attachment; filename=SalesReport.pdf");
-  //   res.sendFile(pdfPath, (err) => {
-  //     if (err) {
-  //       console.error("Download error:", err);
-  //       return res.status(500).send("Error downloading file.");
-  //     }
-  //   });
-  // }, 300);
-  //     // res.setHeader("Content-Type", "application/pdf");
-  //     // res.setHeader("Content-Disposition", "attachment; filename=SalesReport.pdf");
-  //     // return res.sendFile(pdfPath, "SalesReport.pdf", (err) => {
-  //     //   if (err) {
-  //     //     console.error("Download error:", err);
-  //     //     return res.status(500).send("Error downloading file.");
-  //     //   }
-  //     // });
-  //   });
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", "attachment; filename=SalesReport.pdf");
+    res.setHeader("Content-Length", pdfBuffer.length); 
+    console.log('length',pdfBuffer.length);
+   
+    res.end(pdfBuffer);
+   
+
   } catch (error) {
     console.error(error);
     next(error);
@@ -2060,7 +2042,7 @@ const downloadSaleReportExcel = async (req, res, next) => {
 
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Sales Report");
-   
+
     worksheet.columns = [
       {
         header:

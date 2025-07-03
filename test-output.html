@@ -62,22 +62,16 @@
 
   <h2>Sales Report</h2>
   <h3>
-    <%= reportType %> Sales Report
+    yearly Sales Report
   </h3>
   <div class="table-container">
-    <% let totalOrders=0; let totalDiscount=0; let totalAmount=0; salesData.forEach(sale=> {
-      totalOrders += sale.orderCount;
-      totalDiscount += (sale.offerDeduction + sale.couponDeduction);
-      totalAmount += sale.totalSales;
-      });
-      %>
+    
       <table>
         <thead>
           <tr>
             <th>Sl No</th>
             <th>
-              <%= reportType==='daily' || reportType==='custom' ? 'Date' : reportType==='weekly' ? 'Week' :
-                reportType==='monthly' ? 'Month' : 'Year' %>
+              Year
             </th>
             <th>Order Count</th>
             <th>Discount Given</th>
@@ -87,31 +81,31 @@
           </tr>
         </thead>
         <tbody>
-          <% salesData.forEach((sale, index)=> { %>
+          
             <tr>
               <td>
-                <%= index + 1 %>
+                1
               </td>
               <td>
-                <%= sale._id %>
+                2025
               </td>
               <td>
-                <%= sale.orderCount %>
+                2
               </td>
-              <td>₹ <%= (sale.offerDeduction+sale.couponDeduction).toFixed(2) %>
+              <td>₹ 30.00
               </td>
-              <td>₹ <%= sale.totalSales.toFixed(2) %>
+              <td>₹ 1370.00
               </td>
             </tr>
-            <% }) %>
+            
               <tr>
                 <th colspan="2" style="text-align: right;">Total</th>
                 <th>
-                  <%= totalOrders %>
+                  2
                 </th>
-                <th>₹ <%= totalDiscount.toFixed(2) %>
+                <th>₹ 30.00
                 </th>
-                <th>₹ <%= totalAmount.toFixed(2) %>
+                <th>₹ 1370.00
                 </th>
               </tr>
         </tbody>
