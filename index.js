@@ -82,8 +82,7 @@ app.get(
   passport.authenticate("google", { failureRedirect: "/login" }),
   (req, res) => {
     console.log("Google authentication successful!--------");
-
-    res.redirect("/user/setPassword"); // Redirect to the appropriate frontend route
+  res.redirect("/user/setPassword"); 
   },
 );
 

@@ -321,6 +321,7 @@ const cancelOrder = async (req, res) => {
     order.status = "cancelled";
     await order.save();
 
+
     console.log("order cancelled successfully");
 
     //restore the stock
@@ -335,6 +336,8 @@ const cancelOrder = async (req, res) => {
       await product.save();
       console.log(`after restoring ${product.productName} is ${product.stock}`);
     }
+
+
 
     return res.json({ success: true, message: "Order cancelled successfully" });
   } catch (error) {
@@ -1915,32 +1918,40 @@ const downloadSaleReportpdf = async (req, res, next) => {
     }
 
     const pdfPath = path.join(downloadsDir, "SalesReport.pdf");
-
-    pdf.create(htmlContent).toFile(pdfPath, (err, result) => {
-      if (err) {
-        console.error("PDF creation error:", err);
-        return res.status(500).send("Failed to generate PDF");
+    pdf.create(htmlContent).toBuffer((err,buffer)=>{
+      if(err){
+        console.error('PDF creation error',err)
+        return res.status(500).send("Failed to generate PDF")
       }
+      res.setHeader("Content-Type","application/pdf")
+      res.setHeader("Content-Disposition","attachment;filename=SalesReport.pdf")
+      res.send(buffer)
+    })
+  //   pdf.create(htmlContent).toFile(pdfPath, (err, result) => {
+  //     if (err) {
+  //       console.error("PDF creation error:", err);
+  //       return res.status(500).send("Failed to generate PDF");
+  //     }
 
-       setTimeout(() => {
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", "attachment; filename=SalesReport.pdf");
-    res.sendFile(pdfPath, (err) => {
-      if (err) {
-        console.error("Download error:", err);
-        return res.status(500).send("Error downloading file.");
-      }
-    });
-  }, 300);
-      // res.setHeader("Content-Type", "application/pdf");
-      // res.setHeader("Content-Disposition", "attachment; filename=SalesReport.pdf");
-      // return res.sendFile(pdfPath, "SalesReport.pdf", (err) => {
-      //   if (err) {
-      //     console.error("Download error:", err);
-      //     return res.status(500).send("Error downloading file.");
-      //   }
-      // });
-    });
+  //      setTimeout(() => {
+  //   res.setHeader("Content-Type", "application/pdf");
+  //   res.setHeader("Content-Disposition", "attachment; filename=SalesReport.pdf");
+  //   res.sendFile(pdfPath, (err) => {
+  //     if (err) {
+  //       console.error("Download error:", err);
+  //       return res.status(500).send("Error downloading file.");
+  //     }
+  //   });
+  // }, 300);
+  //     // res.setHeader("Content-Type", "application/pdf");
+  //     // res.setHeader("Content-Disposition", "attachment; filename=SalesReport.pdf");
+  //     // return res.sendFile(pdfPath, "SalesReport.pdf", (err) => {
+  //     //   if (err) {
+  //     //     console.error("Download error:", err);
+  //     //     return res.status(500).send("Error downloading file.");
+  //     //   }
+  //     // });
+  //   });
   } catch (error) {
     console.error(error);
     next(error);
@@ -1954,7 +1965,7 @@ const downloadSaleReportExcel = async (req, res, next) => {
     const { endDate } = req.query || null;
     const { reportType } = req.query;
     console.log("startDate,endDate,reportType", startDate, endDate, reportType);
-    //getiing salesdata
+    //geting salesdata
     console.log("reportType", reportType);
     //////
     let matchStage = { $match: { status: { $eq: "Delivered" } } };
@@ -2049,17 +2060,7 @@ const downloadSaleReportExcel = async (req, res, next) => {
 
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Sales Report");
-    // let th = 'Date'
-    // if (reportType == 'daily') {
-    //   th = 'Date'
-    // } else if (reportType == 'weekly') {
-    //   th = 'Week'
-    // } else if (reportType == 'yearly') {
-    //   th = 'Year'
-    // } else if (reportType == 'monthly') {
-    //   th = 'Month'
-    // }
-    // Define columns
+   
     worksheet.columns = [
       {
         header:
@@ -2081,27 +2082,6 @@ const downloadSaleReportExcel = async (req, res, next) => {
     let grandTotal = 0;
     let grandDiscount = 0;
     let grandOrderCount = 0;
-
-    // Add data rows
-    // salesData.forEach((entry) => {
-
-    //   const discount =
-    //     Number(entry.offerDeduction || 0) + Number(entry.couponDeduction || 0);
-    //   const total = Number(entry.totalSales);
-
-    //   grandDiscount += discount;
-    //   grandTotal += total;
-    //   grandOrderCount += entry.orderCount;
-
-    //   worksheet.addRow({
-    //     date: entry._id,
-    //     totalDiscount: (
-    //       Number(entry.offerDeduction || 0) + Number(entry.couponDeduction || 0)
-    //     ).toFixed(2),
-    //     orderCount: entry.orderCount,
-    //     total: entry.totalSales.toFixed(2),
-    //   });
-    // });
 
     salesData.forEach((entry) => {
       const discount =
