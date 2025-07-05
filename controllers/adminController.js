@@ -52,9 +52,9 @@ const postLogin = async (req, res) => {
   }
 };
 //get categories
-const getCategory = async (req, res) => {
-  res.render("admin/category", { errorMessage: null });
-};
+// const getCategory = async (req, res) => {
+//   res.render("admin/category", { errorMessage: null });
+// };
 
 //get products
 const getProducts = async (req, res) => {
@@ -2117,7 +2117,7 @@ const downloadSaleReportExcel = async (req, res, next) => {
 module.exports = {
   getLogin,
   postLogin,
-  getCategory,
+ 
   getProducts,
   getUsers,
   getAddProducts,

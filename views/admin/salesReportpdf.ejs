@@ -42,8 +42,8 @@
     th {
       background-color: #4a90e2;
       color: white;
-      font-weight: 600;
-      text-transform: uppercase;
+      font-weight: 400;
+      
     }
 
     tr:hover {
@@ -62,7 +62,7 @@
 
   <h2>Sales Report</h2>
   <h3>
-    <%= reportType %> Sales Report
+    <%= reportType.toUpperCase() %> Sales Report
   </h3>
   <div class="table-container">
     <% let totalOrders=0; let totalDiscount=0; let totalAmount=0; salesData.forEach(sale=> {

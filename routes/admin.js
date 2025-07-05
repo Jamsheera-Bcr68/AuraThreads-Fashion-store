@@ -12,6 +12,7 @@ const sharp = require("sharp");
 const path = require("path");
 const { route } = require("./product");
 const Order = require("../model/orderModel");
+const categoryController=require('../controllers/categoryController')
 
 // Display Login Page
 router.get("/login", adminController.getLogin);
@@ -198,56 +199,6 @@ router.get("/dashboard",adminAuth, async (req, res) => {
     thisPage:'dashboard'
   });
 });
-
-//get categoryManagement
-router.get("/category",adminAuth, async (req, res) => {
-  try {
-    const query = req.query.query || "";
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 5;
-    const skip = (page - 1) * limit;
-    console.log("Query is", query);
-    let searchQuery = { isDeleted: false };
-
-    if (query.trim()) {
-      searchQuery = {
-        $and: [
-          {
-            $or: [
-              { categoryName: { $regex: query, $options: "i" } },
-              { description: { $regex: query, $options: "i" } },
-            ],
-          },
-          { isDeleted: false },
-        ],
-      };
-    }
-
-    const categories = await category
-      .find(searchQuery)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
-    console.log(`from category page is ${page} lmit is ${limit}`);
-
-    const totalCategory = await category.countDocuments(searchQuery);
-    const totalPages = Math.ceil(totalCategory / limit);
-
-    res.render("../views/admin/categoryManagement", {
-      categories,
-      currentPage: page,
-      totalPages,
-      query,
-      title: "Category Manamgement",
-      thisPage:'category',
-      successMessage: res.locals.successMessage[0] || "",
-      errorMessage: res.locals.errorMessage[0] || "",
-    });
-  } catch (error) {
-    res.status(500).send("Error fetching categories");
-  }
-});
-
 // Multer storage setup (for storing images in "uploads" folder)
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -259,135 +210,40 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage: storage });
+//get categoryManagement
+router.get("/category",adminAuth,categoryController.getCategory)
+router.post('/category/add',upload.none(),categoryController.addCategory)
+router.post('/upload',upload.single('image'),categoryController.uploadImage)
+router.put('/category/edit/:id',adminAuth,categoryController.editCategory)
+router.delete('/category/delete/:id',adminAuth,categoryController.deleteCategory)
 
-router.post("/category/add", upload.array("images", 5), async (req, res) => {
-  console.log("Uploaded files:", req.files); 
-  console.log('reqestbody',req.body);
-  
-  if (!req.files || req.files.length === 0) {
-   // req.flash("errorMessage", "No images uploaded.");
-    return res.json({success:false,message:'Image not uploaded'})
-  }
+// router.delete("/category/delete/:id",adminAuth, async (req, res) => {
+//   const { id } = req.params;
+//   console.log("from delete routes");
 
-  const { categoryName, description } = req.body;
-  const isListed = req.body.isListed == "on" ? true : false;
-  const imagePaths = []; // Clear this before pushing resized images
+//   try {
+//     const softDeleteCategory = await category.findByIdAndUpdate(
+//       id,
+//       { isDeleted: true },
+//       { new: true },
+//     );
+//     if (!softDeleteCategory) {
+//       console.log("Category not found");
 
-  console.log('categoryName,description,isListed,imagePaths',categoryName,description,isListed,imagePaths);
-  
-  try {
-    if(imagePaths.length<0){
-      return res.json({success:false,message:'Image is not uploaded'})
-    }
-    // Check if category already exists
-    const existingCategory = await category.findOne({
-      categoryName,
-
-    });
-
-    if (existingCategory) {
-      console.log('category already exsting');
-      
-      return res.json({success:false,message:'This Category already exists.'})
-    }
-
-    // Resize each uploaded image and save only resized paths
-    await Promise.all(
-      req.files.map(async (file) => {
-        const resizedPath = path.join("uploads", "resized_" + file.filename);
-
-        await sharp(file.path)
-          .resize({ width: 500, height: 500, fit: "cover" }) // Crop & Resize
-          .toFile(resizedPath);
-
-        imagePaths.push(resizedPath); // Save only resized image path
-      }),
-    );
-
-    // Save category
-    const newCategory = new category({
-      categoryName,
-      description,
-      isListed,
-      images: imagePaths, // Only resized images are stored
-    });
-
-    await newCategory.save();
-    
-    return res.json({success:true,message:'Category added successfully!'})
-  } catch (error) {
-    console.error("Error when adding category:", error);
-   
-    return res.json({success:false,message:"Error in adding Category."})
-  }
-});
-
-router.post("/category/edit/:id",adminAuth, async (req, res) => {
-  console.log('From admin edit category');
-
-  const { categoryName, description, isListed } = req.body;
-  const { id } = req.params;
-try {
-const mongoose = require('mongoose');
-const categoryexist = await category.findOne({
-  categoryName,
-  _id: { $ne: new mongoose.Types.ObjectId(id) }
-});
-
-  console.log('Category exist',categoryexist);
-  if(categoryexist){
-    console.log('category already exist');
-   return res.json({success:false,message:"Category already exist"})
-  }
-  
-    const existCategory = await category.findOneAndUpdate(
-      { _id: id },
-      {
-        $set: {
-          categoryName,
-          description,
-          isListed: Boolean(isListed),
-        },
-      },
-      { new: true }
-    );
-
-    return res.json({ success: true, message: "Category Updated Successfully" });
-
-  } catch (error) {
-    console.error(error);
-    return res.json({ success: false, message: 'Internal Server Error' });
-  }
-});
-
-
-router.delete("/category/delete/:id",adminAuth, async (req, res) => {
-  const { id } = req.params;
-  console.log("from delete routes");
-
-  try {
-    const softDeleteCategory = await category.findByIdAndUpdate(
-      id,
-      { isDeleted: true },
-      { new: true },
-    );
-    if (!softDeleteCategory) {
-      console.log("Category not found");
-
-      return res.json({ success: false, message: "Category not found" });
-    } else {
-      console.log("Category Deleted successfully");
-      console.log("soft deleted category " + softDeleteCategory);
-      return res.json({
-        success: true,
-        message: "Category Deleted successfully",
-      });
-    }
-  } catch (error) {
-    console.log("error on deleting category", error);
-    return res.json({ success: false, message: "Error in delting category" });
-  }
-});
+//       return res.json({ success: false, message: "Category not found" });
+//     } else {
+//       console.log("Category Deleted successfully");
+//       console.log("soft deleted category " + softDeleteCategory);
+//       return res.json({
+//         success: true,
+//         message: "Category Deleted successfully",
+//       });
+//     }
+//   } catch (error) {
+//     console.log("error on deleting category", error);
+//     return res.json({ success: false, message: "Error in delting category" });
+//   }
+// });
 
 //get usermangement
 router.get("/users",adminAuth, async (req, res) => {

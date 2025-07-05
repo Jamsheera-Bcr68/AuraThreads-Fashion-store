@@ -4,6 +4,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Cropper.js CSS -->
+  <!-- Include Cropper.js (CDN) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
 
   <title>Admin - Category Management</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
@@ -11,12 +14,11 @@
 </head>
 
 <body>
-<style>
-  .catImg{
-    height: 55px;
-  }
- 
-</style>
+  <style>
+    .catImg {
+      height: 55px;
+    }
+  </style>
 
   <div class="container">
     <%- include('../partials/header.ejs') %>
@@ -25,7 +27,7 @@
         <%- include('../partials/sidebar') %>
 
           <div class="container mt-4">
-            
+
             <% if (successMessage.length> 0) { %>
               <div class="alert alert-success">
                 <%= successMessage %>
@@ -51,14 +53,14 @@
                       </div>
                     </div>
                     <!-- Button to Open Modal -->
-                   
+
 
                     <!-- Category Table -->
                     <div class="card ms-4  shadow">
-                    
+
                       <table class="table table-striped ">
                         <thead class="table-primary">
-                          <tr >
+                          <tr>
                             <th>Category Id</th>
                             <th>Category Name</th>
                             <th>Image</th>
@@ -71,12 +73,12 @@
                           <% categories.forEach((category, index)=> { %>
                             <tr id="row-<%= category._id %>">
                               <td>
-                               #CAT<%= category._id.toString().slice(-6) %>
+                                #CAT<%= category._id.toString().slice(-6) %>
                               </td>
                               <td>
                                 <%= category.categoryName %>
                               </td>
-                              <td><img class="catImg" src="/<%= category.images[0] %>" alt=""></td>
+                              <td><img class="catImg" src="<%= category.images[0] %>" alt=""></td>
                               <td>
                                 <%= category.description %>
                               </td>
@@ -85,7 +87,7 @@
                               </td>
                               <td>
                                 <button class="btn btn-warning btn-sm"
-                                  onclick="openEditModal('<%= category._id %>', `<%= category.categoryName %>`, `<%= category.description %>`,'<%= category.isListed %>' )">
+                                  onclick="openEditModal('<%= category._id %>', `<%= category.categoryName %>`, `<%= category.description %>`,'<%= category.isListed %>', '<%= category.images[0] %>' )">
                                   Edit
                                 </button>
                                 <button onclick="deleteCategory('<%= category._id %>')" class="btn btn-danger btn-sm">
@@ -161,10 +163,23 @@
               <label class="form-label">Description</label>
               <textarea class="form-control" name="description" id="editCategoryDescription" rows="3"></textarea>
             </div>
+            <!-- <div class="mb-3">
+              <label class="form-label">Change Category Image</label>
+              <input type="file" class="form-control" name="newImage" id="editImageInput" accept="image/*">
+            </div> -->
+
+            <!--image-->
+            <div class="mb-3">
+              <label class="form-label">Image</label>
+              <div>
+                <img id="editCategoryImagePreview" src="" alt="Category Image"
+                  style="max-width: 100%; max-height: 150px;" />
+              </div>
+            </div>
             <!-- test-->
             <div class="mb-3">
               <label class="form-label">Is Listed</label>
-             
+
               <div class="form-check">
                 <input type="checkbox" class="form-check-input" name="isListed" id="editCategoryIsListed" />
                 <label class="form-check-label" for="editCategoryIsListed">Yes</label>
@@ -206,8 +221,18 @@
             <div class="mb-3">
               <label class="form-label">Category Images</label>
 
-              <input id="image" type="file" class="form-control" name="images" accept="image/*" multiple required />
+              <input id="imageInput" type="file" class="form-control" accept="image/*" multiple />
+              <input type="hidden" id="uploadedImagesInput" name="uploadedImages">
             </div>
+
+            <!-- Image Preview Container -->
+            <div id="previewContainer" style="display: flex; flex-wrap: wrap; gap: 10px;"></div>
+
+            <!-- Cropped Canvas (Hidden) -->
+            <canvas id="croppedCanvas" style="display: none;"></canvas>
+
+            <button class="btn btn-primary" type="button" id="cropButton" style="display: none;">Crop</button>
+
 
             <!-- Checkbox for Is Listed -->
             <div class="mb-3">
@@ -228,94 +253,769 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://unpkg.com/cropperjs/dist/cropper.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
   <script>
 
+    //     // document.addEventListener('DOMContentLoaded', function () {
+    //     //   const imageInput = document.getElementById('image');
+    //     //   const previewContainer = document.getElementById('previewContainer');
+    //     //   const cropButton = document.getElementById('cropButton');
+
+    //     //   const categoryForm = document.getElementById('categoryForm');
+    //     //   const uploadedImagesInput = document.getElementById('uploadedImagesInput');
+    //     //   let cropInstances = {};
+    //     //   let uploadedImagePaths = []; // Store uploaded image paths
+
+    //     //   imageInput.addEventListener('change', function (event) {
+    //     //     cropButton.style.display = 'inline-block';
+    //     //     // Clear previous previews and crop instances
+    //     //     previewContainer.innerHTML = '';
+    //     //     cropInstances = {};
+    //     //     uploadedImagePaths = [];
+
+    //     //     // Create preview for each selected image
+    //     //     Array.from(event.target.files).forEach((file, index) => {
+    //     //       const reader = new FileReader();
+
+    //     //       reader.onload = function (e) {
+    //     //         const img = document.createElement('img');
+    //     //         img.src = e.target.result;
+    //     //         img.onload = () => {
+    //     //           const cropper = new Cropper(img, {
+    //     //             aspectRatio: 3 / 4,
+    //     //             viewMode: 2,
+    //     //             guides: true,
+    //     //             background: false
+    //     //           });
+    //     //           cropInstances[index] = cropper;
+    //     //         }
+    //     //       }      // Read the file
+    //     //       reader.readAsDataURL(file);
+    //     //     });
+    //     //   });
+
+    //     //   cropButton.addEventListener('click', function () {
+    //     //     if (Object.keys(cropInstances).length === 0) {
+    //     //       Swal.fire("No images selected!", "Please select an image before cropping and uploading.", "warning");
+    //     //       return;
+    //     //     }
+
+    //     //     let uploadPromises = [];
+    //     //     uploadedImagePaths = []; // Reset before new uploads
+
+    //     //     Object.keys(cropInstances).forEach(index => {
+    //     //       const cropper = cropInstances[index];
+    //     //       if (cropper) {
+    //     //         uploadPromises.push(new Promise((resolve, reject) => {
+    //     //           cropper.getCroppedCanvas().toBlob((blob) => {
+    //     //             if (!blob) {
+    //     //               reject("Failed to get cropped image.");
+    //     //               return;
+    //     //             }
+
+    //     //             const formData = new FormData();
+    //     //             formData.append('image', blob, `cropped-image-${index}.jpg`);
+
+    //     //             fetch('/admin/upload', {
+    //     //               method: 'POST',
+    //     //               body: formData
+    //     //             })
+    //     //               .then(response => response.json())
+    //     //               .then(data => {
+    //     //                 if (data.filePaths && data.filePaths.length > 0) {
+    //     //                   uploadedImagePaths.push(...data.filePaths);
+    //     //                   resolve();
+    //     //                 } else {
+    //     //                   reject('Upload failed');
+    //     //                 }
+    //     //               })
+    //     //               .catch(error => reject(error));
+    //     //           });
+    //     //         }));
+    //     //       }
+    //     //     });
+
+    //     //     if (uploadPromises.length === 0) {
+    //     //       Swal.fire("No images to upload!", "Please select an image and try again.", "info");
+    //     //       return;
+    //     //     }
+
+    //     //     Promise.all(uploadPromises)
+    //     //       .then(() => {
+    //     //         Swal.fire({
+    //     //           icon: "success",
+    //     //           title: 'image uploaded ',
+    //     //           showConfirmButton: false,
+    //     //           timer: 1000
+    //     //         });
+
+    //     //         // Update hidden input with uploaded image paths
+    //     //         if (uploadedImagesInput) {
+    //     //           uploadedImagesInput.value = JSON.stringify(uploadedImagePaths);
+    //     //         }
+    //     //         console.log('Uploaded image paths:', uploadedImagePaths);
+    //     //       })
+    //     //       .catch(error => {
+    //     //         console.error('Error uploading images:', error);
+    //     //         Swal.fire("Upload Error", "Failed to upload images.", "error");
+    //     //       });
+    //     //   });
+
+
+
+    //     //   categoryForm.addEventListener('submit', function (e) {
+    //     //     e.preventDefault()
+    //     //     console.log('category form submitted');
+
+    //     //     // Check if images have been uploaded
+    //     //     const storedImagePaths = uploadedImagesInput.value;
+    //     //     const fileInputImages = imageInput.files;
+
+    //     //     if (!storedImagePaths || JSON.parse(storedImagePaths).length === 0) {
+    //     //       return Swal.fire("Please crop and upload images before submitting.");
+    //     //     }
+
+    //     //     const formData = new FormData(this)
+    //     //     for (let [key, value] of formData.entries()) {
+    //     //       console.log(`${key}:`, value);
+    //     //     }
+    //     //     const categoryName = formData.get('categoryName').trim();
+
+    //     //     console.log(formData);
+    //     //     if (!categoryName) {
+    //     //       return Swal.fire({
+
+    //     //         icon: "error",
+
+    //     //         title: "Category name cannot be empty!",
+    //     //         showConfirmButton: false,
+    //     //         timer: 1000
+    //     //       });
+
+    //     //     } else if (/^\d/.test(categoryName)) {
+    //     //       return Swal.fire({
+
+    //     //         icon: "error",
+    //     //         title: "Category name cannot include numbers!",
+    //     //         showConfirmButton: false,
+    //     //         timer: 1000
+    //     //       });
+    //     //     }
+    //     //     if (categoryName.length > 20) {
+    //     //       return Swal.fire({
+
+    //     //         icon: "error",
+    //     //         title: "Category name atmost 20 charectors",
+    //     //         showConfirmButton: false,
+    //     //         timer: 1000
+    //     //       });
+    //     //     }
+    //     //     if (categoryName.length < 3) {
+    //     //       return Swal.fire({
+
+    //     //         icon: "error",
+    //     //         title: "Category name atleast 3 charectors",
+    //     //         showConfirmButton: false,
+    //     //         timer: 1000
+    //     //       });
+    //     //     }
+
+    //     //     fetch(`/admin/category/add`, {
+    //     //       method: 'POST',
+
+    //     //       body: formData
+    //     //     }).then(res => res.json())
+    //     //       .then(data => {
+    //     //         if (data && data.success) {
+    //     //           Swal.fire({
+
+    //     //             icon: "success",
+    //     //             title: data.message,
+    //     //             showConfirmButton: false,
+    //     //             timer: 1000
+    //     //           }).then(() => {
+    //     //             location.reload()
+    //     //           })
+
+    //     //           categoryForm.reset()
+    //     //           const modal = bootstrap.Modal.getInstance(document.getElementById('addCategoryModal'));
+    //     //           modal.hide();
+
+    //     //         } else {
+    //     //           Swal.fire(data.message)
+    //     //         }
+    //     //       }).catch(err => {
+    //     //         Swal.fire(err)
+    //     //       })
+    //     //   });
+    //     // });
+
+    // // document.addEventListener("DOMContentLoaded",function(){
+    // //   console.log('Loaded');
+    // //   const imageInput = document.getElementById('image');
+    // //   const previewContainer = document.getElementById('previewContainer');
+    // //   const cropButton = document.getElementById('cropButton');
+    // //   const uploadedImagesInput = document.getElementById('uploadedImagesInput');
+    // //   const categoryForm = document.getElementById('categoryForm');
+
+    // //    let cropper;
+    // //   let selectedImageBlob;
+
+    // //    imageInput.addEventListener('change', function (e) {
+    // //     const file = e.target.files[0];
+    // //     if (!file) return;
+
+    // //     previewContainer.innerHTML = '';
+
+    // //     const reader = new FileReader();
+    // //     reader.onload = function (e) {
+    // //       const img = document.createElement('img');
+    // //       img.src = e.target.result;
+    // //       img.style.maxWidth = '100%';
+    // //       img.style.maxHeight = '300px';
+    // //       previewContainer.appendChild(img);
+
+    // //       cropper = new Cropper(img, {
+    // //         aspectRatio: 3 / 4,
+    // //         viewMode: 1,
+    // //       });
+
+    // //       cropButton.style.display = 'inline-block';
+    // //     };
+    // //     reader.readAsDataURL(file);
+    // //   });
+
+    // //   cropButton.addEventListener('click', function () {
+    // //     if (!cropper) return;
+
+    // //     cropper.getCroppedCanvas().toBlob(blob => {
+    // //       selectedImageBlob = blob;
+
+    // //       // Preview cropped image
+    // //       const url = URL.createObjectURL(blob);
+    // //       previewContainer.innerHTML = `<img src="${url}" style="max-width:100%; max-height:300px;" />`;
+
+    // //       Swal.fire('Image Cropped!', 'You can now submit the form.', 'success');
+    // //     });
+    // //   });
+
+
+    // //     categoryForm.addEventListener('submit', function (e) {
+    // //     e.preventDefault();
+
+    // //     if (!selectedImageBlob) {
+    // //       Swal.fire('Crop the image first!', '', 'warning');
+    // //       return;
+    // //     }
+
+    // //     const formData = new FormData(categoryForm);
+    // //     formData.append('croppedImage', selectedImageBlob, 'category.jpg');
+
+    // //     fetch('/admin/category/add', {
+    // //       method: 'POST',
+    // //       body: formData
+    // //     })
+    // //       .then(res => res.json())
+    // //       .then(data => {
+    // //         if (data.success) {
+    // //           Swal.fire('Category Added!', '', 'success').then(() => {
+    // //             location.reload();
+    // //           });
+    // //         } else {
+    // //           Swal.fire('Error', data.message || 'Failed to add category', 'error');
+    // //         }
+    // //       })
+    // //       .catch(err => {
+    // //         console.error(err);
+    // //         Swal.fire('Server error', '', 'error');
+    // //       });
+    // //   });
+    // // })
+
+
+    // document.addEventListener('DOMContentLoaded', function () {
+    //     const imageInput = document.getElementById('categoryImageInput');
+    //     const previewContainer = document.getElementById('previewContainer');
+    //     const cropButton = document.getElementById('cropButton');
+    //     const addCategoryForm = document.getElementById('categoryForm');
+    //     const uploadedImagesInput = document.getElementById('uploadedCategoryImagesInput');
+
+    //     let cropInstances = {};
+    //     let uploadedImagePaths = [];
+
+    //     imageInput.addEventListener('change', function (event) {
+    //         previewContainer.innerHTML = '';
+    //         cropInstances = {};
+    //         uploadedImagePaths = [];
+    //         cropButton.style.display = 'inline-block';
+
+    //         Array.from(event.target.files).forEach((file, index) => {
+    //             const reader = new FileReader();
+
+    //             reader.onload = function (e) {
+    //                 const imageContainer = document.createElement('div');
+    //                 imageContainer.style.position = 'relative';
+    //                 imageContainer.style.margin = '10px';
+    //                 imageContainer.style.width = '200px';
+
+    //                 const img = document.createElement('img');
+    //                 img.src = e.target.result;
+    //                 img.style.maxWidth = '100%';
+    //                 img.style.maxHeight = '200px';
+    //                 img.setAttribute('data-index', index);
+
+    //                 const removeButton = document.createElement('button');
+    //                 removeButton.innerHTML = '×';
+    //                 Object.assign(removeButton.style, {
+    //                     position: 'absolute',
+    //                     top: '0', right: '0', backgroundColor: 'red',
+    //                     color: 'white', border: 'none', borderRadius: '50%',
+    //                     width: '25px', height: '25px', cursor: 'pointer'
+    //                 });
+
+    //                 removeButton.addEventListener('click', () => {
+    //                     imageContainer.remove();
+    //                     delete cropInstances[index];
+
+    //                     const filesArray = Array.from(imageInput.files);
+    //                     filesArray.splice(index, 1);
+    //                     const dataTransfer = new DataTransfer();
+    //                     filesArray.forEach(file => dataTransfer.items.add(file));
+    //                     imageInput.files = dataTransfer.files;
+    //                 });
+
+    //                 imageContainer.appendChild(img);
+    //                 imageContainer.appendChild(removeButton);
+    //                 previewContainer.appendChild(imageContainer);
+
+    //                 const cropper = new Cropper(img, {
+    //                     aspectRatio: 3 / 4,
+    //                     viewMode: 2,
+    //                     guides: true,
+    //                     background: false
+    //                 });
+
+    //                 cropInstances[index] = cropper;
+    //             };
+
+    //             reader.readAsDataURL(file);
+    //         });
+    //     });
+
+    //     cropButton.addEventListener('click', function () {
+    //         if (Object.keys(cropInstances).length === 0) {
+    //             return Swal.fire("No image", "Please select and crop an image before submitting", "warning");
+    //         }
+
+    //         let uploadPromises = [];
+    //         uploadedImagePaths = [];
+
+    //         Object.keys(cropInstances).forEach(index => {
+    //             const cropper = cropInstances[index];
+    //             if (cropper) {
+    //                 uploadPromises.push(new Promise((resolve, reject) => {
+    //                     cropper.getCroppedCanvas().toBlob(blob => {
+    //                         if (!blob) {
+    //                             return reject("Blob creation failed");
+    //                         }
+
+    //                         const formData = new FormData();
+    //                         formData.append('image', blob, `cropped-category-${index}.jpg`);
+
+    //                         fetch('/admin/upload', {
+    //                             method: 'POST',
+    //                             body: formData
+    //                         }).then(res => res.json())
+    //                           .then(data => {
+    //                               if (data.filePaths?.length) {
+    //                                   uploadedImagePaths.push(...data.filePaths);
+    //                                   resolve();
+    //                               } else {
+    //                                   reject("Upload failed");
+    //                               }
+    //                           }).catch(reject);
+    //                     });
+    //                 }));
+    //             }
+    //         });
+
+    //         Promise.all(uploadPromises)
+    //             .then(() => {
+    //                 Swal.fire({ icon: "success", title: "Image(s) uploaded", timer: 1000 });
+    //                 uploadedImagesInput.value = JSON.stringify(uploadedImagePaths);
+    //             })
+    //             .catch(err => {
+    //                 console.error(err);
+    //                 Swal.fire("Error", "Image upload failed", "error");
+    //             });
+    //     });
+
+    //     addCategoryForm.addEventListener('submit', async function (event) {
+    //         event.preventDefault();
+
+    //         const categoryName = addCategoryForm.categoryName.value.trim();
+    //         const description = addCategoryForm.description.value.trim();
+
+    //         if (!categoryName || categoryName.length < 3 || categoryName.length > 20 || /^\d/.test(categoryName)) {
+    //             return Swal.fire("Invalid Input", "Check the category name", "error");
+    //         }
+
+    //         if (!uploadedImagesInput.value || JSON.parse(uploadedImagesInput.value).length === 0) {
+    //             return Swal.fire("Upload Images", "Please upload cropped images before submitting.", "info");
+    //         }
+
+    //         const formData = new FormData(addCategoryForm);
+
+    //         try {
+    //             const response = await fetch("/admin/category/add", {
+    //                 method: "POST",
+    //                 body: formData
+    //             });
+
+    //             const result = await response.json();
+
+    //             if (result.success) {
+    //                 Swal.fire({ icon: "success", title: "Category Added", timer: 1000 }).then(() => {
+    //                     addCategoryForm.reset();
+    //                     previewContainer.innerHTML = '';
+    //                     uploadedImagesInput.value = '';
+    //                     location.reload();
+    //                 });
+    //             } else {
+    //                 Swal.fire("Error", result.message || "Failed to add category", "error");
+    //             }
+    //         } catch (error) {
+    //             console.error("Submission error:", error);
+    //             Swal.fire("Error", "Something went wrong", "error");
+    //         }
+    //     });
+    // });
+
+
     document.addEventListener('DOMContentLoaded', function () {
+      const imageInput = document.getElementById('imageInput');
+      const previewContainer = document.getElementById('previewContainer');
+      const cropButton = document.getElementById('cropButton');
+
       const categoryForm = document.getElementById('categoryForm');
-      categoryForm.addEventListener('submit', function (e) {
-        e.preventDefault()
-        console.log('category form submitted');
+      const uploadedImagesInput = document.getElementById('uploadedImagesInput');
+      let cropInstances = {};
+      let uploadedImagePaths = []; // Store uploaded image paths
 
+      imageInput.addEventListener('change', function (event) {
+        // Clear previous previews and crop instances
 
-        const formData = new FormData(this)
-        for (let [key, value] of formData.entries()) {
-          console.log(`${key}:`, value);
+        document.getElementById('cropButton').style.display = 'block'
+        previewContainer.innerHTML = '';
+        cropInstances = {};
+        uploadedImagePaths = [];
+
+        // Create preview for each selected image
+        Array.from(event.target.files).forEach((file, index) => {
+          const reader = new FileReader();
+
+          reader.onload = function (e) {
+            // Create container for each image
+            const imageContainer = document.createElement('div');
+            imageContainer.style.position = 'relative';
+            imageContainer.style.margin = '10px';
+            imageContainer.style.width = '200px';
+
+            // Create image element
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            img.style.maxWidth = '100%';
+            img.style.maxHeight = '200px';
+            img.style.objectFit = 'contain';
+            img.setAttribute('data-index', index);
+
+            // Create remove button
+            const removeButton = document.createElement('button');
+            removeButton.innerHTML = '×';
+            removeButton.style.position = 'absolute';
+            removeButton.style.top = '0';
+            removeButton.style.right = '0';
+            removeButton.style.backgroundColor = 'red';
+            removeButton.style.color = 'white';
+            removeButton.style.border = 'none';
+            removeButton.style.borderRadius = '50%';
+            removeButton.style.width = '25px';
+            removeButton.style.height = '25px';
+            removeButton.style.cursor = 'pointer';
+
+            removeButton.addEventListener('click', () => {
+              // Remove the image from preview and crop instances
+              imageContainer.remove();
+              delete cropInstances[index];
+
+              // Update file input to remove the specific file
+              const filesArray = Array.from(imageInput.files);
+              filesArray.splice(index, 1);
+
+              // Recreate FileList
+              const dataTransfer = new DataTransfer();
+              filesArray.forEach(file => dataTransfer.items.add(file));
+              imageInput.files = dataTransfer.files;
+            });
+
+            // Append image and remove button to container
+            imageContainer.appendChild(img);
+            imageContainer.appendChild(removeButton);
+
+            // Add to preview container
+            previewContainer.appendChild(imageContainer);
+
+            // Initialize Cropper for each image
+            const cropper = new Cropper(img, {
+              aspectRatio: 3 / 4, // Square crop
+              viewMode: 2,
+              guides: true,
+              background: false
+            });
+
+            // Store cropper instance
+            cropInstances[index] = cropper;
+          };
+
+          // Read the file
+          reader.readAsDataURL(file);
+        });
+      });
+
+      cropButton.addEventListener('click', function () {
+        if (Object.keys(cropInstances).length === 0) {
+          Swal.fire("No images selected!", "Please select an image before cropping and uploading.", "warning");
+          return;
         }
-        const categoryName = formData.get('categoryName').trim();
 
-        console.log(formData);
+        let uploadPromises = [];
+        uploadedImagePaths = []; // Reset before new uploads
+
+        Object.keys(cropInstances).forEach(index => {
+          const cropper = cropInstances[index];
+          if (cropper) {
+            uploadPromises.push(new Promise((resolve, reject) => {
+              cropper.getCroppedCanvas().toBlob((blob) => {
+                if (!blob) {
+                  reject("Failed to get cropped image.");
+                  return;
+                }
+
+                const formData = new FormData();
+                formData.append('image', blob, `cropped-image-${index}.jpg`);
+                console.log('send img to back');
+
+                fetch('/admin/upload', {
+                  method: 'POST',
+                  body: formData
+                })
+                  .then(response => response.json())
+                  .then(data => {
+                    console.log('came from bacekend', data.filePaths);
+
+                    if (data.filePaths && data.filePaths.length > 0) {
+                      uploadedImagePaths.push(...data.filePaths);
+
+                      const uploadedImageURL = data.filePaths[0];
+                      // Find the image element using data-index
+                      const img = document.querySelector(`img[data-index="${index}"]`);
+                      if (img) {
+                        // Destroy the cropper instance
+                        cropInstances[index].destroy();
+                        delete cropInstances[index];
+                        // Replace the src with uploaded image URL (from backend)
+                        img.src = uploadedImageURL;
+                        img.style.border = '2px solid #28a745'; // Optional: add a border to show it's uploaded
+                      }
+
+
+                      resolve();
+                    } else {
+                      reject('Upload failed');
+                    }
+                  })
+                  .catch(error => reject(error));
+              });
+            }));
+          }
+        });
+
+        if (uploadPromises.length === 0) {
+          Swal.fire("No images to upload!", "Please select an image and try again.", "info");
+          return;
+        }
+
+        Promise.all(uploadPromises)
+          .then(() => {
+            Swal.fire({
+              icon: "success",
+              title: 'image uploaded ',
+              showConfirmButton: false,
+              timer: 1000
+            });
+            console.log('uploadedImagesInput', uploadedImagesInput);
+            console.log('uploadedImagePaths', uploadedImagePaths);
+
+            // Update hidden input with uploaded image paths
+            if (uploadedImagesInput) {
+              uploadedImagesInput.value = JSON.stringify(uploadedImagePaths);
+            }
+            console.log('Uploaded image paths:', uploadedImagePaths);
+          })
+          .catch(error => {
+            console.error('Error uploading images:', error);
+            Swal.fire("Upload Error", "Failed to upload images.", "error");
+          });
+      });
+
+      //form submit event listener
+      categoryForm.addEventListener('submit', async function (event) {
+        event.preventDefault();
+        console.log('from category submit form');
+
+
+        // Check if images have been uploaded
+        const storedImagePaths = uploadedImagesInput.value;
+        const fileInputImages = imageInput.files;
+
+        if (!storedImagePaths && fileInputImages.length === 0) {
+          Swal.fire("Image Upload Required", "Please upload images before adding the product.", "warning");
+          return;
+        }
+
+        const formData = new FormData(this);
+
+        // Log all form data entries for debugging
+        console.log('Form Data Entries:');
+        for (let [key, value] of formData.entries()) {
+          console.log(`${key}: ${value}`);
+        }
+        const categoryName = formData.get('categoryName').trim()
+        console.log(categoryName);
         if (!categoryName) {
           return Swal.fire({
-           
-            icon: "error", // 🔴 change icon to 'error'
-            title: "Category name cannot be empty!",
-            showConfirmButton: false,
-            timer: 1000
-          });
-
-        }else if(/^\d/.test(categoryName)){
-           return Swal.fire({
-           
-            icon: "error", // 🔴 change icon to 'error'
-            title: "Category name cannot include numbers!",
-            showConfirmButton: false,
-            timer: 1000
-          });
-        }
-        if(categoryName.length>20){
-          return Swal.fire({
-           
-            icon: "error", // 🔴 change icon to 'error'
-            title: "Category name atmost 20 charectors",
-            showConfirmButton: false,
-            timer: 1000
-          });
-        } 
-         if(categoryName.length<3){
-          return Swal.fire({
-           
-            icon: "error", // 🔴 change icon to 'error'
-            title: "Category name atleast 3 charectors",
-            showConfirmButton: false,
-            timer: 1000
-          });
-        }
-
-        fetch(`/admin/category/add`, {
-          method: 'POST',
-
-          body: formData
-        }).then(res => res.json())
-          .then(data => {
-            if (data && data.success) {
-              Swal.fire({
-
-                icon: "success",
-                title: data.message,
-                showConfirmButton: false,
-                timer: 1000
-              }).then(()=>{
-                location.reload()
-              })
-              
-              categoryForm.reset()
-              const modal = bootstrap.Modal.getInstance(document.getElementById('addCategoryModal'));
-              modal.hide();
-
-            } else {
-              Swal.fire(data.message)
-            }
-          }).catch(err => {
-            Swal.fire(err)
+            icon: 'error',
+            title: 'Error',
+            text: "Category Name cannot be empty"
           })
+        }
+        if (categoryName.length < 3) {
+          return Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: "Category Name Should contain at least 3 letters"
+          })
+        }
+        if (categoryName.length > 20) {
+          return Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: "Category Name Should not contain more than 20 letters"
+          })
+        }
+        if (/^\d/.test(categoryName)) {
+          return Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: "Category Name Should not sart with numbers"
+          })
+        }
+        if(/^[^a-zA-Z]/.test(categoryName)) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: "Category Name should start with a letter"
+          });
+          return;
+        }
+
+        try {
+          const response = await fetch("/admin/category/add", {
+            method: "POST",
+            body: formData
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            console.log('result.newCategory', result.newCategory);
+
+            const category = result.newCategory
+            const newRow = document.createElement('tr')
+            rowId = `row-${result.newCategory._id}`
+
+            const newRowHtml = `
+            <tr id=${rowId}>
+              <td>#CAT${category._id.slice(-6)}</td>
+              <td>${category.categoryName}</td>
+              
+               
+              <td><img class="catImg" src="${category.images[0]}" alt=""></td>
+              <td>${category.description}</td>
+              <td>${category.isListed}</td>
+              <td>
+        <button class="btn btn-warning btn-sm"
+         onclick="openEditModal(
+        '${category._id}',
+        \`${category.categoryName}\`,
+        \`${category.description}\`,
+        '${category.isListed}',
+        '${category.images[0]}'
+      )">
+          Edit
+        </button>
+        <button onclick="deleteCategory('${category._id}')" class="btn btn-danger btn-sm">
+          Delete
+        </button>
+      </td>
+      </tr>
+            `
+            const tableBody = document.querySelector('tbody');
+            tableBody.insertAdjacentHTML('afterbegin', newRowHtml);
+
+
+            Swal.fire({
+              icon: "success",
+              title: 'Category Added Successfully ',
+              showConfirmButton: false,
+              timer: 1000
+            }).then(() => {
+              // Reset form and preview
+              categoryForm.reset();
+              previewContainer.innerHTML = '';
+              uploadedImagePaths = [];
+              uploadedImagesInput.value = '';
+
+              const addCategoryModal = bootstrap.Modal.getInstance(document.getElementById('addCategoryModal'));
+              if (addCategoryModal) addCategoryModal.hide();
+            });
+
+
+
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: result.message || 'Failed to add Category'
+            });
+          }
+        } catch (error) {
+          console.error("Error submitting form:", error);
+          Swal.fire({
+            icon: 'error',
+            title: 'Submission Error',
+            text: 'An unexpected error occurred'
+          });
+        }
       });
+
     });
 
 
-
-
     function deleteCategory(id) {
-      console.log("from delete cATEGORY SCRIPT" , id);
+      console.log("from delete cATEGORY SCRIPT", id);
 
       Swal.fire({
         title: "Are you sure?",
@@ -335,18 +1035,18 @@
               if (data && data.success) {
                 Swal.fire({
 
-                icon: "success",
-                title: data.message,
-                showConfirmButton: false,
-                timer: 1000
-              })
-              document.getElementById(`row-${id}`).remove()
+                  icon: "success",
+                  title: data.message,
+                  showConfirmButton: false,
+                  timer: 1000
+                })
+                document.getElementById(`row-${id}`).remove()
               } else {
                 Swal.fire(data.message)
                 document.getElementById('addCategoryModal').style.display = 'none'
               }
             }).catch(error => {
-              Swal.fire('Server Error')
+              Swal.fire(data.message)
               document.getElementById('addCategoryModal').style.display = 'none'
             })
         }
@@ -354,17 +1054,20 @@
     }
 
     //edit
-    let editCategoryId='';
-    function openEditModal(id, categoryName, description, isListed) {
+    let editCategoryId = '';
+    function openEditModal(id, categoryName, description, isListed, imagePath) {
+      console.log('image path', imagePath);
+
       console.log("from edit script");
 
-      editCategoryId=id
+      editCategoryId = id
       document.getElementById("editCategoryName").value = categoryName;
       document.getElementById("editCategoryDescription").value = description;
 
       const checkbox = document.getElementById("editCategoryIsListed");
       checkbox.checked = isListed === "true" || isListed === true;
-      console.log(isListed);
+      document.getElementById('editCategoryImagePreview').src = imagePath;
+
 
       document.getElementById(
         "editCategoryForm"
@@ -374,111 +1077,141 @@
         document.getElementById("editCategoryModal")
       );
       editModal.show();
-     
-      
+
+
     }
 
-const editForm = document.getElementById('editCategoryForm');
+    const editForm = document.getElementById('editCategoryForm');
 
-editForm.addEventListener('submit', function (e) {
-  e.preventDefault();
-  console.log('Edit category form submitted');
- console.log('editCategoryId',editCategoryId);
-  const formData = new FormData(this);
-  const formObject = Object.fromEntries(formData);
+    editForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      console.log('Edit category form submitted');
+      console.log('editCategoryId', editCategoryId);
+      const formData = new FormData(this);
+      const formObject = Object.fromEntries(formData);
 
- 
-  formObject.isListed = formData.get('isListed') === 'on';
-console.log('formObject.isListed',formObject.isListed);
 
-  const categoryName = formData.get('categoryName').trim();
+      formObject.isListed = formData.get('isListed') === 'on';
+      console.log('formObject.isListed', formObject.isListed);
 
-  // VALIDATIONS
-  if (!categoryName) {
-    return Swal.fire({
-      icon: "error",
-      title: "Category name cannot be empty!",
-      showConfirmButton: false,
-      timer: 1000
-    });
-  }
+      const categoryName = formData.get('categoryName').trim();
 
-  if (/^\d/.test(categoryName)) {
-    return Swal.fire({
-      icon: "error",
-      title: "Category name cannot start with a number!",
-      showConfirmButton: false,
-      timer: 1000
-    });
-  }
-
-  if (categoryName.length > 20) {
-    return Swal.fire({
-      icon: "error",
-      title: "Category name must be at most 20 characters",
-      showConfirmButton: false,
-      timer: 1000
-    });
-  }
-
-  if (categoryName.length < 3) {
-    return Swal.fire({
-      icon: "error",
-      title: "Category name must be at least 3 characters",
-      showConfirmButton: false,
-      timer: 1000
-    });
-  }
-
- console.log('editCategoryId',editCategoryId)
-
-  // SUBMIT
-  fetch(`/admin/category/edit/${editCategoryId}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(formObject)
-  })
-    .then(res => res.json())
-    .then(data => {
-      if (data.success) {
-        Swal.fire({
-          icon: "success",
-          title: "Category updated successfully",
-          showConfirmButton: false,
-          timer: 1000
-        }).then(() => {
-        var editModal = new bootstrap.Modal(
-        document.getElementById("editCategoryModal")
-      );
-      editModal.hide();
-          location.reload(); 
-        });
-      } else {
-        Swal.fire({
+      // VALIDATIONS
+      if (!categoryName) {
+        return Swal.fire({
           icon: "error",
-          title: data.message || "Update failed",
+          title: "Category name cannot be empty!",
           showConfirmButton: false,
           timer: 1000
         });
       }
-    })
-    .catch(err => {
-      console.error("Error submitting edit form:", err);
-      Swal.fire({
-        icon: "error",
-        title: "Something went wrong!",
-        showConfirmButton: false,
-        timer: 1000
+
+      if (/^\d/.test(categoryName)) {
+        return Swal.fire({
+          icon: "error",
+          title: "Category name cannot start with a number!",
+          showConfirmButton: false,
+          timer: 1000
+        });
+      }
+
+      if (categoryName.length > 20) {
+        return Swal.fire({
+          icon: "error",
+          title: "Category name must be at most 20 characters",
+          showConfirmButton: false,
+          timer: 1000
+        });
+      }
+
+      if (categoryName.length < 3) {
+        return Swal.fire({
+          icon: "error",
+          title: "Category name must be at least 3 characters",
+          showConfirmButton: false,
+          timer: 1000
+        });
+      }
+      if (/^[^a-zA-Z]/.test(categoryName)) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: "Category Name should start with a letter"
+        });
+        return;
+      }
+
+      console.log('editCategoryId', editCategoryId)
+
+      // SUBMIT
+      fetch(`/admin/category/edit/${editCategoryId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(formObject)
       })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            const category = data.existCategory
+            const row = document.getElementById(`row-${editCategoryId}`)
+            row.innerHTML = `
+        <td>#CAT${category._id.slice(-6)}</td>
+        <td>${category.categoryName}</td>
+        <td><img class="catImg" src="${category.images[0]}" alt=""></td>
+        <td>${category.description}</td>
+        <td>${category.isListed}</td>
+        <td>
+          <button class="btn btn-warning btn-sm"
+            onclick="openEditModal('${category._id}', \`${category.categoryName}\`, \`${category.description}\`, '${category.isListed}', '${category.images[0]}')">
+            Edit
+          </button>
+          <button onclick="deleteCategory('${category._id}')" class="btn btn-danger btn-sm">
+            Delete
+          </button>
+        </td>
+      `;
+
+            Swal.fire({
+              icon: "success",
+              title: data.message,
+              showConfirmButton: false,
+              timer: 1000
+            }).then(() => {
+              const editModalEl = document.getElementById("editCategoryModal");
+              const editModal = bootstrap.Modal.getInstance(editModalEl); // ✅ Get the existing instance
+              if (editModal) editModal.hide();
+
+
+
+            });
+          } else {
+            Swal.fire({
+              icon: "error",
+              title: data.message || "Update failed",
+              showConfirmButton: false,
+              timer: 1000
+            });
+          }
+        })
+        .catch(err => {
+          console.error("Error submitting edit form:", err);
+          Swal.fire({
+            icon: "error",
+            title:data.message|| "Something went wrong!",
+            showConfirmButton: false,
+            timer: 1000
+          })
+        })
     })
-})
-</script>
+  </script>
 
-  
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Cropper.js JS -->
+
+
+
 </body>
 
 </html>
