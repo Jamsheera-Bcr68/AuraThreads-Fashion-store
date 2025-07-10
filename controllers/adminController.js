@@ -51,21 +51,11 @@ const postLogin = async (req, res) => {
     res.render("admin/login", { errorMessage: "Something went wrong" });
   }
 };
-//get categories
-// const getCategory = async (req, res) => {
-//   res.render("admin/category", { errorMessage: null });
-// };
 
-//get products
-const getProducts = async (req, res) => {
-  res.render("admin/products/add", { errorMessage: null });
-};
 
-//get addproduct page
 
-const getAddProducts = async (req, res) => {
-  res.render("admin/products", { errorMessage: null });
-};
+
+
 
 //get users
 const getUsers = async (req, res) => {
@@ -2118,9 +2108,9 @@ module.exports = {
   getLogin,
   postLogin,
  
-  getProducts,
+  
   getUsers,
-  getAddProducts,
+  
   searchProducts,
   getOrder,
   getOrderDetails,

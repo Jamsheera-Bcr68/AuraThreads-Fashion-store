@@ -13,6 +13,7 @@ const path = require("path");
 const { route } = require("./product");
 const Order = require("../model/orderModel");
 const categoryController=require('../controllers/categoryController')
+const userController=require('../controllers/userController')
 
 // Display Login Page
 router.get("/login", adminController.getLogin);
@@ -211,6 +212,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 //get categoryManagement
+
 router.get("/category",adminAuth,categoryController.getCategory)
 router.post('/category/add',upload.none(),categoryController.addCategory)
 router.post('/upload',upload.single('image'),categoryController.uploadImage)
@@ -219,76 +221,10 @@ router.delete('/category/delete/:id',adminAuth,categoryController.deleteCategory
 
 
 //get usermangement
-router.get("/users",adminAuth, async (req, res) => {
-  try {
-    const query = req.query.query || "";
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 5;
-    const skip = (page - 1) * limit;
+router.get("/users",adminAuth,userController.getUsers)
 
-    console.log("query", query);
-
-    let searchQuery = {};
-    if (query.trim()) {
-      searchQuery = {
-        $or: [
-          { name: { $regex: query, $options: "i" } },
-          { email: { $regex: query, $options: "i" } },
-        ],
-      };
-    }
-    const users = await user
-      .find(searchQuery)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
-
-    const totalUsers = await user.countDocuments();
-    const totalPages = Math.ceil(totalUsers / limit);
-
-    console.log(`from userpage.page is ${page} and limit is ${limit}`);
-
-    res.render("../views/admin/userManagement", {
-      users,
-      currentPage: page,
-      totalPages,
-      thisPage:'users',
-      title: "User Management",
-      successMessage: res.locals.successMessage || "",
-      errorMessage: res.locals.errorMessage || "",
-    });
-  } catch (error) {
-    req.flash("errorMessage", "Error in fetching User");
-    res.render("../views/admin/dashboard", { title: "Admin Dashboard" });
-  }
-});
-
-//block and unblock user
-
-router.patch("/block-user/:userId",adminAuth, async (req, res) => {
-  console.log("from block user");
-  const { userId } = req.params;
-  const { isActive } = req.body;
-
-  try {
-    const blockUser = await user.findOneAndUpdate(
-      { _id: userId },
-      { isActive },
-      { new: true },
-    );
-
-    if (!blockUser) {
-      console.log('User not found');
-      return res.json({success:false,message:"User not found"})
-    }
-    console.log('Status updated');
-      return res.json({success:true,message:"User Status updated successfully"})
-  } catch (error) {
-   
-    console.log('Server Error');
-      return res.status(500).json({success:false,message:"Internal Server error"})
-  }
-});
+//block user
+router.patch("/block-user/:userId",adminAuth,userController.blockUser)
 
 router.get("/orders",adminAuth, adminController.getOrder);
 router.get("/orderDetails/:orderId",adminAuth, adminController.getOrderDetails);
@@ -333,20 +269,6 @@ router.put("/editOffer/:offerId",adminAuth, adminController.editOffer);
 //add refferal offer
 router.post("/addrefferalOffer",adminAuth, adminController.addrefferalOffer);
 
-//get referal offer
-// router.get("/referalOffers", adminController.referalOffers);
-
-//delete referal offer
-// router.delete(
-//   "/refferalOffer/delete/:offerId",
-//   adminController.deleteReferalOffers,
-// );
-
-//get single refferal
-//router.get("/getSinglerefferal/:offerId", adminController.getSinglerefferal);
-
-//edit referal offer
-//router.post("/editReferralForm/:offerId", adminController.editReffferalOffer);
 
 // get approval page
 router.get("/pendings", adminAuth, adminController.getPendings);
