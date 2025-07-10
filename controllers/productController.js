@@ -84,7 +84,7 @@ const getProducts = async (req, res) => {
     const products = await Variant.aggregate([
       // Group by productId to get only one variant per product
       {
-        $sort: { createdAt: 1 } // sort if you want to pick the first variant
+        $sort: { createdAt: -1 } // sort if you want to pick the first variant
       },
       {
         $group: {
@@ -147,7 +147,7 @@ const getProducts = async (req, res) => {
       { $limit: limit }
     ]);
 
-   // console.log(products);
+    // console.log(products);
 
 
     const totalProducts = await Product.countDocuments(searchQuery);
@@ -252,10 +252,10 @@ const getVariants = async (req, res) => {
 
     //get variant count
     // First: total count
-const totalVariants = await Variant.countDocuments({
-  productId: new mongoose.Types.ObjectId(productId),
-  isDeleted: false
-});
+    const totalVariants = await Variant.countDocuments({
+      productId: new mongoose.Types.ObjectId(productId),
+      isDeleted: false
+    });
 
     const variants = await Variant.aggregate([
       {
@@ -286,11 +286,11 @@ const totalVariants = await Variant.countDocuments({
           path: "$category",
           preserveNullAndEmptyArrays: true
         }
-      },{$sort:{createdAt:-1}},
-       { $skip: skip }, { $limit: limit }
+      }, { $sort: { createdAt: -1 } },
+      { $skip: skip }, { $limit: limit }
     ]);
 
-   
+
     const totalPages = Math.ceil(totalVariants / limit)
     console.log('totalVariants', totalVariants);
 
@@ -359,11 +359,11 @@ const uploadImages = async (req, res) => {
     return res.status(400).json({ message: "No files uploaded" });
   }
 
-  
+
   const filePaths = req.files.map((file) => `/uploads/${file.filename}`);
-  if(filePaths.length==0){
+  if (filePaths.length == 0) {
     console.log('Images are not entered');
-    return res.status(StatusCodes.BAD_REQUEST).json({success:false,message:"Images are not uploaded"})
+    return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: "Images are not uploaded" })
   }
 
   console.log("Uploaded file paths:", filePaths);
@@ -465,8 +465,8 @@ const postAddProduct = async (req, res) => {
         description,
         categoryId,
         brand,
-        isListed:isListed === 'true',
-        isActive:isActive === 'true',
+        isListed: isListed === 'true',
+        isActive: isActive === 'true',
       });
 
       // Save product
@@ -545,11 +545,11 @@ const postEditProduct = async (req, res) => {
       throw new Error("No product data ");
     }
 
-   
+
     // Extract image filenames
-    let { productName,brand, categoryId, price, description, stock } = req.body;
+    let { productName, brand, categoryId, price, description, stock } = req.body;
     const { productId } = req.params;
-    categoryId=new mongoose.Types.ObjectId(categoryId)
+    categoryId = new mongoose.Types.ObjectId(categoryId)
 
     console.log("This is req.body:", JSON.stringify(req.body, null, 2));
     console.log("Product name is:", productName);
@@ -569,30 +569,30 @@ const postEditProduct = async (req, res) => {
       return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: statusMessages.NOT_FOUND })
 
     }
-    
-    const isActive=req.body.isActive?true:false
-    const isListed=req.body.isListed?true:false
+
+    const isActive = req.body.isActive ? true : false
+    const isListed = req.body.isListed ? true : false
     const updatedProduct = await Product.findOneAndUpdate(
       { _id: productId },
       {
-        $set: { productName, categoryId, description, brand,price, stock ,isActive,isListed},
+        $set: { productName, categoryId, description, brand, price, stock, isActive, isListed },
       },
       { new: true },
     );
 
     await Variant.updateMany(
-  { productId: new mongoose.Types.ObjectId(productId) },
-  {
-    $set: {
-      productName,
-      price,
-      brand,description,categoryId
-    }
-  }
-);
+      { productId: new mongoose.Types.ObjectId(productId) },
+      {
+        $set: {
+          productName,
+          price,
+          brand, description, categoryId
+        }
+      }
+    );
 
     console.log(" product updated, Updated Product:", updatedProduct);
-    return res.status(StatusCodes.OK).json({ success: true, message: statusMessages.UPDATED('Product') ,updatedProduct})
+    return res.status(StatusCodes.OK).json({ success: true, message: statusMessages.UPDATED('Product'), updatedProduct })
 
   } catch (error) {
     console.error("Error updating product:", error);
@@ -608,10 +608,10 @@ const deleteProduct = async (req, res) => {
 
   try {
     const deletedProduct = await Product.findOneAndUpdate(
-  { _id: productId },
-  { $set: { isDeleted: true, isActive: false, isListed: false } },
-  { new: true }
-);
+      { _id: productId },
+      { $set: { isDeleted: true, isActive: false, isListed: false } },
+      { new: true }
+    );
     console.log('deleted product', deleteProduct);
 
     if (!deleteProduct) {
@@ -625,13 +625,13 @@ const deleteProduct = async (req, res) => {
 
     console.log(products);
 
-    const variants=await Variant.find({productId:new mongoose.Types.ObjectId(productId)})
+    const variants = await Variant.find({ productId: new mongoose.Types.ObjectId(productId) })
 
     await Variant.updateMany(
       { productId: new mongoose.Types.ObjectId(productId) },
       { $set: { isDeleted: true } }
     );
-   
+
     console.log("Product deleted succesfully");
     return res.status(StatusCodes.OK).json({ success: true, message: statusMessages.DELETED("Product") });
 
@@ -668,21 +668,21 @@ const addVariant = async (req, res) => {
       return res.status(StatusCodes.CONFLICT).json({ success: false, message: statusMessages.EXISTS('Varient') })
     }
     if (images.length == 0) {
-        console.log('Images not entered');
+      console.log('Images not entered');
       return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: statusMessages.REQUIRED('Images ') })
     }
-    if(!color){
-        console.log('color not entered');
+    if (!color) {
+      console.log('color not entered');
       return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: statusMessages.REQUIRED('Color ') })
     }
-    if(!size){
-        console.log('Size not entered');
-       return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: statusMessages.REQUIRED('Size ') })
+    if (!size) {
+      console.log('Size not entered');
+      return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: statusMessages.REQUIRED('Size ') })
     }
-    if(!stock){
+    if (!stock) {
       console.log('Stock not entered');
-      
-       return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: statusMessages.REQUIRED('Stock ') })
+
+      return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: statusMessages.REQUIRED('Stock ') })
     }
 
     const isListed = req.body.isListed ? true : false;
@@ -697,13 +697,13 @@ const addVariant = async (req, res) => {
     console.log('new varint saved');
     console.log(statusMessages.CREATED("Variant"))
 
-    const populatedVariant = await Variant.findById({_id:newVariant._id})
-  .populate('productId')
-  .populate('categoryId');
+    const populatedVariant = await Variant.findById({ _id: newVariant._id })
+      .populate('productId')
+      .populate('categoryId');
 
 
 
-    return res.status(StatusCodes.CREATED).json({ success: true, message: statusMessages.CREATED("Variant"),newVariant:populatedVariant })
+    return res.status(StatusCodes.CREATED).json({ success: true, message: statusMessages.CREATED("Variant"), newVariant: populatedVariant })
 
   } catch (error) {
     console.log(statusMessages.SERVER_ERROR);
@@ -714,34 +714,47 @@ const addVariant = async (req, res) => {
   }
 
 }
-const getVariant=async(req,res)=>{
+const getVariant = async (req, res) => {
   console.log('getVariant');
 
-  const variantId=req.params.variantId
-  if(!variantId){
+  const variantId = req.params.variantId
+  if (!variantId) {
     console.log('varient id not found');
-    return res.status(StatusCodes.NOT_FOUND).json({success:false,message:statusMessages.NOT_FOUND('Varient Id')})
+    return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: statusMessages.NOT_FOUND('Varient Id') })
   }
-  const variant=await Variant.findOne({_id:new mongoose.Types.ObjectId(variantId)})
+  const variant = await Variant.findOne({ _id: new mongoose.Types.ObjectId(variantId) })
   console.log(variant);
-  if(!variant){
-     console.log('varient not found');
-    return res.status(StatusCodes.NOT_FOUND).json({success:false,message:statusMessages.NOT_FOUND('Varient')})
+  if (!variant) {
+    console.log('varient not found');
+    return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: statusMessages.NOT_FOUND('Varient') })
   }
 
-  return res.status(StatusCodes.OK).json({success:true,message:'varient found',variant})
+  return res.status(StatusCodes.OK).json({ success: true, message: 'varient found', variant })
 }
-const editVariant=async(req,res)=>{
+const editVariant = async (req, res) => {
   console.log('editVariant');
   try {
-    const variantId=req.params.variantId
+    const variantId = req.params.variantId
 
-    const productId=req.body.productId
-    console.log('productId',productId);
-    
-    
-    const variantExist = await Variant.findOne({ productId: new mongoose.Types.ObjectId(productId), color, size,_id:{$ne:new mongoose.Types.ObjectId(variantId)} })
-    console.log('variantExist',variantExist);
+    const productId = req.body.productId
+    console.log('productId', productId);
+
+
+
+
+    const variant = await Variant.findOne({ _id: new mongoose.Types.ObjectId(variantId) })
+    console.log(variant);
+    if (!variant) {
+      console.log('varient not found');
+      return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: statusMessages.NOT_FOUND('Varient') })
+    }
+
+
+
+    const { stock, size, color } = req.body
+
+    const variantExist = await Variant.findOne({ productId: new mongoose.Types.ObjectId(productId), color, size, _id: { $ne: new mongoose.Types.ObjectId(variantId) } })
+    console.log('variantExist', variantExist);
 
 
     if (variantExist) {
@@ -749,88 +762,85 @@ const editVariant=async(req,res)=>{
       return res.status(StatusCodes.CONFLICT).json({ success: false, message: statusMessages.EXISTS('Varient') })
     }
 
-  const variant=await Variant.findOne({_id:new mongoose.Types.ObjectId(variantId)})
-  console.log(variant);
-  if(!variant){
-     console.log('varient not found');
-    return res.status(StatusCodes.NOT_FOUND).json({success:false,message:statusMessages.NOT_FOUND('Varient')})
-   }
+    if (!color || !size) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message: "Color and size are required"
+      });
+    }
 
-
-
-   const {stock,size,color}=req.body
-   const isActive=req.body.isActive? true:false
-   const isListed=req.body.isListed?true:false
-   let images = req.files?.map(file => `/uploads/${file.filename}`) 
-   if(images.length==0){
-    images=variant.images
-   }
+    const isActive = req.body.isActive ? true : false
+    const isListed = req.body.isListed ? true : false
+    let images = req.files?.map(file => `/uploads/${file.filename}`)
+    if (images.length == 0) {
+      images = variant.images
+    }
     console.log(images);
-   variant.color=color || variant.color
-   variant.size=size|| variant.size
-   variant.images=images
-   variant.stock=stock||variant.stock
-   variant.isActive=isActive
-   variant.isListed=isListed
-   await variant.save()
-
-     const populatedVariant = await Variant.findById({_id:variant._id})
-  .populate('productId')
-  .populate('categoryId');
-
-   return res.status(StatusCodes.OK).json({success:true,message:statusMessages.UPDATED("Variant"),variant:populatedVariant})
-  } catch (error) {
-    console.log(error);
-    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({success:false,message:statusMessages.SERVER_ERROR})
-  }
-}
-
-const deleteVariant=async(req,res)=>{
-  console.log('Delete varient');
-  try {
-    const variantId=req.params.variantId
-    if(!variantId){
-      console.log('No variant id');
-      
-      return res.status(StatusCodes.NOT_FOUND),json({success:false,message:statusMessages.NOT_FOUND("variant Id")})
-    }
-
-    const variant=await Variant.findOne({_id:new mongoose.Types.ObjectId(variantId)})
-    if(!variant){
-       console.log(' variant id');
-      
-      return res.status(StatusCodes.NOT_FOUND),json({success:false,message:statusMessages.NOT_FOUND("variant ")})
-    }
-
-    variant.isDeleted=true
+    variant.color = color || variant.color
+    variant.size = size || variant.size
+    variant.images = images
+    variant.stock = stock || variant.stock
+    variant.isActive = isActive
+    variant.isListed = isListed
     await variant.save()
 
-    return res.status(StatusCodes.OK).json({success:true,message:statusMessages.DELETED("Variant")})
+    const populatedVariant = await Variant.findById({ _id: variant._id })
+      .populate('productId')
+      .populate('categoryId');
+
+    return res.status(StatusCodes.OK).json({ success: true, message: statusMessages.UPDATED("Variant"), variant: populatedVariant })
   } catch (error) {
     console.log(error);
-    return res.status(StatusCodes.INTERNAL_SERVER_ERROR),json({success:false,message:statusMessages.SERVER_ERROR})
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: statusMessages.SERVER_ERROR })
   }
 }
 
-const getAdminProduct=async(req,res)=>{
-  console.log('get admin product');
-  
+const deleteVariant = async (req, res) => {
+  console.log('Delete varient');
   try {
-    const productId=req.params.productId
-  if(!productId){
-    console.log('productid notfound');
-    return res.status(StatusCodes.OK).json({success:true,message:statusMessages.NOT_FOUND(" product id")})
-  }
-  const product=await Product.findOne({_id:new mongoose.Types.ObjectId(productId)})
-   if(!product){
-    console.log('product notfound');
-    return res.status(StatusCodes.OK).json({success:true,message:statusMessages.NOT_FOUND(" product ")})
-  }
-  //get categories
-  const categories=await Category.find({isDeleted:false})
-   return res.status(StatusCodes.OK).json({success:true,product,categories})
+    const variantId = req.params.variantId
+    if (!variantId) {
+      console.log('No variant id');
+
+      return res.status(StatusCodes.NOT_FOUND), json({ success: false, message: statusMessages.NOT_FOUND("variant Id") })
+    }
+
+    const variant = await Variant.findOne({ _id: new mongoose.Types.ObjectId(variantId) })
+    if (!variant) {
+      console.log(' variant id');
+
+      return res.status(StatusCodes.NOT_FOUND), json({ success: false, message: statusMessages.NOT_FOUND("variant ") })
+    }
+
+    variant.isDeleted = true
+    await variant.save()
+
+    return res.status(StatusCodes.OK).json({ success: true, message: statusMessages.DELETED("Variant") })
   } catch (error) {
-    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({success:true,message:statusMessages.SERVER_ERROR})
+    console.log(error);
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR), json({ success: false, message: statusMessages.SERVER_ERROR })
+  }
+}
+
+const getAdminProduct = async (req, res) => {
+  console.log('get admin product');
+
+  try {
+    const productId = req.params.productId
+    if (!productId) {
+      console.log('productid notfound');
+      return res.status(StatusCodes.OK).json({ success: true, message: statusMessages.NOT_FOUND(" product id") })
+    }
+    const product = await Product.findOne({ _id: new mongoose.Types.ObjectId(productId) })
+    if (!product) {
+      console.log('product notfound');
+      return res.status(StatusCodes.OK).json({ success: true, message: statusMessages.NOT_FOUND(" product ") })
+    }
+    //get categories
+    const categories = await Category.find({ isDeleted: false })
+    return res.status(StatusCodes.OK).json({ success: true, product, categories })
+  } catch (error) {
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: true, message: statusMessages.SERVER_ERROR })
   }
 }
 module.exports = {
