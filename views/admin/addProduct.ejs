@@ -56,14 +56,14 @@
                             class="form-container" novalidate>
                             <div class="row">
                                 <!-- Left Column -->
-                                <div class="col-md-6">
+                                <div class="col-md-6" id="productData">
                                     <!-- Product Name -->
                                     <div class="mb-3">
                                         <label class="form-label">Product Name</label>
                                         <input type="text" class="form-control" value="" name="productName" required>
                                     </div>
 
-                                    <!-- Category & Subcategory in One Row -->
+
                                     <div class="row">
                                         <div class="col-md-6 mb-3">
                                             <label class="form-label">Category</label>
@@ -77,100 +77,122 @@
                                             </select>
                                         </div>
                                         <div class="col-md-6 mb-3">
-                                            <label class="form-label">Stock</label>
-                                            <input class="form-control" value="" type="number" name="stock" min="0" required>
+                                            <label class="form-label">Price (₹ )</label>
+                                            <input type="number" class="form-control" value="" name="price" min="0"
+                                                required>
                                         </div>
                                     </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Description</label>
+                                        <textarea class="form-control" name="description" rows="3"></textarea>
+                                    </div>
 
-                                    <!-- Brand & Price in One Row -->
                                     <div class="row">
                                         <div class="col-md-6 mb-3">
                                             <label class="form-label">Brand</label>
                                             <input type="text" class="form-control" name="brand">
                                         </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Price (₹ )</label>
-                                            <input type="number" class="form-control" value="" name="price" min="0" required>
-                                        </div>
-                                    </div>
 
-                                    <!-- Color & Size in One Row -->
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Color</label>
-                                            <select class="form-select" name="color">
-                                                <option value="">Select Color</option>
-                                                <option value="red">Red</option>
-                                                <option value="blue">Blue</option>
-                                                <option value="black">Black</option>
-                                                <option value="white">White</option>
-                                                <option value="Orange">Orange</option>
-                                                <option value="Peach">Peach</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Size</label>
-                                            <select class="form-select" name="size">
-                                                <option value="">Select Size</option>
-                                                <option value="S">Small</option>
-                                                <option value="M">Medium</option>
-                                                <option value="L">Large</option>
-                                                <option value="XL">Extra Large</option>
-                                            </select>
-                                        </div>
                                     </div>
+                                    <!-- Description -->
+
+
                                 </div>
 
                                 <!-- Right Column -->
-                                <div class="col-md-6">
-                                    <!-- Description -->
-                                    <div class="mb-3">
-                                        <label class="form-label">Description</label>
-                                        <textarea class="form-control" name="description" rows="3"></textarea>
-                                    </div>
-                                    <!-- Checkboxes in One Row -->
-                                    <div class="d-flex align-items-center mb-3">
-                                        <div class="form-check me-3">
-                                            <input class="form-check-input" type="checkbox" name="isListed"
-                                                value="true">
-                                            <label class="form-check-label">List this product</label>
+                                <div id="variantColumn" class="col-md-6">
+                                    <div class="variant-block">
+
+                                        <div class="row">
+
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Size</label>
+                                                <select class="form-select" name="size">
+                                                    <option value="">Select Size</option>
+                                                    <option value="S">Small</option>
+                                                    <option value="M">Medium</option>
+                                                    <option value="L">Large</option>
+                                                    <option value="XL">Extra Large</option>
+                                                    <option value="FS">Free Size</option>
+                                                </select>
+                                            </div>
+                                            <div id="colorSelect" class="col-md-6 mb-3">
+                                                <label class="form-label">Color</label>
+                                                <select class="form-select" name="color">
+                                                    <option value="">Select Color</option>
+                                                    <option value="red">Red</option>
+                                                    <option value="blue">Blue</option>
+                                                    <option value="black">Black</option>
+                                                    <option value="white">White</option>
+                                                    <option value="orange">Orange</option>
+                                                    <option value="peach">Peach</option>
+                                                    <option value="green">Green</option>
+                                                    <option value="yellow">Yellow</option>
+                                                    <option value="pink">Pink</option>
+                                                    <option value="violet">Violet</option>
+                                                </select>
+                                            </div>
                                         </div>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="isActive"
-                                                value="true">
-                                            <label class="form-check-label">Set as Active</label>
+                                        <div class="row">
+
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Stock</label>
+                                                <input class="form-control" value="" type="number" name="stock" min="0"
+                                                    required>
+
+                                            </div>
                                         </div>
+                                        <!-- Checkboxes in One Row -->
+                                        <div class="d-flex align-items-center mb-3">
+                                            <div class="form-check me-3">
+                                                <input class="form-check-input" type="checkbox" name="isListed"
+                                                    value="true">
+                                                <label class="form-check-label">List this product</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="isActive"
+                                                    value="true">
+                                                <label class="form-check-label">Set as Active</label>
+                                            </div>
+                                        </div>
+                                        <!-- Other form fields -->
+                                        <div class="mb-3">
+                                            <label class="form-label">Upload Images</label>
+                                            <!-- In the file upload input -->
+                                            <input type="file" class="form-control" id="imageInput" name="imageInput"
+                                                multiple accept="image/*" required
+                                                title="Please select at least one image">
+
+                                            <!-- Hidden input to store uploaded image paths -->
+                                            <input type="hidden" id="uploadedImagesInput" name="uploadedImages">
+                                        </div>
+
+                                        <!-- Image Preview Container -->
+                                        <div id="previewContainer" style="display: flex; flex-wrap: wrap; gap: 10px;">
+                                        </div>
+
+                                        <!-- Cropped Canvas (Hidden) -->
+                                        <canvas id="croppedCanvas" style="display: none;"></canvas>
+
+                                        <button class="btn btn-primary" type="button" id="cropButton">Crop &
+                                            Upload</button>
+
+
                                     </div>
-                                    <!-- Other form fields -->
-                                    <div class="mb-3">
-                                        <label class="form-label">Upload Images</label>
-                                        <!-- In the file upload input -->
-                                        <input type="file" class="form-control" id="imageInput" name="imageInput"
-                                            multiple accept="image/*" required title="Please select at least one image">
-
-                                        <!-- Hidden input to store uploaded image paths -->
-                                        <input type="hidden" id="uploadedImagesInput" name="uploadedImages">
-                                    </div>
-
-                                    <!-- Image Preview Container -->
-                                    <div id="previewContainer" style="display: flex; flex-wrap: wrap; gap: 10px;"></div>
-
-                                    <!-- Cropped Canvas (Hidden) -->
-                                    <canvas id="croppedCanvas" style="display: none;"></canvas>
-
-                                    <button class="btn btn-primary" type="button" id="cropButton">Crop & Upload</button>
-
 
 
                                     <!-- Buttons in One Row -->
                                     <div class="d-flex justify-content-end">
                                         <button type="reset" class="btn btn-secondary me-2">reset</button>
-                                        <button type="button" class="btn btn-secondary me-2"><a style="text-decoration: none;color: white;"
+                                        <button type="button" class="btn btn-secondary me-2"><a
+                                                style="text-decoration: none;color: white;"
                                                 href="/product/products">Back</a></button>
                                         <button type="submit" id="addProductForm" class="btn btn-primary">Add
                                             Product</button>
                                     </div>
                         </form>
+                        <button id="addVariant" class="btn btn-primary" style="display: none;">Save
+                        </button>
                     </div>
             </div>
 
@@ -191,7 +213,7 @@
                 const imageInput = document.getElementById('imageInput');
                 const previewContainer = document.getElementById('previewContainer');
                 const cropButton = document.getElementById('cropButton');
-                
+
                 const addForm = document.getElementById('addForm');
                 const uploadedImagesInput = document.getElementById('uploadedImagesInput');
                 let cropInstances = {};
@@ -329,7 +351,7 @@
                                 showConfirmButton: false,
                                 timer: 1000
                             });
-
+                              cropInstances = {};
                             // Update hidden input with uploaded image paths
                             if (uploadedImagesInput) {
                                 uploadedImagesInput.value = JSON.stringify(uploadedImagePaths);
@@ -362,59 +384,74 @@
                     for (let [key, value] of formData.entries()) {
                         console.log(`${key}: ${value}`);
                     }
-                    const productName=formData.get('productName').trim()
+                    const productName = formData.get('productName').trim()
                     console.log(productName);
-                    if(!productName){
-                      return  Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text:"Product Name cannot be empty"
-                            })
+                    if (!productName) {
+                        return Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: "Product Name cannot be empty"
+                        })
                     }
-                    if(productName.length<3){
-                        return  Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text:"Product Name Should contain at least 3 letters"
-                            })
+                    if (productName.length < 3) {
+                        return Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: "Product Name Should contain at least 3 letters"
+                        })
                     }
-                    if(productName.length>20){
-                        return  Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text:"Product Name Should not contain more than 20 letters"
-                            })
+                    if (productName.length > 20) {
+                        return Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: "Product Name Should not contain more than 20 letters"
+                        })
                     }
-                     if(/^\d/.test(productName)){
-                         return  Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text:"Product Name Should not sart with numbers"
-                            })
-                     }
-                     const stock=formData.get('stock')
-                     if(stock<0){
-                         return  Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text:"Stock cannot be less than zero"
-                            })
-                     }
-                      if(!stock){
-                         return  Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text:"Stock cannot be empty"
-                            })
-                     }
-                     const price=formData.get('price')
-                     if(price==0){
-                         return  Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text:"Price cannot be zero"
-                            })
-                     }
+                    if (/^\d/.test(productName)) {
+                        return Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: "Product Name Should not sart with numbers"
+                        })
+                    }
+                    const stock = formData.get('stock')
+                    if (stock < 0) {
+                        return Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: "Stock cannot be less than zero"
+                        })
+                    }
+                    if (!stock) {
+                        return Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: "Stock cannot be empty"
+                        })
+                    }
+                    const price = formData.get('price')
+                    if (price == 0) {
+                        return Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: "Price cannot be zero"
+                        })
+                    }
+                    if (price < 0) {
+                        return Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: "Price cannot be less than zero"
+                        })
+                    }
+                    if (price > 10000) {
+                        return Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: "Price cannot be greater than 10000"
+                        })
+                    }
+
 
                     try {
                         const response = await fetch("/product/products/add", {
@@ -423,21 +460,76 @@
                         });
 
                         const result = await response.json();
-
                         if (result.success) {
-                            Swal.fire({
-                                icon: "success",
-                                title: 'Product Added Successfully ',
-                                showConfirmButton: false,
-                                timer: 1000
-                            }).then(() => {
-                                // Reset form and preview
-                                addForm.reset();
-                                previewContainer.innerHTML = '';
-                                uploadedImagePaths = [];
-                                uploadedImagesInput.value = '';
+
+                            const swalWithBootstrapButtons = Swal.mixin({
+                                customClass: {
+                                    confirmButton: "btn btn-success",
+                                    cancelButton: "btn btn-secondary"
+                                },
+                                buttonsStyling: false
                             });
-                            window.location.href = '/product/products'
+
+                            swalWithBootstrapButtons.fire({
+                                title: "Add Another Variant?",
+                                text: "The product was added successfully. Do you want to add another variant for this product?",
+                                icon: "question",
+                                showCancelButton: true,
+                                confirmButtonText: "Yes, add more",
+                                cancelButtonText: "No, I'm done",
+                                reverseButtons: true
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                  
+                                    const productData = document.getElementById('productData')
+                                    const inputs = productData.querySelectorAll('input, select, textarea');
+                                    // Disable each field
+                                    inputs.forEach(input => {
+                                        input.setAttribute('readonly', true);
+                                    });
+
+                                    const variantColumn = document.getElementById('variantColumn')
+                                    // Clear all inputs & selects (except checkboxes and readonly/disabled)
+                                    const variantInputs = variantColumn.querySelectorAll('input:not([readonly]):not([type="checkbox"]), select, textarea');
+
+                                    variantInputs.forEach(input => {
+                                        input.value = '';
+                                    });
+                                    //unckheck check boxes
+                                    const checkboxes = variantColumn.querySelectorAll('input[type="checkbox"]');
+                                    checkboxes.forEach(checkbox => {
+                                        checkbox.checked = false;
+                                    });
+
+                                    // Clear image preview and input
+                                    const previewContainer = document.getElementById('previewContainer');
+                                    previewContainer.innerHTML = '';
+
+                                    const imageInput = document.getElementById('imageInput');
+                                    imageInput.value = '';
+
+                                   
+                                    uploadedImagesInput.value = '' 
+                                    uploadedImagePaths = []; 
+
+                                } else if (result.dismiss === Swal.DismissReason.cancel) {
+                                    Swal.fire({
+                                        title: "All Done!",
+                                        text: "Product and variant saved successfully.",
+                                        icon: "success"
+                                    }).then(() => {
+                                        const productData = document.getElementById('productData');
+                                        const inputs = productData.querySelectorAll('input, select, textarea');
+                                        inputs.forEach(input => {
+                                            input.removeAttribute('readonly');
+                                        });
+                                        // ✅ Redirect or reset the form
+                                        window.location.href = "/product/products"; // or wherever you want
+                                    });
+                                }
+                            });
+
+
                         } else {
                             Swal.fire({
                                 icon: 'error',
@@ -445,6 +537,27 @@
                                 text: result.message || 'Failed to add product'
                             });
                         }
+                        // if (result.success) {
+                        //     Swal.fire({
+                        //         icon: "success",
+                        //         title: 'Product Added Successfully ',
+                        //         showConfirmButton: false,
+                        //         timer: 1000
+                        //     }).then(() => {
+                        //         // Reset form and preview
+                        //         addForm.reset();
+                        //         previewContainer.innerHTML = '';
+                        //         uploadedImagePaths = [];
+                        //         uploadedImagesInput.value = '';
+                        //     });
+                        //     window.location.href = '/product/products'
+                        // } else {
+                        //     Swal.fire({
+                        //         icon: 'error',
+                        //         title: 'Error',
+                        //         text: result.message || 'Failed to add product'
+                        //     });
+                        // }
                     } catch (error) {
                         console.error("Error submitting form:", error);
                         Swal.fire({
@@ -456,7 +569,8 @@
                 });
 
             });
-        
+
+
         </script>
 </body>
 

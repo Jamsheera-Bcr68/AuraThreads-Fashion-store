@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const productSchema = new mongoose.Schema({
+const productSchema =new mongoose.Schema({
   productName: { type: String, required: true },
   price: { type: Number, required: true },
   categoryId: {
@@ -16,8 +16,8 @@ const productSchema = new mongoose.Schema({
   images: [String],
   brand: String,
   rating: Number,
-  isListed: Boolean,
-  isActive: Boolean,
+  isListed:{type:Boolean,default:false},
+  isActive: {type:Boolean,default:false},
   isDeleted: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },

@@ -217,33 +217,6 @@ router.post('/upload',upload.single('image'),categoryController.uploadImage)
 router.put('/category/edit/:id',adminAuth,categoryController.editCategory)
 router.delete('/category/delete/:id',adminAuth,categoryController.deleteCategory)
 
-// router.delete("/category/delete/:id",adminAuth, async (req, res) => {
-//   const { id } = req.params;
-//   console.log("from delete routes");
-
-//   try {
-//     const softDeleteCategory = await category.findByIdAndUpdate(
-//       id,
-//       { isDeleted: true },
-//       { new: true },
-//     );
-//     if (!softDeleteCategory) {
-//       console.log("Category not found");
-
-//       return res.json({ success: false, message: "Category not found" });
-//     } else {
-//       console.log("Category Deleted successfully");
-//       console.log("soft deleted category " + softDeleteCategory);
-//       return res.json({
-//         success: true,
-//         message: "Category Deleted successfully",
-//       });
-//     }
-//   } catch (error) {
-//     console.log("error on deleting category", error);
-//     return res.json({ success: false, message: "Error in delting category" });
-//   }
-// });
 
 //get usermangement
 router.get("/users",adminAuth, async (req, res) => {

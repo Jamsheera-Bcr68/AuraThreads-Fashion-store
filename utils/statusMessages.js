@@ -11,7 +11,7 @@ const statusMessages = {
   REQUIRED: (item) => `${item} is required.`,
   INVALID: (item) => `${item} is invalid.`,
   OUT_OF_STOCK: (item) => `${item} is currently out of stock.`,
-SERVER_ERROR: 'Internal server error. Please try again later.'
+   SERVER_ERROR: 'Internal server error. Please try again later.'
 };
 
 

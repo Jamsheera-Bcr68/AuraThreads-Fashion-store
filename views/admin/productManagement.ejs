@@ -17,12 +17,32 @@
       max-width: 100%;
     }
 
+
+
+    .alert:empty {
+      display: none;
+    }
+
+
+
     body {
       margin: 0;
     }
 
-    .alert:empty {
-      display: none;
+    .form-container {
+      margin-left: 1rem;
+      padding: 20px;
+      border: 1px solid blue;
+      border-radius: 5px;
+      background-color: #f8f9fa;
+    }
+
+    .row {
+      margin-top: 1rem;
+    }
+
+    .form-check-label {
+      margin-left: 5px;
     }
   </style>
   <div class="container ">
@@ -46,7 +66,8 @@
                   <% } %>
                     <!-- Add Product Button -->
                     <div class="text-end mb-3">
-                      <a href="/product/products/add" class="btn btn-primary">Add Product</a>
+                      <!-- Button to trigger modal -->
+                      <a href="/product/products/add " class=" btn btn-primary">Add Product</a>
                     </div>
 
                     <!-- Product Table -->
@@ -67,26 +88,32 @@
                           <% products.forEach((product, index)=> { %>
                             <tr id="row-<%= product._id %>">
                               <td>
-                               #PRD<%= product._id.toString().slice(-6) %>
+                                #PRD<%= product._id.toString().slice(-6) %>
                               </td>
                               <td>
-                                <img src="<%= product.images[0] %>" alt="Product Image"
-                                  style="width: 60px; height: auto;">
+                                <img
+                                  src="<%= product.mainVariant?.images?.[0] || product.images?.[0] || 'no-image.png' %>"
+                                  alt="Product Image" style="width: 60px; height: auto;">
                               </td>
                               <td>
-                                <%= product.productName %>
+                                <%= product.product.productName ||product.productName %>
                               </td>
-                              <td>₹ <%= product.price %>
-                              </td>
-                              <td>
-                                <%= product.categoryId.categoryName %>
+                              <td>₹ <%= product.product.price ||product.price %>
                               </td>
                               <td>
-                                <%= product.stock %>
+                                <%= product.category.categoryName %>
                               </td>
                               <td>
-                                <a href="/product/products/edit/<%= product._id %>"
-                                  class="btn btn-warning btn-sm">Edit</a>
+                                <%= product.mainVariant?.stock || product.stock %>
+                              </td>
+                              <td>
+                                <a href="/product/viewVariants/<%= product.product._id %>/<%= product?.category?._id %>"
+                                  class="btn btn-primary btn-sm">View Variant</a>
+                                <button type="button" class="btn btn-warning btn-sm"
+                                  onclick="openEditProductModal('<%= product.product._id %>')">
+                                  Edit
+                                </button>
+
                                 <a href="#" class="btn btn-danger btn-sm" onclick="confirmDeletion('<%= product._id %>');
      return false;">Delete</a>
                               </td>
@@ -135,6 +162,85 @@
 
 
   <%- include('../partials/footer') %>
+
+    <!-- Edit Product Modal -->
+    <div class="modal fade" id="editProductModal" tabindex="-1" aria-labelledby="editProductModalLabel"
+      aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+          <!-- Modal Header -->
+          <div class="modal-header">
+            <h5 class="modal-title" id="editProductModalLabel">Edit Product</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+
+          <!-- Modal Body -->
+          <div class="modal-body">
+            <form id="editProductForm">
+
+              <!-- Product Name -->
+              <div class="mb-3">
+                <label for="editProductName" class="form-label">Product Name</label>
+                <input type="text" class="form-control" id="editProductName" name="productName" required>
+              </div>
+
+              <!-- Category Select -->
+              <div class="mb-3">
+                <label for="editProductCategory" class="form-label">Category</label>
+                <select class="form-select" id="editProductCategory" name="categoryId" required>
+                  <!-- Options will be filled dynamically -->
+                </select>
+              </div>
+
+              <!-- Price -->
+              <div class="mb-3">
+                <label for="editProductPrice" class="form-label">Price</label>
+                <input type="number" class="form-control" id="editProductPrice" name="price" min="0" step="0.01"
+                  required>
+              </div>
+
+              <!-- Description -->
+              <div class="mb-3">
+                <label for="editProductDescription" class="form-label">Description</label>
+                <textarea class="form-control" id="editProductDescription" name="description" rows="3"></textarea>
+              </div>
+
+              <!-- Brand -->
+              <div class="mb-3">
+                <label for="editProductBrand" class="form-label">Brand</label>
+                <input type="text" class="form-control" id="editProductBrand" name="brand">
+              </div>
+
+              <!-- Is Listed -->
+              <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" value="true" id="editProductIsListed" name="isListed">
+                <label class="form-check-label" for="editProductIsListed">
+                  Listed
+                </label>
+              </div>
+
+              <!-- Is Active -->
+              <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" value="true" id="editProductIsActive" name="isActive">
+                <label class="form-check-label" for="editProductIsActive">
+                  Active
+                </label>
+              </div>
+
+              <!-- Hidden Product ID -->
+              <input type="hidden" id="editProductId" name="productId">
+
+              <!-- Submit -->
+              <button type="submit" class="btn btn-primary">Save Changes</button>
+            </form>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
@@ -165,7 +271,7 @@
                     showConfirmButton: false,
                     timer: 1000
                   }).then(() => {
-                    const row=document.getElementById(`row-${productId}`)
+                    const row = document.getElementById(`row-${productId}`)
                     row.remove()
                     //location.reload(); // Reload page after deletion
                   });
@@ -188,6 +294,172 @@
           }
         });
       }
+
+      function openEditProductModal(productId) {
+        console.log('editModal');
+        console.log('productId', productId);
+
+        fetch(`/product/product/${productId}`, { method: "GET" })
+          .then(res => res.json())
+          .then(data => {
+            if (data && data.success) {
+              const product = data.product
+
+              const categories=data.categories
+              console.log('product reached',product);
+              
+
+              document.getElementById('editProductId').value = product._id;
+              document.getElementById('editProductName').value = product.productName;
+              document.getElementById('editProductPrice').value = product.price;
+              document.getElementById('editProductDescription').value = product.description || '';
+              document.getElementById('editProductBrand').value = product.brand || '';
+              document.getElementById('editProductIsListed').checked = product.isListed;
+              document.getElementById('editProductIsActive').checked = product.isActive;
+
+              // Fill category options:
+              const categorySelect = document.getElementById('editProductCategory');
+              categorySelect.innerHTML = ''; // clear
+              categories.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat._id;
+                option.textContent = cat.categoryName;
+                if (cat._id === product.categoryId) {
+                  option.selected = true;
+                }
+                categorySelect.appendChild(option);
+              });
+
+              const modal = new bootstrap.Modal(document.getElementById('editProductModal'));
+              modal.show();
+
+
+
+            } else {
+              Swal.fire(data.message)
+            }
+          }).catch(err => {
+            console.log(err);
+            Swal.fire("Server error")
+          })
+
+      }
+    
+    const editForm=document.getElementById('editProductForm')
+      editForm.addEventListener('submit', function (e) {
+            e.preventDefault()
+            console.log('edit form submitted');
+            const formData = new FormData(this)
+
+            const images = formData.getAll('images');
+            console.log('Images:', images);
+
+            if (images.length > 5) {
+                return Swal.fire({
+                    icon: 'error',
+
+                    text: "you can upload only upto 5 images"
+                });
+            }
+            const formObject = Object.fromEntries(formData);
+            console.log(formObject);
+
+            const productName = formObject.productName.trim();
+            console.log(productName);
+
+            if (!productName) {
+                return Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: "Product Name cannot be empty"
+                });
+            }
+
+            if (productName.length < 3) {
+                return Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: "Product Name should contain at least 3 letters"
+                });
+            }
+
+            if (productName.length > 20) {
+                return Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: "Product Name should not contain more than 20 letters"
+                });
+            }
+
+            if (/^\d/.test(productName)) {
+                return Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: "Product Name should not start with numbers"
+                });
+            }
+
+           
+           
+
+            const price = Number(formObject.price);
+            if (isNaN(price) || price === 0) {
+                return Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: "Price cannot be zero"
+                });
+            }
+            const productId = formObject.productId
+
+            if (price < 0) {
+                return Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: "Price cannot be less than zero"
+                })
+            }
+            if (price > 10000) {
+                return Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: "Price cannot be greater than 10000"
+                })
+            }
+
+
+            fetch(`/product/products/edit/${productId}`, {
+                method: 'POST',
+
+                body: formData,
+
+            }).then(res => res.json())
+                .then(data => {
+                    if (data && data.success) {
+                        Swal.fire({
+                            icon: "success",
+                            title: 'Product Updated Successfully ',
+                            showConfirmButton: false,
+                            timer: 1000
+                        })
+                        const product=data.updatedProduct
+                        
+
+                        window.location.href = '/product/products'
+                    } else {
+                        Swal.fire({
+                            icon: "error",
+                            title: data.message,
+                            showConfirmButton: false,
+                            timer: 1000
+                        })
+                    }
+                }).catch(err => {
+                    Swal.fire('Server Error')
+                })
+        })
+
+   
     </script>
 </body>
 

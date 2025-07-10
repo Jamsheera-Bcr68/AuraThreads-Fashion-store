@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>variants</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+
+<body>
+    <style>
+        .container {
+            margin-left: 0;
+            margin-right: 0;
+            padding: 0;
+            max-width: 100%;
+        }
+
+
+
+        .alert:empty {
+            display: none;
+        }
+
+
+
+        body {
+            margin: 0;
+        }
+
+        .form-container {
+            margin-left: 1rem;
+            padding: 20px;
+            border: 1px solid blue;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+        }
+
+        .row {
+            margin-top: 1rem;
+        }
+
+        .form-check-label {
+            margin-left: 5px;
+        }
+    </style>
+    <div class="container ">
+        <!-- Include Header -->
+        <%- include('../partials/header.ejs') %>
+
+            <div class="d-flex" id="wrapper">
+                <!-- Include Sidebar -->
+                <%- include('../partials/sidebar') %>
+
+                    <div class="container p-4">
+                        <% if (successMessage.length> 0) { %>
+                            <div class="alert alert-success">
+                                <%= successMessage %>
+                            </div>
+                            <% } %>
+                                <% if (errorMessage.length> 0) { %>
+                                    <div class="alert alert-danger">
+                                        <%= errorMessage %>
+                                    </div>
+                                    <% } %>
+                                        <!-- Add Product Button -->
+                                        <div class="text-end mb-3">
+                                            <!-- Button to trigger modal -->
+                                            <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                                                data-bs-target="#addVariantModal"
+                                                onclick="openVariantModal('<%= productId %>')">
+                                                Add Variant
+                                            </button>
+                                        </div>
+
+                                        <!-- Variant Table -->
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered">
+                                                <thead class="table-primary">
+                                                    <tr>
+                                                        <th>Variant Id</th>
+                                                        <th>Image</th>
+                                                        <th>Product Name</th>
+                                                        <th>Color</th>
+                                                        <th>Size</th>
+                                                        <th>Price</th>
+                                                        <th>Category</th>
+                                                        <th>Stock</th>
+                                                        <th>Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <% variants.forEach((variant)=> { %>
+                                                        <tr id="row-<%= variant._id %>">
+                                                            <td>#VAR<%= variant._id.toString().slice(-6) %>
+                                                            </td>
+
+                                                            <td>
+                                                                <img src="<%= variant.images?.[0] || 'no-image.png' %>"
+                                                                    alt="Variant Image"
+                                                                    style="width: 60px; height: auto;">
+                                                            </td>
+
+                                                            <td>
+                                                                <%= variant.product.productName %>
+                                                            </td>
+
+                                                            <td>
+                                                                <%= variant.color %>
+                                                            </td>
+                                                            <td>
+                                                                <%= variant.size %>
+                                                            </td>
+
+                                                            <td>₹ <%= variant.product.price %>
+                                                            </td>
+
+                                                            <td>
+                                                                <%= variant.category?.categoryName || 'Uncategorized' %>
+                                                            </td>
+
+                                                            <td>
+                                                                <%= variant.stock %>
+                                                            </td>
+
+                                                            <td>
+                                                                <button type="button" class="btn btn-primary btn-sm"
+                                                                    onclick="openEditVariantModal('<%=variant._id %>')">
+                                                                    Edit
+                                                                </button>
+
+                                                                <a href="#" class="btn btn-danger btn-sm"
+                                                                    onclick="confirmDeletion('<%= variant._id %>'); return false;">
+                                                                    Delete
+                                                                </a>
+                                                            </td>
+                                                        </tr>
+                                                        <% }) %>
+                                                </tbody>
+                                            </table>
+                                        </div>
+
+                    </div>
+            </div>
+    </div>
+
+    <!--Pagination-->
+    <nav>
+        <ul class="pagination justify-content-center">
+            <!-- Previous Button -->
+            <% if (currentPage> 1) { %>
+                <li class="page-item">
+                    <a class="page-link" href="?page=<%= currentPage - 1 %>&limit=5">Previous</a>
+                </li>
+                <% } else { %>
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" tabindex="-1">Previous</a>
+                    </li>
+                    <% } %>
+
+                        <!-- Page Numbers -->
+                        <% for (let i=1; i <=totalPages; i++) { %>
+                            <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+                                <a class="page-link" href="?page=<%= i %>&limit=5">
+                                    <%= i %>
+                                </a>
+                            </li>
+                            <% } %>
+
+                                <!-- Next Button -->
+                                <% if (currentPage < totalPages) { %>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=<%= currentPage + 1 %>&limit=5">Next</a>
+                                    </li>
+                                    <% } else { %>
+                                        <li class="page-item disabled">
+                                            <a class="page-link" href="#">Next</a>
+                                        </li>
+                                        <% } %>
+        </ul>
+    </nav>
+
+
+    <%- include('../partials/footer') %>
+        <!-- Add Variant Modal -->
+        <div class="modal fade" id="addVariantModal" tabindex="-1" aria-labelledby="addVariantModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog">
+                <form id="addForm" action="/product/variant/add" method="POST" enctype="multipart/form-data">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="addVariantModalLabel">Add Variant</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+
+                        <div class="modal-body">
+
+                            <!-- Hidden Product ID -->
+                            <input type="hidden" name="productId" id="variantProductId" value="<%= productId %>">
+                            <input type="hidden" name="categoryId" id="variantCategoryId" value="<%= categoryId %>">
+                            <div class="mb-3">
+                                <label for="color" class="form-label">Color</label>
+
+                                <select class="form-select" name="color" required>
+                                    <option value="">Select Color</option>
+                                    <option value="red">Red</option>
+                                    <option value="blue">Blue</option>
+                                    <option value="black">Black</option>
+                                    <option value="white">White</option>
+                                    <option value="orange">Orange</option>
+                                    <option value="peach">Peach</option>
+                                    <option value="green">Green</option>
+                                    <option value="yellow">Yellow</option>
+                                     <option value="pink">Pink</option>
+                                    <option value="violet">Violet</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="size" class="form-label">Size</label>
+                                <select class="form-select" name="size" required>
+                                    <option value="">Select Size</option>
+                                    <option value="S">Small</option>
+                                    <option value="M">Medium</option>
+                                    <option value="L">Large</option>
+                                    <option value="XL">Extra Large</option>
+                                    <option value="FS">Free Size</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="stock" class="form-label">Stock</label>
+                                <input type="number" class="form-control" name="stock" min="1" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="image" class="form-label">Variant Image</label>
+                                <input type="file" class="form-control" name="images" id="variantImageInput"
+                                    accept="image/*" multiple onchange="previewMultipleImages(event)">
+                            </div>
+
+                            <!-- Preview Area -->
+                            <!-- Image Preview Container -->
+                            <div class="mb-3" id="variantImagePreviewContainer"
+                                style="display: flex; gap: 10px; flex-wrap: wrap;"></div>
+                        </div>
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="form-check me-3">
+                                <input class="form-check-input" type="checkbox" name="isListed" value="true">
+                                <label class="form-check-label">List this product</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="isActive" value="true">
+                                <label class="form-check-label">Set as Active</label>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary">Add Variant</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        </div>
+                    </div>
+
+
+            </div>
+            </form>
+        </div>
+        </div>
+
+        <!-- Edit Variant Modal -->
+        <div class="modal fade" id="editVariantModal" tabindex="-1" aria-labelledby="editVariantModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog">
+                <form id="editForm" action="/product/variant/edit" method="POST" enctype="multipart/form-data">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="editVariantModalLabel">Edit Variant</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+
+                        <div class="modal-body">
+                            <!-- Hidden IDs -->
+                            <input type="hidden" name="variantId" id="editVariantId">
+                            <input type="hidden" value="<%= productId %>" name="productId" id="editProductId">
+                            <input type="hidden" name="categoryId" id="editCategoryId">
+
+                            <!-- Color -->
+                            <div class="mb-3">
+                                <label for="editColor" class="form-label">Color</label>
+                                <select class="form-select" name="color" id="editColor" required>
+                                    <option value="">Select Color</option>
+                                    <option value="red">Red</option>
+                                    <option value="blue">Blue</option>
+                                    <option value="black">Black</option>
+                                    <option value="white">White</option>
+                                    <option value="orange">Orange</option>
+                                    <option value="peach">Peach</option>
+                                    <option value="green">Green</option>
+                                    <option value="yellow">Yellow</option>
+                                     <option value="pink">Pink</option>
+                                  <option value="violet">Violet</option>
+                                </select>
+                            </div>
+
+                            <!-- Size -->
+                            <div class="mb-3">
+                                <label for="editSize" class="form-label">Size</label>
+                                <select class="form-select" name="size" id="editSize" required>
+                                    <option value="">Select Size</option>
+                                    <option value="S">Small</option>
+                                    <option value="M">Medium</option>
+                                    <option value="L">Large</option>
+                                    <option value="XL">Extra Large</option>
+                                    <option value="FS">Free Size</option>
+                                </select>
+                            </div>
+
+                            <!-- Stock -->
+                            <div class="mb-3">
+                                <label for="editStock" class="form-label">Stock</label>
+                                <input type="number" class="form-control" name="stock" id="editStock" min="1" required>
+                            </div>
+
+                            <!-- Images -->
+                            <div class="mb-3">
+                                <label for="editImages" class="form-label">Variant Images</label>
+                                <input type="file" class="form-control" name="images" id="editImages" accept="image/*"
+                                    multiple onchange="previewEditImages(event)">
+                            </div>
+
+                            <!-- Existing Images Preview -->
+                            <div class="mb-3" id="editVariantImagePreviewContainer"
+                                style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                <!-- JS will fill this -->
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="form-check me-3">
+                                <input class="form-check-input" type="checkbox" name="isListed" id="editIsListed"
+                                    value="true">
+                                <label class="form-check-label">List this product</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="isActive" id="editIsActive"
+                                    value="true">
+                                <label class="form-check-label">Set as Active</label>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary">Update Variant</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script>
+            function openVariantModal(productId) {
+                document.getElementById('variantProductId').value = productId;
+            }
+
+            function previewMultipleImages(event) {
+                const files = event.target.files;
+                const container = document.getElementById('variantImagePreviewContainer');
+                container.innerHTML = ""; // Clear previous previews
+
+                if (files.length === 0) return;
+
+                Array.from(files).forEach(file => {
+                    if (file.type.startsWith("image/")) {
+                        const reader = new FileReader();
+
+                        reader.onload = function (e) {
+                            const img = document.createElement('img');
+                            img.src = e.target.result;
+                            img.style.maxWidth = "100px";
+                            img.style.height = "auto";
+                            img.style.borderRadius = "5px";
+                            img.style.objectFit = "cover";
+                            container.appendChild(img);
+                        };
+
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+
+            const addForm = document.getElementById('addForm')
+            addForm.addEventListener('submit', function (e) {
+                e.preventDefault()
+                console.log('add form submitted');
+
+                const formData = new FormData(this)
+                const formObject = Object.fromEntries(formData)
+                console.log(formObject);
+                const stock = formObject.stock
+
+                if (stock < 0) {
+                    return Swal.fire("Invalid Stock")
+                }
+                const images = formData.getAll('images');
+                if (images.length < 1) {
+                    return Swal.fire("Please add atleast one image")
+                }
+                if (images.length > 5) {
+                    return Swal.fire("Please select maximum 5 image")
+                }
+                const color = formObject.color
+                if (!color) {
+                    return Swal.fire("color not selected")
+                }
+                const size = formObject.size
+                if (!size) {
+                    return Swal.fire("Size not selected")
+                }
+                const productId = document.getElementById('variantProductId').value
+                console.log(productId);
+
+                fetch(`/product/variant/add`, {
+                    method: "POST",
+
+                    body: formData
+                }).then(res => res.json())
+                    .then(data => {
+                        if (data && data.success) {
+                            const variant = data.newVariant
+                            console.log('variant', variant);
+
+                            Swal.fire({
+                                icon: "success",
+                                title: data.message,
+                                showConfirmButton: false,
+                                timer: 1000
+                            }).then(() => {
+                                const modal = bootstrap.Modal.getInstance(document.getElementById('addVariantModal'));
+                                modal.hide();
+                                addForm.reset()
+                                appendVariantRow(variant)
+                            })
+
+                        } else {
+                            Swal.fire(data.message)
+                        }
+                    }).catch(err => {
+                        console.log(err);
+                        Swal.fire('Server error')
+                    })
+            })
+
+            function openEditVariantModal(variantId) {
+                console.log('variantId', variantId)
+                fetch(`/product/getvariant/${variantId}`, { method: "GET" }).then(res => res.json())
+                    .then(data => {
+                        if (data && data.success) {
+                            const variant = data.variant
+                            console.log(variant);
+
+                            document.getElementById('editVariantId').value = variantId;
+                            document.getElementById('editProductId').value = variant.productId;
+                            document.getElementById('editCategoryId').value = variant.categoryId;
+
+                            document.getElementById('editColor').value = variant.color;
+                            document.getElementById('editSize').value = variant.size;
+                            document.getElementById('editStock').value = variant.stock;
+
+                            document.getElementById('editIsListed').checked = variant.isListed;
+                            document.getElementById('editIsActive').checked = variant.isActive;
+
+                            // Render existing images
+                            const previewContainer = document.getElementById('editVariantImagePreviewContainer');
+                            previewContainer.innerHTML = '';
+
+                            if (variant.images && Array.isArray(variant.images) && variant.images.length > 0) {
+                                variant.images.forEach(img => {
+                                    const imgEl = document.createElement('img');
+                                    imgEl.src = img; // Full URL or path
+                                    imgEl.style.width = '80px';
+                                    imgEl.style.height = '80px';
+                                    imgEl.style.objectFit = 'cover';
+                                    imgEl.style.borderRadius = '6px';
+                                    imgEl.style.border = '1px solid #ddd';
+                                    previewContainer.appendChild(imgEl);
+                                });
+                            }
+                            const modal = new bootstrap.Modal(document.getElementById('editVariantModal'));
+                            modal.show();
+
+
+
+                        }
+                    })
+
+            }
+
+
+
+            const editForm = document.getElementById('editForm')
+            editForm.addEventListener('submit', function (e) {
+                e.preventDefault()
+                console.log('edit form submittted');
+                const formData = new FormData(this)
+                const formObject = Object.fromEntries(formData)
+                console.log(formObject);
+                const stock = formObject.stock
+
+                if (stock < 0) {
+                    return Swal.fire("Invalid Stock")
+                }
+                const images = formData.getAll('images');
+                if (images.length < 1) {
+                    return Swal.fire("Please add atleast one image")
+                }
+                if (images.length > 5) {
+                    return Swal.fire("Please select maximum 5 image")
+                }
+                const color = formObject.color
+                if (!color) {
+                    return Swal.fire("color not selected")
+                }
+                const size = formObject.size
+                if (!size) {
+                    return Swal.fire("Size not selected")
+                }
+                const variantId = document.getElementById('editVariantId').value
+                console.log(variantId);
+
+                fetch(`/product/variant/edit/${variantId}`, {
+                    method: "PATCH",
+
+                    body: formData
+                }).then(res => res.json())
+                    .then(data => {
+                        if (data && data.success) {
+                            const variant = data.variant
+                            // document.getElementById('variantImagePreviewContainer').innerHTML = "";
+                            Swal.fire({
+                                icon: "success",
+                                title: data.message,
+                                showConfirmButton: false,
+                                timer: 1000
+                            }).then(() => {
+                                const modal = bootstrap.Modal.getInstance(document.getElementById('editVariantModal'));
+                                modal.hide();
+                                editForm.reset()
+                                updateVariantRow(variant)
+                            })
+
+                        } else {
+                            Swal.fire(data.message)
+                        }
+                    }).catch(err => {
+                        console.log(err);
+                        Swal.fire('Server error')
+                    })
+            })
+
+            function previewEditImages(event) {
+                const files = event.target.files;
+
+                const previewContainer = document.getElementById('editVariantImagePreviewContainer');
+
+                // Clear previous NEW previews only — keep original images if no new files
+                if (files.length > 0) {
+                    previewContainer.innerHTML = ''; // Clear all existing images
+
+                    Array.from(files).forEach(file => {
+                        const reader = new FileReader();
+                        reader.onload = function (e) {
+                            const imgEl = document.createElement('img');
+                            imgEl.src = e.target.result;
+                            imgEl.style.width = '80px';
+                            imgEl.style.height = '80px';
+                            imgEl.style.objectFit = 'cover';
+                            imgEl.style.border = '1px solid #ccc';
+                            imgEl.style.borderRadius = '6px';
+                            previewContainer.appendChild(imgEl);
+                        };
+                        reader.readAsDataURL(file);
+                    });
+                } else {
+
+                    console.log('No new files selected, keep showing existing preview.');
+                }
+            }
+
+            function updateVariantRow(variant) {
+                console.log('variant', variant);
+
+                const row = document.getElementById(`row-${variant._id}`);
+                if (!row) return console.warn('Variant row not found!');
+
+                row.innerHTML = `
+    <td>#VAR${variant._id.slice(-6)}</td>
+    <td>
+      <img src="${variant.images?.[0] || 'no-image.png'}" alt="Variant Image"
+           style="width: 60px; height: auto;">
+    </td>
+    <td>${variant.productId?.productName || ''}</td>
+    <td>${variant.color || ''}</td>
+    <td>${variant.size || ''}</td>
+    <td>₹ ${variant.productId?.price || ''}</td>
+    <td>${variant.categoryId?.categoryName || 'Uncategorized'}</td>
+    <td>${variant.stock || ''}</td>
+    <td>
+      <button type="button" class="btn btn-primary btn-sm"
+        onclick="openEditVariantModal('${variant._id}')">
+        Edit
+      </button>
+      <a href="#" class="btn btn-danger btn-sm"
+        onclick="confirmDeletion('${variant._id}'); return false;">
+        Delete
+      </a>
+    </td>
+  `;
+            }
+
+
+            function appendVariantRow(variant) {
+                console.log('from append function');
+                console.log(variant);
+
+
+                const tbody = document.querySelector('tbody');
+
+                const newRow = document.createElement('tr');
+                newRow.id = `row-${variant._id}`;
+
+                newRow.innerHTML = `
+    <td>#VAR${variant._id.slice(-6)}</td>
+    <td>
+      <img src="${variant.images?.[0] || 'no-image.png'}" alt="Variant Image"
+           style="width: 60px; height: auto;">
+    </td>
+    <td>${variant.productId.productName || ''}</td>
+    <td>${variant.color || ''}</td>
+    <td>${variant.size || ''}</td>
+    <td>₹ ${variant.productId.price || ''}</td>
+    <td>${variant.categoryId.categoryName || 'Uncategorized'}</td>
+    <td>${variant.stock || ''}</td>
+    <td>
+      <button type="button" class="btn btn-primary btn-sm"
+        onclick="openEditVariantModal('${variant._id}')">
+        Edit
+      </button>
+      <a href="#" class="btn btn-danger btn-sm"
+        onclick="confirmDeletion('${variant._id}'); return false;">
+        Delete
+      </a>
+    </td>
+  `;
+
+                tbody.prepend(newRow);
+            }
+
+            function confirmDeletion(variantId) {
+                console.log('delete function');
+
+                console.log('vairant id', variantId);
+                Swal.fire({
+                    title: "Do you want to delete?",
+                    text: "You won't be able to revert this!",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#3085d6",
+                    cancelButtonColor: "#d33",
+                    confirmButtonText: "Yes, delete it!"
+                }).then((result) => {
+                    if (result.isConfirmed) {
+
+                        fetch(`/product/variant/${variantId}`,{
+                            method:"DELETE"
+                        }).then(res=>res.json())
+                        .then(data=>{
+                            if(data.success){
+                                 Swal.fire({
+                                icon: "success",
+                                title: data.message,
+                                showConfirmButton: false,
+                                timer: 1000
+                            }).then(()=>{
+                                const row=document.getElementById(`row-${variantId}`)
+                                row.remove()
+                            })
+                            }else{
+                                Swal.fire(data.message)
+                            }
+                        }).catch(err=>{
+                            console.log(err);
+                            
+                            Swal.fire("Server Error")
+                        })
+
+                        
+                    }
+                });
+            }
+
+        </script>
+</body>
+
+</html>
