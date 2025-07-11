@@ -14,6 +14,7 @@ const { route } = require("./product");
 const Order = require("../model/orderModel");
 const categoryController=require('../controllers/categoryController')
 const userController=require('../controllers/userController')
+const couponController=require('../controllers/couponController')
 
 // Display Login Page
 router.get("/login", adminController.getLogin);
@@ -233,23 +234,23 @@ router.post("/updateOrder", adminController.postUpdateOrder);
 router.delete("/cancelOrder/:orderId",adminAuth, adminController.cancelOrder);
 router.post("/logout",adminAuth, adminController.postLogout);
 
-//admin coupenMangement
-router.get("/coupens",adminAuth, adminController.getCoupenPage);
+//admin couponMangement
+router.get("/coupens",adminAuth, couponController.getCouponPage);
 
-//admin add coupen
-router.post("/addCoupon",adminAuth, adminController.addCoupen);
+//admin add coupon
+router.post("/addCoupon",adminAuth, couponController.addCoupon);
 
-//admin edit coupen
-router.put("/editCoupon/:couponId",adminAuth, adminController.editCoupen);
+//admin edit coupon
+router.put("/editCoupon/:couponId",adminAuth, couponController.editCoupon);
 
-//get coupen data
-router.get("/getCouponData/:coupenId",adminAuth, adminController.getCouponData);
+//get coupon data
+router.get("/getCouponData/:coupenId",adminAuth, couponController.getCouponData);
 
 //remove coupon
-router.delete("/removeCoupon/:couponId",adminAuth, adminController.removeCoupon);
+router.delete("/removeCoupon/:couponId",adminAuth, couponController.removeCoupon);
 
 //applyCoupon
-router.put("/applyCoupon/:couponId",adminAuth, adminController.applyCoupon);
+router.put("/applyCoupon/:couponId",adminAuth, couponController.applyCoupon);
 
 //get offer mangement
 router.get("/offers",adminAuth, adminController.getOffers);
