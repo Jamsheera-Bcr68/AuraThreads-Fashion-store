@@ -1,3 +1,4 @@
+const { default: mongoose } = require('mongoose');
 const Coupen=require('../model/coupenModel')
 const statusCodes=require('../utils/statusCodes')
 const statusMessages=require('../utils/statusMessages')
@@ -137,22 +138,28 @@ const editCoupon = async (req, res) => {
       minOrder,
       startDate,
       isActive,
-      usageLimit,
+      
     } = req.body;
-    const coupen = await Coupen.findOne({ _id: couponId });
+    const coupen = await Coupen.findOne({ _id:new mongoose.Types.ObjectId(couponId) });
     if (!coupen) {
       return res.status(statusCodes.NOT_FOUND).json({ success: false, message: statusMessages.NOT_FOUND("Coupon")});
     }
-    (coupen.coupenCode = coupenCode),
-      (coupen.description = description),
-      (coupen.discountType = discountType),
-      (coupen.discountValue = discountValue),
-      (coupen.expiryDate = endDate),
-      (coupen.minPurchase = minOrder),
-      (coupen.startDate = startDate),
-      (coupen.isActive = isActive),
-      (coupen.usageLimit = usageLimit),
-      (coupen.updatedAt = new Date()),
+
+    const couponExist=await Coupen.findOne({coupenCode,_id:{$ne:new mongoose.Types.ObjectId(couponId)}})
+    if (couponExist) {
+      return res.status(statusCodes.CONFLICT).json({ success: false, message: statusMessages.EXISTS("Coupon")});
+    }
+
+    coupen.coupenCode = coupenCode || coupen.coupenCode
+      coupen.description = description ||coupen.description
+      coupen.discountType = discountType||coupen.discountType
+      coupen.discountValue = discountValue||coupen.discountValue
+      coupen.expiryDate = endDate||coupen.expiryDate
+      coupen.minPurchase = minOrder||coupen.minPurchase
+      coupen.startDate = startDate ||coupen.startDate
+      coupen.isActive = isActive 
+      coupen.usageLimit = 1
+      coupen.updatedAt = new Date()
       await coupen.save();
     console.log("coupon editted successfully");
 

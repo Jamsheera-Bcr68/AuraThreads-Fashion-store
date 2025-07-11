@@ -354,9 +354,10 @@
                                 }).then(() => {
                                     if (data.newCoupon) {
                                         addRow(data.newCoupon)
+                                         modal.style.display = "none";
                                     } else if(data.editedCoupon)
                                     updateRow(data.editedCoupon)
-
+                                     modal.style.display = "none";
                                 })
 
                             } else {
@@ -367,8 +368,8 @@
 
                             Swal.fire('Some thing went Wrong')
                         })
-                    // Close modal and optionally refresh the table
-                    modal.style.display = "none";
+                  
+                   
 
                 }
 

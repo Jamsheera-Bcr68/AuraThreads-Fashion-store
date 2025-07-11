@@ -10,7 +10,7 @@ const coupenSchema = new mongoose.Schema({
   createdAt: { type: Date },
   description: { type: String },
   startDate: { type: Date },
-  usageLimit: { type: Number },
+  usageLimit: { type: Number ,default:1},
   updatedAt: { type: Date },
   used: { type: Number },
 });
