@@ -15,6 +15,7 @@ const Order = require("../model/orderModel");
 const categoryController=require('../controllers/categoryController')
 const userController=require('../controllers/userController')
 const couponController=require('../controllers/couponController')
+const offerController=require('../controllers/offerController')
 
 // Display Login Page
 router.get("/login", adminController.getLogin);
@@ -252,20 +253,22 @@ router.delete("/removeCoupon/:couponId",adminAuth, couponController.removeCoupon
 //applyCoupon
 router.put("/applyCoupon/:couponId",adminAuth, couponController.applyCoupon);
 
+
+
 //get offer mangement
-router.get("/offers",adminAuth, adminController.getOffers);
+router.get("/offers",adminAuth, offerController.getOffers);
 
 //add offer
-router.post("/addOffer",adminAuth, adminController.addOffer);
+router.post("/addOffer",adminAuth, offerController.addOffer);
 
 //delte Offer
-router.delete("/offer/delete/:offerId",adminAuth, adminController.deleteOffer);
+router.delete("/offer/delete/:offerId",adminAuth, offerController.deleteOffer);
 
 //edit offer
-router.get("/getSingleOffer/:offerId",adminAuth, adminController.getSingleOffer);
+router.get("/getSingleOffer/:offerId",adminAuth, offerController.getSingleOffer);
 
 //edit offer
-router.put("/editOffer/:offerId",adminAuth, adminController.editOffer);
+router.put("/editOffer/:offerId",adminAuth,offerController.editOffer);
 
 //add refferal offer
 router.post("/addrefferalOffer",adminAuth, adminController.addrefferalOffer);

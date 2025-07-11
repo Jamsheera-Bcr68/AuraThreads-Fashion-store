@@ -220,7 +220,7 @@ tbody tr:hover {
   z-index: 1000;
 }
 
-.modal.active {
+.modal.show {
   display: flex;
 }
 

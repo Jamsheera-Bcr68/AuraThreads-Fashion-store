@@ -22,6 +22,7 @@ const offerSchema = new mongoose.Schema({
   },
   categoryId: {
     type: mongoose.Schema.Types.ObjectId,
+    ref:"Category"
   },
   productId: {
     type: mongoose.Schema.Types.ObjectId,
