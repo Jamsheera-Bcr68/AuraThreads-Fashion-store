@@ -1,6 +1,9 @@
 const csrfToken = document
   .querySelector('meta[name="csrf-token"]')
   .getAttribute("content");
+
+  console.log('csrfToken',csrfToken);
+  
 AOS.init({
   duration: 800,
   easing: "slide",
@@ -597,7 +600,10 @@ document.addEventListener('DOMContentLoaded', function () {
         const heart = this.querySelector('i');
         const productId = heart.getAttribute('data-id');
         const isNotInWishlist = heart.classList.contains('far');
-
+        console.log('wishlist button clicked')
+        console.log(csrfToken);
+        ;
+        
         if (isNotInWishlist) {
           fetch('/user/wishList/add', {
             method: 'POST',
@@ -605,7 +611,8 @@ document.addEventListener('DOMContentLoaded', function () {
               'Content-Type': 'application/json',
               'CSRF-Token': csrfToken
             },
-            body: JSON.stringify({ productId })
+            body: JSON.stringify({ productId }),
+             credentials: 'include'
           })
           .then(response =>response.json())
           .then(data=>{
@@ -640,7 +647,8 @@ document.addEventListener('DOMContentLoaded', function () {
               'Content-Type': 'application/json',
               'CSRF-Token': csrfToken
             },
-            body: JSON.stringify({ productId })
+            body: JSON.stringify({ productId }),
+             credentials: 'include'
           })
           .then(response => {
             if (!response.ok) throw new Error(`Server responded ${response.status}`);
