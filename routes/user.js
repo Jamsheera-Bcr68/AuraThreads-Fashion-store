@@ -12,6 +12,9 @@ const upload = multer({ dest: "uploads/" });
 const csrfProtection = require("../middleweres/csrf");
 const crypto = require("crypto");
 const transporter = require("../config/nodeMailer");
+const productController=require('../controllers/productController')
+const wishListController=require('../controllers/wishListConntroller')
+const cartController=require('../controllers/cartController')
 
 router.use(csrfProtection);
 
@@ -46,11 +49,11 @@ router.get(
 );
 
 //get product listing page
-router.get("/productList", userController.getProductList);
+router.get("/productList", productController.getProductList);
 //get home page
 router.get("/home", userController.getHome);
 
-router.get("/products/:productId", userController.getSingleProduct);
+router.get("/products/:variantId", productController.getSingleProduct);
 
 //google authenticaion
 router.post("/google/callback", userController.postRegister);
@@ -61,12 +64,7 @@ router.get("/setPassword", userController.getSetPassword);
 //post google user passwrd
 router.post("/setPassword", userController.postSetPassword);
 
-//get all prooducts page
-router.get("/products", (req, res) => {
-  console.log("allproducts");
 
-  res.render("../views/user/allProducts");
-});
 
 //get forgot password
 router.get("/forgot-password", async (req, res) => {
@@ -96,7 +94,7 @@ router.post("/forgot-password", async (req, res) => {
       userExist.resetTokenExpiry = Date.now() + 3600000; // 1 hour
       await userExist.save();
       //create reset link with token
-      const resetLink = `https://aurathreads.store/user/reset-password/${token}`;
+      const resetLink = `http://localhost:3000/user/reset-password/${token}`;
 
       // reset password message
       const mailOptions = {
@@ -126,24 +124,14 @@ router.get("/reset-password/:token", userController.getResetPassword);
 
 //reset post
 router.post("/reset-password", userController.postResetPassword);
-//shop
-router.get("/shop", async (req, res) => {
-  const products = await Product.find({ isDeleted: false });
-  const categories = await category.find({ isDeleted: false });
-  res.render("../views/user/shop", {
-    categories,
-    products,
-    cartCount: 2,
-  });
-});
+
+
 
 //user account
 router.get("/account", userAuth, userController.getAccount);
 
 //add anew address
 router.post("/address/add", userController.addAddress);
-
-//user Update
 router.patch("/profile/update", userController.updateUser);
 
 router.get("/emailChangeOtp", userController.getEmailChangeOtp);
@@ -167,15 +155,13 @@ router.post("/removeProfileImage", userController.removeProfileImage);
 router.post("/address/edit/:editAddressId", userController.editAddress);
 
 //user delete address
-router.delete("/address/delete/:addressId", userController.deleteAddress);
+router.delete("/address/delete/:addressId", userController.deleteAddress)
+
 
 //user cart
-router.get("/cart", userAuth, userController.getCart);
-
-//user add to cart
-router.post("/cart/add", userController.addToCart);
-//user remove cart
-router.delete("/cart/remove/:productId", userController.deleteCart);
+router.get("/cart", userAuth, cartController.getCart);
+router.post("/cart/add", cartController.addToCart);
+router.delete("/cart/remove/:productId", cartController.deleteCart);
 
 //user cartupdate
 router.post("/cart/update/:productId/:quantity/", userController.updateCart);
@@ -204,14 +190,11 @@ router.post("/applyCoupon/", userController.applyCoupon);
 //remove Coupon
 router.get("/removeCoupon", userController.removeCoupon);
 
+
 //user wishlist
-router.get("/wishList", userAuth, userController.getWishList);
-
-//add to wishList
-router.post("/wishList/add", userController.addToWishList);
-
-//remove from wishList
-router.delete("/wishList/delete/:productId", userController.deleteWishlistItem);
+router.get("/wishList", userAuth, wishListController.getWishList);
+router.post("/wishList/add", wishListController.addToWishList);
+router.delete("/wishList/delete/:productId", wishListController.deleteWishlistItem);
 
 // get wallet
 router.get("/wallet", userAuth, userController.getWallet);

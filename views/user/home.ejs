@@ -1,5 +1,17 @@
 <head>
   <meta name="csrf-token" content="<%= csrfToken %>">
+
+  <!-- Slick CSS -->
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css" />
+
+  <!-- Slick Theme (optional) -->
+  <link rel="stylesheet" type="text/css"
+    href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick-theme.css" />
+
+  <!-- Slick JS -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
+
 </head>
 
 <body>
@@ -14,12 +26,36 @@
   <script src="/js/popper.min.js"></script>
   <script src="/js/slick.min.js"></script>
   <style>
+
+/* .category-slide img {
+  width: 100%;
+  height: auto ;
+  display: block;
+} */
+
+.slick-slide img {
+  height: auto !important;
+  object-fit: cover;
+}
     .block-4-image {
       width: 13em;
       height: auto;
       margin-left: 4em;
     }
-  </style>
+     .block-c-image {
+      width: 16em;
+      height: auto;
+      margin-left: 2em;
+    }
+/*     
+    .category-slide .text {
+  position: relative;
+  z-index: 10;
+  background: white; /* or rgba(255,255,255,0.8) 
+  padding: 10px;
+    } 
+ */
+ </style>
 
   <%- include('../partials/userHeader') %>
     <!--hero session -->
@@ -80,37 +116,48 @@
       </div>
     </div>
 
-    <!--shop by categories -->
-    <div class="site-section site-blocks-2">
+    <div id="categories" class="site-section block-3 site-blocks-2 bg-light">
       <div class="container">
         <div class="row justify-content-center">
-          <div class="col-md-7 fw-bold site-section-heading text-center pt-4">
+          <div class="col-md-7 site-section-heading fw-bold text-center pt-4">
             <h2>Shop By Categories</h2>
           </div>
         </div>
-        <div class="row categoy">
+        <div class="row">
+          <div class="col-md-12">
+            <div class="nonloop-block-3 owl-carousel">
 
-          <% categories.forEach((category, index)=> { %>
-            <div class="col-sm-6 col-md-6 col-lg-4 mb-4 mb-lg-0" data-aos="fade" data-aos-delay="<%= index * 100 %>">
-              <a class="block-2-item" href="#womens">
-                <figure class="image">
-                  <a href="/user/productList?categoryId=<%= category._id %>"><img src="/<%= category.images[0] %>"
-                      alt="<%= category.categoryName %>" class="img-fluid"></a>
-                </figure>
-                <div class="text">
-                  <span class="text-uppercase">Category</span>
-                  <h3>
-                    <%= category.categoryName %>
-                  </h3>
-                  <p>
-                    <%= category.description %>
-                  </p>
+              <% categories.forEach(category=> { %>
+                <div class="item">
+
+                  
+                  <div class="block-4 text-center p-3"
+                    style="background: #fff; border-radius: 10px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);">
+
+                  <div class="block-4-text p-2">
+                       
+                          <h3 class="mb-1"> <%= category.categoryName %></h3>
+                     </div>
+
+                    <figure class="block-c-image">
+                      <a href="/user/productList?categoryId=<%= category._id %>">
+                        <img class="img-fluid" src="<%= category?.images[0] %>" alt="Image placeholder"
+                          style="border-radius: 8px; height: 250px; width: 100%; object-fit: cover;">
+                      </a>
+                      
+                    </figure>
+                    
+                  </div>
                 </div>
-              </a>
+                <% }) %>
             </div>
-            <% }) %>
+          </div>
+        </div>
+        <div class="more  d-flex justify-content-end" style="background-color: rgb(248 249 250);height: 50px;">
+          
         </div>
       </div>
+
     </div>
 
 
@@ -131,8 +178,8 @@
                     style="background: #fff; border-radius: 10px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);">
                     <figure class="block-4-image">
 
-                      <a href="/user/products/<%= product._id %>">
-                        <img class="img-fluid" src="<%= product.images[0] %>" alt="Image placeholder"
+                      <a href="/user/products/<%= product.mainVariant._id %>">
+                        <img class="img-fluid" src="<%= product.mainVariant?.images?.[0] %>" alt="Image placeholder"
                           style="border-radius: 8px; height: 250px; width: 100%; object-fit: cover;">
                       </a>
                       <% if (product.finalDiscount) { %>
@@ -152,7 +199,7 @@
                           <%= product.productName %>
                         </a>
                       </h3>
-                      
+
                       <p class="text-warning mb-1" style="font-size: 12px;">
                         <% for (var i=1; i <=5; i++) { %>
                           <i
@@ -168,10 +215,11 @@
                             <span class="fw-bold">₹ <%= product.price.toFixed(2) %> </span>
                             <% } %>
                       </p>
-                       <span style="border-radius: 3px;" class="rating-box ratings bg-success text-white" id="product-rating">
-                                                    <span class="rating-number">5</span>
-                                                    <span class="rating-star">★</span>
-                        </span>
+                      <span style="border-radius: 3px;" class="rating-box ratings bg-success text-white"
+                        id="product-rating">
+                        <span class="rating-number">5</span>
+                        <span class="rating-star">★</span>
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -182,12 +230,11 @@
         </div>
 
         <div class="more  d-flex justify-content-end" style="background-color: rgb(248 249 250);height: 50px;">
-          <div class="showMore text-center "> 
+          <div class="showMore text-center ">
             <% if(kidsProducts.length!==0){ %>
-            <a
-              href="/user/productList?categoryId=<%= kidsProducts[0].categoryId %>">Show More </a>
-            <% } %>
-            </div>
+              <a href="/user/productList?categoryId=<%= kidsProducts[0].categoryId %>">Show More </a>
+              <% } %>
+          </div>
         </div>
 
 
@@ -204,13 +251,13 @@
                 <div class="nonloop-block-3 owl-carousel">
 
 
-                  <% mensProducts.forEach(product=> { %>
+                  <% menProducts.forEach(product=> { %>
                     <div class="item">
                       <div class="block-4 text-center p-3"
                         style="background: #fff; border-radius: 10px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);">
                         <figure class="block-4-image">
-                          <a href="/user/products/<%= product._id %>">
-                            <img class="img-fluid" src="<%= product.images[0] %>" alt="Image placeholder"
+                          <a href="/user/products/<%= product.mainVariant._id %>">
+                            <img class="img-fluid"  src="<%= (product.mainVariant && product.mainVariant?.images && product.mainVariant.images[0]) || product.images[0] %>" alt="Image placeholder"
                               style="border-radius: 8px; height: 250px; width: 100%; object-fit: cover;">
                           </a>
                           <% if (product.finalDiscount) { %>
@@ -230,28 +277,29 @@
                               <%= product.productName %>
                             </a>
                           </h3>
-                           
+
                           <!-- <p class="text-success fw-bold mb-1" style="font-size: 12px;">Free Delivery</p> -->
                           <p class="text-primary font-weight-bold mb-0" style="font-size: 14px;">
                             <% if (product.discountPrice && product.discountPrice < product.price) { %>
                               <span class="text-decoration-line-through text-muted">₹ <%= product.price.toFixed(2) %>
-                                  </span>
+                              </span>
                               <span class="text-danger fw-bold ms-2">₹ <%= product.discountPrice.toFixed(2) %></span>
                               <% } else { %>
                                 <span class="fw-bold">₹ <%= product.price.toFixed(2) %> </span>
                                 <% } %>
                           </p>
-                           <span style="border-radius: 3px;" class="rating-box ratings bg-success text-white" id="product-rating">
-                                                    <span class="rating-number">5</span>
-                                                    <span class="rating-star">★</span>
-                           </span>
+                          <span style="border-radius: 3px;" class="rating-box ratings bg-success text-white"
+                            id="product-rating">
+                            <span class="rating-number">5</span>
+                            <span class="rating-star">★</span>
+                          </span>
                         </div>
                       </div>
                     </div>
-                   
+
                     <% }) %>
-                    
-                         
+
+
                 </div>
               </div>
             </div>
@@ -259,11 +307,11 @@
 
         </div>
         <div class="more  d-flex justify-content-end" style="background-color: rgb(248 249 250);height: 50px;">
-          <div class="showMore text-center "> 
-            <% if(mensProducts.length>0){ %>
-             <a href="/user/productList?categoryId=<%= mensProducts[0].categoryId %>">Show More </a>
+          <div class="showMore text-center ">
+            <% if(menProducts.length>0){ %>
+              <a href="/user/productList?categoryId=<%= menProducts[0].categoryId %>">Show More </a>
               <% } %>
-            </div>
+          </div>
         </div>
       </div>
 
@@ -287,8 +335,8 @@
                   <div class="block-4 text-center p-3"
                     style="background: #fff; border-radius: 10px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);">
                     <figure class="block-4-image">
-                      <a href="/user/products/<%= product._id %>">
-                        <img class="img-fluid" src="<%= product.images[0] %>" alt="Image placeholder"
+                      <a href="/user/products/<%= product.mainVariant._id %>">
+                        <img class="img-fluid" src="<%= product.mainVariant?.images?.[0]  %>" alt="Image placeholder"
                           style="border-radius: 8px; height: 250px; width: 100%; object-fit: cover;">
                       </a>
                       <% if (product.finalDiscount) { %>
@@ -308,11 +356,11 @@
                           <%= product.productName %>
                         </a>
                       </h3>
-                       <div class="d-flex align-items-center">
-                                               
-                       </div>
-                       
-                     
+                      <div class="d-flex align-items-center">
+
+                      </div>
+
+
                       <!-- <p class="text-success fw-bold mb-1" style="font-size: 12px;">Free Delivery</p> -->
                       <p class="text-primary font-weight-bold mb-0" style="font-size: 14px;">
                         <% if (product.discountPrice && product.discountPrice < product.price) { %>
@@ -322,10 +370,11 @@
                             <span class="fw-bold">₹ <%= product.price.toFixed(2) %> </span>
                             <% } %>
                       </p>
-                       <span style="border-radius: 3px;" class="rating-box ratings bg-success text-white" id="product-rating">
-                                                    <span class="rating-number">5</span>
-                                                    <span class="rating-star">★</span>
-                        </span>
+                      <span style="border-radius: 3px;" class="rating-box ratings bg-success text-white"
+                        id="product-rating">
+                        <span class="rating-number">5</span>
+                        <span class="rating-star">★</span>
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -335,11 +384,11 @@
         </div>
         <div class="more  d-flex justify-content-end" style="background-color: rgb(248 249 250);height: 50px;">
           <div class="showMore text-center ">
-            <% if(mensProducts.length>0){ %>
-             
-             <a href="/user/productList?categoryId=<%= womenProducts[0].categoryId %>">Show More </a>
+            <% if(menProducts.length>0){ %>
+
+              <a href="/user/productList?categoryId=<%= womenProducts[0].categoryId %>">Show More </a>
               <% } %>
-            </div>
+          </div>
         </div>
       </div>
 
@@ -370,5 +419,32 @@
       </div>
     </div>
     <%- include('../partials/userFooter') %>
+      <script>
+        $(document).ready(function () {
+          $('.category-carousel').slick({
+            slidesToShow: 3,
+            slidesToScroll: 1,
+            infinite: true,
+            arrows: true,
+            dots: false,
+            responsive: [
+              {
+                breakpoint: 768,
+                settings: {
+                  slidesToShow: 2
+                }
+              },
+              {
+                breakpoint: 480,
+                settings: {
+                  slidesToShow: 1
+                }
+              }
+            ]
+          });
+        });
+      </script>
+
+
 
 </body>

@@ -17,8 +17,8 @@
     <div class="container">
       <!-- Breadcrumbs -->
       <% singleProduct.reviews=['good', 'very good' , 'super' ] %>
-        <%singleProduct.highlights=['good material', 'recent price' , 'longlasting' ] %>
-          <% singleProduct.relatedProducts=[{ name: 'churidar' ,image: singleProduct.images[0] }] %>
+        <% singleProduct.highlights=['good material', 'recent price' , 'longlasting' ] %>
+          <% singleProduct.relatedProducts=[{ name: 'churidar' ,image: variant.images[0] }] %>
             <% singleProduct.rating=5 %>
 
               <div class="breadcrumbs">
@@ -35,11 +35,11 @@
                 <!-- Product Gallery -->
                 <div class="product-gallery">
                   <div class="main-image" id="mainImage">
-                    <img src="<%= singleProduct.images[0] %>" alt="<%= singleProduct.productName %>"
+                    <img src="<%= variant.images[0] %>" alt="<%= singleProduct.productName %>"
                       id="productMainImage" />
                   </div>
                   <div class="thumbnails">
-                    <% singleProduct.images.forEach((image, index)=> { %>
+                    <% variant.images.forEach((image, index)=> { %>
                       <div class="thumbnail" data-img="<%= image %>">
                         <img src="<%= image %>" alt="Image <%= index + 1 %>" />
                       </div>
@@ -273,21 +273,27 @@
                 <div class="item">
                   <div class="block-4 text-center">
                     <figure class="block-4-image">
-                      <a href="/user/products/<%= product._id %>">
-                        <img class="d-block mx-auto" src="/uploads/<%= product.images[0].split('/').pop() %>" alt="Image placeholder"
+                       <span class="badge text-bg-warning text-wrap ">
+    Save <%= singleProduct.discount %> <%= singleProduct.discountType === 'amount' ? '₹' : '%' %>
+  </span>
+                      <a href="/user/products/<%= product.mainVariant._id %>">
+                        <img class="d-block mx-auto" src="/uploads/<%= product?.mainVariant?.images?.[0].split('/').pop() %>" alt="Image placeholder"
                           class="img-fluid">
                       </a>
                       
                     </figure>
                     <div class="block-4-text p-4">
-                      <h3><a href="#">
+                      <h3>
                           <%= product.productName %>
-                        </a></h3>
-                      <p class="mb-0">
-                        <%= product.description %>
-                      </p>
-                      <p class="text-primary font-weight-bold">
-                        ₹ <%= product.price %>
+                       </h3>
+                     
+                      <p class="text-primary font-weight-bold mb-0" style="font-size: 14px;">
+                        <% if (singleProduct.discount ) { %>
+                          <span class="text-decoration-line-through text-muted">₹ <%= product.price.toFixed(2) %></span>
+                          <span class="text-danger fw-bold ms-2">₹ <%= (product.price - singleProduct.discountAmount).toFixed(2) %></span>
+                          <% } else { %>
+                            <span class="fw-bold">₹ <%= product.price.toFixed(2) %> </span>
+                            <% } %>
                       </p>
                     </div>
                   </div>

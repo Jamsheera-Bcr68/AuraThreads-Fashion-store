@@ -20,6 +20,7 @@ const crypto = require("crypto");
 const { title } = require("process");
 const StatusCodes = require("../utils/statusCodes");
 const statusMessages = require("../utils/statusMessages");
+const Variant =require('../model/variantModel')
 
 
 //get Register
@@ -96,9 +97,9 @@ const getSetPassword = async (req, res) => {
   console.log("user found ", user);
   const email = user.email;
 
-  console.log("email is ", email,'show alert is true');
- 
-  res.render("user/setPassword",  { showAlert: true, email});
+  console.log("email is ", email, 'show alert is true');
+
+  res.render("user/setPassword", { showAlert: true, email });
 };
 
 //post set password
@@ -327,11 +328,11 @@ const getLogin = async (req, res) => {
 //Handle post login
 
 const postLogin = async (req, res) => {
-    const { email, password } = req.body;
-    console.log(email, password);
+  const { email, password } = req.body;
+  console.log(email, password);
 
   try {
-  
+
     //finding the url to redirect
     const redirectTo = req.session.redirectTo || "/user/home";
     console.log("redirectTo", redirectTo);
@@ -381,7 +382,7 @@ const postLogin = async (req, res) => {
 // reset forgot password
 
 const getResetPassword = async (req, res) => {
-  console.log("resetPassword");
+  console.log("resetPassword-forgot password");
   try {
     let token = req.params.token;
     console.log("token params", token);
@@ -452,61 +453,147 @@ const postResetPassword = async (req, res) => {
 const getHome = async (req, res) => {
   const categories = await category
     .find({
-      isDeleted: false,
-      categoryName: { $in: ["Mens", "Womens", "Kids"] },
+      isDeleted: false
     })
-    .limit(3);
-  // console.log(categories + 'categories');
 
-  //console.log('category images', categories[0].images);
 
   categories.forEach((item) =>
     item.images.forEach((image) => image.replace(/\\/g, "/")),
   );
-  // console.log('category images after updata',categories[0].images);
+
 
   const womenCategory = await category.findOne(
     { isDeleted: false, categoryName: "Womens" },
     { _id: 1 },
   );
-  //console.log('womenCategory is'+womenCategory.id);
+  
   let womenProducts = [];
   if (womenCategory) {
-    womenProducts = await Product.find({
-      isDeleted: false,
-      categoryId: womenCategory.id,
-    });
+
+    womenProducts = await Product.aggregate([
+  {
+    $match: { categoryId: womenCategory._id, isDeleted: false }
+  },
+  {
+    $lookup: {
+      from: 'variants',
+      let: { productId: '$_id' }, // pass the local _id as productId
+      pipeline: [
+        {
+          $match: {
+            $expr: {
+              $and: [
+                { $eq: ['$productId', '$$productId'] }, // match productId
+                { $eq: ['$isDeleted', false] }          // AND variant is not deleted
+              ]
+            }
+          }
+        },
+         { $limit: 1 }
+      ],
+      as: 'mainVariant'
+    }
+  },
+  {
+    $unwind: {
+      path: '$mainVariant',
+      preserveNullAndEmptyArrays: true
+    }
   }
+])
+
+  }
+
+ 
 
   const mensCategory = await category.findOne(
     { isDeleted: false, categoryName: "Mens" },
     { _id: 1 },
   );
-  let mensProducts = [];
+
+  let menProducts = [];
   if (mensCategory) {
-    mensProducts = await Product.find({
-      isDeleted: false,
-      categoryId: mensCategory.id,
-    }).limit(3);
-    mensProducts.forEach((product) => {
-      product.images = product.images.map((image) => image.replace(/\\/g, "/"));
-    });
+    console.log('mensCategory._id', mensCategory._id, typeof mensCategory._id);
+menProducts = await Product.aggregate([
+  {
+    $match: { categoryId: mensCategory._id, isDeleted: false }
+  },
+  {
+    $lookup: {
+      from: 'variants',
+      let: { productId: '$_id' }, // pass the local _id as productId
+      pipeline: [
+        {
+          $match: {
+            $expr: {
+              $and: [
+                { $eq: ['$productId', '$$productId'] }, // match productId
+                { $eq: ['$isDeleted', false] }          // AND variant is not deleted
+              ]
+            }
+          }
+        },{ $limit: 1 }
+      ],
+      as: 'mainVariant'
+    }
+  },
+  {
+    $unwind: {
+      path: '$mainVariant',
+      preserveNullAndEmptyArrays: true
+    }
   }
+])
+
+  }
+
+ 
+
 
   const kidsCategory = await category.findOne(
     { isDeleted: false, categoryName: "Kids" },
     { _id: 1 },
   );
   let kidsProducts = [];
-  // console.log('kids category id is' + kidsCategory.id);
+ 
   if (kidsCategory) {
-    kidsProducts = await Product.find({
-      isDeleted: false,
-      categoryId: kidsCategory.id,
-    }).limit(3);
+
+  kidsProducts = await Product.aggregate([
+  {
+    $match: { categoryId: kidsCategory._id, isDeleted: false }
+  },
+  {
+    $lookup: {
+      from: 'variants',
+      let: { productId: '$_id' }, // pass the local _id as productId
+      pipeline: [
+        {
+          $match: {
+            $expr: {
+              $and: [
+                { $eq: ['$productId', '$$productId'] }, // match productId
+                { $eq: ['$isDeleted', false] }          // AND variant is not deleted
+              ]
+            }
+          }
+        },{ $limit: 1 }
+      ],
+      as: 'mainVariant'
+    }
+  },
+  {
+    $unwind: {
+      path: '$mainVariant',
+      preserveNullAndEmptyArrays: true
+    }
+  }
+])
+
+
   }
 
-  console.log("user found", req.session.user);
+  
+  
   let cartCount = 0;
   if (req.session.user) {
     const user = req.session.user;
@@ -574,7 +661,7 @@ const getHome = async (req, res) => {
     }
   });
 
-  mensProducts.forEach((product) => {
+  menProducts.forEach((product) => {
     const productOffer = offers.find(
       (offer) =>
         offer.applicableTo === "product" &&
@@ -693,347 +780,194 @@ const getHome = async (req, res) => {
     user: req.session.user || "",
     categories,
     womenProducts,
-    mensProducts,
+    menProducts,
     kidsProducts,
   });
 };
 
-const getSingleProduct = async (req, res) => {
-  console.log("from single product page");
-  const { productId } = req.params;
-  console.log("productId is equal to " + productId);
 
-  try {
-    if (!productId) {
-      console.log("Product id is not fount");
 
-      return res.json({ success: false, message: "Product Id is not fount" });
-    }
-    const singleProduct = await Product.findOne({
-      isDeleted: false,
-      _id: productId,
-    }).lean();
+// const getSingleProduct = async (req, res) => {
+//   console.log("from single vairant page");
+//   const { variantId } = req.params;
+//   console.log("variantid is equal to " + variantId);
 
-    if (!singleProduct) {
-      console.log("No product found");
-      return res
-        .status(404)
-        .render({ success: false, message: "Product not found" });
-    }
+//   try {
+//     if (!variantId) {
+//       console.log("Variant id is not fount");
 
-    singleProduct.images = singleProduct.images.map((image) =>
-      image.replace(/\\/g, "/"),
-    );
+//       return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: statusMessages.NOT_FOUND("Variant Id")});
+//     }
 
-    //get related products
-    const relatedProducts = await Product.find({
-      isDeleted: false,
-      categoryId: singleProduct.categoryId,
-    }).limit(3);
-    relatedProducts.forEach((product) => {
-      product.images = product.images.map((image) => image.replace(/\\/g, "/"));
-    });
-    //console.log('related images' + relatedProducts[0].images);
+//     const variant=await Variant.findOne({_id:new mongoose.Types.ObjectId(variantId)})
+//     console.log('variant',variant);
+//     if(!variant){
+//        console.log("Variant  is not fount");
 
-    // console.log(relatedProducts + ' related products');
+//       return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: statusMessages.NOT_FOUND("Variant")});
+   
+//     }
 
-    //get cart count
-    let cartCount = 0;
-    if (req.session.user) {
-      const userId = req.session.user._id;
-      const cart = await Cart.findOne({ userId });
-      if (cart) {
-        cartCount = cart.items.length;
-        console.log("cart count is ", cartCount);
-      } else {
-        console.log("cart not fount");
-      }
-    }
+//     const productId=variant.productId
+//     const variants=await Variant.find({productId}).populate('productId')
+//     console.log('variants',variants);
+    
 
-    //fetching offer
-    const offers = await Offer.find({ status: "active" });
 
-    const productOffer = offers.find(
-      (offer) =>
-        offer.applicableTo == "product" &&
-        offer.productId?.toString() == singleProduct._id.toString(),
-    );
-    const categoryOffer = offers.find(
-      (offer) =>
-        offer.applicableTo == "category" &&
-        offer.categoryId?.toString() == singleProduct.categoryId?.toString(),
-    );
+//     const singleProduct = await Product.findOne({
+//       isDeleted: false,
+//       _id: productId,
+//     }).lean();
 
-    let finalOffer = null;
-    let discountAmount = 0;
+//     if (!singleProduct) {
+//       console.log("No product found");
+//       return res
+//         .status(StatusCodes.NOT_FOUND)
+//         .json({ success: false, message:statusMessages.NOT_FOUND("Product") });
+//     }
 
-    if (productOffer && categoryOffer) {
-      console.log("Both available fronm single product page");
+   
 
-      const productdiscountAmount =
-        productOffer.discountType == "amount"
-          ? productOffer.discountValue
-          : (productOffer.discountValue * singleProduct.price) / 100;
-      const categoryDiscountAmount =
-        categoryOffer.discountType == "amount"
-          ? categoryOffer.discountValue
-          : (categoryOffer.discountValue * singleProduct.price) / 100;
+//     //get related products
+//     let relatedProducts=[]
 
-      discountAmount =
-        productdiscountAmount > categoryDiscountAmount
-          ? productdiscountAmount
-          : categoryDiscountAmount;
-      finalOffer =
-        productdiscountAmount > categoryDiscountAmount
-          ? productOffer
-          : categoryOffer;
-    } else if (productOffer || categoryOffer) {
-      console.log("one offer applicable fronm single product page");
-      finalOffer = productOffer || categoryOffer;
-      discountAmount =
-        finalOffer.discountType == "amount"
-          ? finalOffer.discountValue
-          : (finalOffer.discountValue * singleProduct.price) / 100;
-    } else {
-      console.log("No offer applicable from single product page");
-      finalOffer = null;
-      discountAmount = 0;
-    }
 
-    if (finalOffer) {
-      singleProduct.discountPrice = Math.round(
-        singleProduct.price - discountAmount,
-      );
-      singleProduct.discountType = finalOffer.discountType;
-      singleProduct.discount = finalOffer.discountValue;
-      singleProduct.discountAmount = discountAmount;
-    } else {
-      singleProduct.discountPrice = singleProduct.price;
-    }
-    res.render("user/sproduct", {
-      title: "Product Details Page",
-      singleProduct,
-      relatedProducts,
-      categoryId: "",
-      priceRange: "",
-      finalOffer,
-      cartCount,
-      user: req.session.user || "",
-      sort: "",
-      query: "",
-    });
-  } catch (error) {
-    console.error("Error fetching product:", error);
-    res.status(500).render({
-      success: false,
-      message: "Something went wrong. Please try again.",
-    });
-  }
-};
+//     relatedProducts = await Product.aggregate([
+//   {
+//     $match: { categoryId: variant.categoryId, isDeleted: false }
+//   },
+//   {
+//     $lookup: {
+//       from: 'variants',
+//       let: { productId: '$_id' }, // pass the local _id as productId
+//       pipeline: [
+//         {
+//           $match: {
+//             $expr: {
+//               $and: [
+//                 { $eq: ['$productId', '$$productId'] }, // match productId
+//                 { $eq: ['$isDeleted', false] }          // AND variant is not deleted
+//               ]
+//             }
+//           }
+//         },
+//          { $limit: 1 }
+//       ],
+//       as: 'mainVariant'
+//     }
+//   },
+//   {
+//     $unwind: {
+//       path: '$mainVariant',
+//       preserveNullAndEmptyArrays: true
+//     }
+//   },
+//   {$limit:3}
+// ])
 
-const getProductList = async (req, res) => {
-  console.log("from user product list");
-  const categoryId = req.query.categoryId || null;
-  console.log("categoryId", categoryId);
-  try {
-    const { query } = req.query;
-    console.log(`query is ${query}`);
+  
 
-    const page = parseInt(req.query.page) || 1;
-    const limit = 6;
-    const skip = (page - 1) * limit;
-    const priceRange = req.query.priceRange || "";
-    const sort = req.query.sort || "";
+    
 
-    // Category based filter
-    const filter = { isDeleted: false };
-    let selectedCategories = [];
-    let categoryTitle = "Show All Products"; // Default title
+//     console.log(relatedProducts , ' related products');
 
-    if (categoryId) {
-      // Handle both single category ID and comma-separated list
-      selectedCategories = Array.isArray(categoryId)
-        ? categoryId
-        : categoryId.includes(",")
-          ? categoryId.split(",")
-          : [categoryId];
+//     //get cart count
+//     let cartCount = 0;
+//     if (req.session.user) {
+//       const userId = req.session.user._id;
+//       const cart = await Cart.findOne({ userId });
+//       if (cart) {
+//         cartCount = cart.items.length;
+//         console.log("cart count is ", cartCount);
+//       } else {
+//         console.log("cart not fount");
+//       }
+//     }
 
-      // Convert string IDs to ObjectId
-      filter.categoryId = {
-        $in: selectedCategories.map((id) => new mongoose.Types.ObjectId(id)),
-      };
+//     //fetching offer
+//     const offers = await Offer.find({ status: "active" });
 
-      //  display a category name in the title, but only when a single category is selected
-      if (selectedCategories.length === 1) {
-        // Only get the category name if there's exactly one category selected
-        const singleCategory = await category.findOne({
-          _id: new mongoose.Types.ObjectId(selectedCategories[0]),
-        });
-        if (singleCategory) {
-          categoryTitle = `${singleCategory.categoryName} Clothing`;
-        }
-      } else if (selectedCategories.length > 1) {
-        // Multiple categories selected
-        categoryTitle = "Multiple Categories";
-      }
-    }
+//     const productOffer = offers.find(
+//       (offer) =>
+//         offer.applicableTo == "product" &&
+//         offer.productId?.toString() == singleProduct._id.toString(),
+//     );
+//     const categoryOffer = offers.find(
+//       (offer) =>
+//         offer.applicableTo == "category" &&
+//         offer.categoryId?.toString() == singleProduct.categoryId?.toString(),
+//     );
 
-    // Price range based filtering
-    let selectedPriceRange = priceRange || "";
-    if (selectedPriceRange) {
-      let [min, max] = selectedPriceRange.split("-").map(Number);
-      filter.price = { $gte: min, $lte: max };
-    }
-    //searchbased fitering
-    if (query) {
-      filter.$or = [
-        { productName: { $regex: query, $options: "i" } },
-        { description: { $regex: query, $options: "i" } },
-      ];
-    }
+//     let finalOffer = null;
+//     let discountAmount = 0;
 
-    // Sorting based on sortOption
-    let sortOption = {};
-    if (sort == "newest") {
-      sortOption.createdAt = -1;
-    } else if (sort == "lowToHigh") {
-      sortOption.price = 1;
-    } else if (sort == "highToLow") {
-      sortOption.price = -1;
-    } else if (sort == "az") {
-      sortOption.productName = 1;
-    } else if (sort == "za") {
-      sortOption.productName = -1; // Fixed: this was price=-1 in your code
-    }
+//     if (productOffer && categoryOffer) {
+//       console.log("Both available fronm single product page");
 
-    const products = await Product.find(filter)
-      .sort(sortOption)
-      .skip(skip)
-      .limit(limit)
-      .lean();
+//       const productdiscountAmount =
+//         productOffer.discountType == "amount"
+//           ? productOffer.discountValue
+//           : (productOffer.discountValue * singleProduct.price) / 100;
+//       const categoryDiscountAmount =
+//         categoryOffer.discountType == "amount"
+//           ? categoryOffer.discountValue
+//           : (categoryOffer.discountValue * singleProduct.price) / 100;
 
-    // Fix image paths
-    products.forEach((product) => {
-      product.images = product.images.map((image) => image.replace(/\\/g, "/"));
-    });
+//       discountAmount =
+//         productdiscountAmount > categoryDiscountAmount
+//           ? productdiscountAmount
+//           : categoryDiscountAmount;
+//       finalOffer =
+//         productdiscountAmount > categoryDiscountAmount
+//           ? productOffer
+//           : categoryOffer;
+//     } else if (productOffer || categoryOffer) {
+//       console.log("one offer applicable fronm single product page");
+//       finalOffer = productOffer || categoryOffer;
+//       discountAmount =
+//         finalOffer.discountType == "amount"
+//           ? finalOffer.discountValue
+//           : (finalOffer.discountValue * singleProduct.price) / 100;
+//     } else {
+//       console.log("No offer applicable from single product page");
+//       finalOffer = null;
+//       discountAmount = 0;
+//     }
 
-    // Get all categories for the filter options
-    const categories = await category.find({ isDeleted: false });
+//     if (finalOffer) {
+//       singleProduct.discountPrice = Math.round(
+//         singleProduct.price - discountAmount,
+//       );
+//       singleProduct.discountType = finalOffer.discountType;
+//       singleProduct.discount = finalOffer.discountValue;
+//       singleProduct.discountAmount = discountAmount;
+//     } else {
+//       singleProduct.discountPrice = singleProduct.price;
+//     }
+//     res.render("user/sproduct", {
+//       title: "Product Details Page",
+//       singleProduct,
+//       variant,
+//       singleProduct,
+//       variants,
+//        relatedProducts,
+//       categoryId: "",
+//       priceRange: "",
+//       finalOffer,
+//       cartCount,
+//       user: req.session.user || "",
+//       sort: "",
+//       query: "",
+//     });
+//   } catch (error) {
+//     console.error("Error fetching product:", error);
+//     res.status(500).render({
+//       success: false,
+//       message: "Something went wrong. Please try again.",
+//     });
+//   }
+// };
 
-    // Get total count of products for pagination
-    const totalProducts = await Product.countDocuments(filter);
-    const totalPages = Math.ceil(totalProducts / limit);
-
-    //get cart count
-    let cartCount = 0;
-    let wishlistIds = [];
-    if (req.session.user) {
-      const userId = req.session.user._id;
-
-      //console.log('userId', userId);
-
-      const wishList = await WishList.findOne({ userId: req.session.user._id });
-      console.log("wishlist", wishList);
-
-      if (wishList) {
-        wishlistIds = wishList.items.map((item) => item.toString());
-      } else {
-        console.log("Wishlist not found for user:", userId);
-        wishlistIds = []; // fallback to empty
-      }
-      //console.log('wishlist ids', wishlistIds);
-
-      const cart = await Cart.findOne({ userId });
-      if (cart) {
-        cartCount = cart.items.length;
-        //console.log('cart count is ', cartCount);
-      } else {
-        console.log("cart not fount");
-      }
-    }
-    // fetching offers
-    const offers = await Offer.find({ status: "active" });
-
-    products.forEach((product) => {
-      const productOffer = offers.find(
-        (offer) =>
-          offer.applicableTo === "product" &&
-          offer.productId?.toString() === product._id.toString(),
-      );
-      const categoryOffer = offers.find(
-        (offer) =>
-          offer.applicableTo === "category" &&
-          offer.categoryId?.toString() === product.categoryId?.toString(),
-      );
-
-      let finalOffer = null;
-      let discountAmount = 0;
-
-      if (productOffer && categoryOffer) {
-        const productDiscountAmount =
-          productOffer.discountType === "amount"
-            ? productOffer.discountValue
-            : (product.price * productOffer.discountValue) / 100;
-
-        const categoryDiscountAmount =
-          categoryOffer.discountType === "amount"
-            ? categoryOffer.discountValue
-            : (product.price * categoryOffer.discountValue) / 100;
-
-        finalOffer =
-          productDiscountAmount > categoryDiscountAmount
-            ? productOffer
-            : categoryOffer;
-        discountAmount = Math.max(
-          productDiscountAmount,
-          categoryDiscountAmount,
-        );
-      } else if (productOffer || categoryOffer) {
-        finalOffer = productOffer || categoryOffer;
-
-        // Checking finalOffer before using its properties
-        if (finalOffer) {
-          discountAmount =
-            finalOffer.discountType === "amount"
-              ? finalOffer.discountValue
-              : (product.price * finalOffer.discountValue) / 100;
-        }
-      }
-
-      if (finalOffer) {
-        product.discountPrice = Math.round(product.price - discountAmount);
-        product.discountAmount = discountAmount;
-        product.finalDiscount = finalOffer.discountValue;
-        product.discountType = finalOffer.discountType;
-      } else {
-        product.discountPrice = product.price;
-      }
-    });
-
-    res.render("user/productList", {
-      products,
-      wishlist: wishlistIds,
-      categoryId: categoryId || null,
-      categories,
-      sort: sort || null,
-      priceRange: priceRange || null,
-      title: categoryTitle,
-      currentPage: page,
-      totalPages,
-      user: req.session.user || "",
-      selectedCategories,
-      selectedPriceRange,
-      cartCount,
-      query: req.query.query || "",
-      type: req.query.type || "products",
-      csrfToken: res.locals.csrfToken,
-      offers,
-    });
-  } catch (error) {
-    console.log("error in fetching products: ", error);
-    return res.redirect("/user/home");
-  }
-};
 const otpStore = {}; //  OTP store temporarly
 
 const getAccount = async (req, res) => {
@@ -1110,10 +1044,10 @@ const addAddress = async (req, res) => {
   try {
     const userId = req.session.user._id;
     console.log("user is ", userId);
-    const address=await Address.find({userId})
-    
-    if(address.length==4){
-      return res.json({success:false,message:"You can only add 4 addresses"})
+    const address = await Address.find({ userId })
+
+    if (address.length == 4) {
+      return res.json({ success: false, message: "You can only add 4 addresses" })
     }
     // If isDefault is true, update all other addresses to false for the same user
     if (isDefault) {
@@ -1133,7 +1067,7 @@ const addAddress = async (req, res) => {
       await newAddress.save();
       console.log("adress saved as default");
 
-      return res.json({success:true, message: "New Address added successfully",address:newAddress });
+      return res.json({ success: true, message: "New Address added successfully", address: newAddress });
     } else {
       const newAddress = new Address({
         userId,
@@ -1148,7 +1082,7 @@ const addAddress = async (req, res) => {
       });
       await newAddress.save();
       console.log("adress is saves as not default");
-      return res.status(201).json({success:true, message: "Address added successfully" });
+      return res.status(201).json({ success: true, message: "Address added successfully" });
     }
   } catch (error) {
     console.log("error in fetching adress", error);
@@ -1263,7 +1197,7 @@ const updateUser = async (req, res) => {
       user.save();
       if (email == user.email) {
         console.log("user saved succes fully");
-        return res.json({ success: true, message: "user profile updated" ,fullName});
+        return res.json({ success: true, message: "user profile updated", fullName });
       } else {
         const otp = generateOTP();
         otpStore[email] = { otp, expiresAt: Date.now() + 1 * 60 * 1000 }; // 1-minute expiry
@@ -1291,10 +1225,10 @@ const updateUser = async (req, res) => {
 
 const getEmailChangeOtp = async (req, res, next) => {
   try {
-    const redirectTo=req.query.redirectTo ||'/user/account'
-    console.log('redirectTo',redirectTo);
-    
-    res.render("user/emailChangeOtp",{redirectTo});
+    const redirectTo = req.query.redirectTo || '/user/account'
+    console.log('redirectTo', redirectTo);
+
+    res.render("user/emailChangeOtp", { redirectTo });
   } catch (error) {
     console.log(error);
     throw Error({ status: 500, message: "server error" });
@@ -1484,342 +1418,342 @@ const removeProfileImage = async (req, res) => {
   });
 };
 
-const getCart = async (req, res) => {
-  let cartCount = 0;
-  console.log("this is from get cart");
-  try {
-    const user = req.session.user;
-    const userId = user._id;
-    if (!userId) {
-      console.log("User not registered");
-      return res.json({
-        success: false,
-        message: "Please register to add to cart",
-      });
-    }
-    console.log("user id is ", userId);
-    let title;
+// const getCart = async (req, res) => {
+//   let cartCount = 0;
+//   console.log("this is from get cart");
+//   try {
+//     const user = req.session.user;
+//     const userId = user._id;
+//     if (!userId) {
+//       console.log("User not registered");
+//       return res.json({
+//         success: false,
+//         message: "Please register to add to cart",
+//       });
+//     }
+//     console.log("user id is ", userId);
+//     let title;
 
-    let cart = await Cart.findOne({ userId }).populate({
-      path: "items.productId",
-      model: "Product",
-      select: "productName price images stock categoryId",
-    });
-    if (!cart) {
-      console.log("No existing cart");
-      try {
-        cart = new Cart({ userId: userId, items: [] });
-        console.log("new empty cart is created");
-      } catch (error) {
-        console.log("error in creating new cart" + error);
-      }
-      await cart.save();
-    }
+//     let cart = await Cart.findOne({ userId }).populate({
+//       path: "items.productId",
+//       model: "Product",
+//       select: "productName price images stock categoryId",
+//     });
+//     if (!cart) {
+//       console.log("No existing cart");
+//       try {
+//         cart = new Cart({ userId: userId, items: [] });
+//         console.log("new empty cart is created");
+//       } catch (error) {
+//         console.log("error in creating new cart" + error);
+//       }
+//       await cart.save();
+//     }
 
-    //console.log("Cart Items:", JSON.stringify(cart.items, null, 2));
-    cart.items.forEach((item) => {
-      if (item.productId.images && item.productId.images.length > 0) {
-        item.productId.images = item.productId.images.map((image) =>
-          image.replace(/\\/g, "/"),
-        );
-      }
-    });
-    cartCount = cart.items.length;
-    title =
-      cart.items.length > 0
-        ? `Displaying your  cart itmes`
-        : "Your cart is empty";
+//     //console.log("Cart Items:", JSON.stringify(cart.items, null, 2));
+//     cart.items.forEach((item) => {
+//       if (item.productId.images && item.productId.images.length > 0) {
+//         item.productId.images = item.productId.images.map((image) =>
+//           image.replace(/\\/g, "/"),
+//         );
+//       }
+//     });
+//     cartCount = cart.items.length;
+//     title =
+//       cart.items.length > 0
+//         ? `Displaying your  cart itmes`
+//         : "Your cart is empty";
 
-    let cartTotal = cart.items.reduce(
-      (sum, item) => sum + item.productId.price * item.quantity,
-      0,
-    );
-    console.log("cart total", cartTotal);
+//     let cartTotal = cart.items.reduce(
+//       (sum, item) => sum + item.productId.price * item.quantity,
+//       0,
+//     );
+//     console.log("cart total", cartTotal);
 
-    //fetching offers
-    const offers = await Offer.find({ status: "active" });
-    cart.items.forEach((item) => {
-      const productOffer = offers.find(
-        (offer) =>
-          offer.applicableTo == "product" &&
-          offer.productId?.toString() == item.productId._id?.toString(),
-      );
-      const categoryOffer = offers.find(
-        (offer) =>
-          offer.applicableTo == "category" &&
-          offer.categoryId?.toString() == item.productId.categoryId.toString(),
-      );
+//     //fetching offers
+//     const offers = await Offer.find({ status: "active" });
+//     cart.items.forEach((item) => {
+//       const productOffer = offers.find(
+//         (offer) =>
+//           offer.applicableTo == "product" &&
+//           offer.productId?.toString() == item.productId._id?.toString(),
+//       );
+//       const categoryOffer = offers.find(
+//         (offer) =>
+//           offer.applicableTo == "category" &&
+//           offer.categoryId?.toString() == item.productId.categoryId.toString(),
+//       );
 
-      let finalOffer = null;
-      let discountAmount = 0;
-      if (!categoryOffer && !productOffer) {
-      } else if (productOffer && categoryOffer) {
-        const productDiscountAmount =
-          productOffer.discountType == "amount"
-            ? productOffer.discountValue
-            : (productOffer.discountValue * item.productId.price) / 100;
-        const categoryDiscountAmount =
-          categoryOffer.discountType == "amount"
-            ? categoryOffer.discountValue
-            : (categoryOffer.discountValue * item.productId.price) / 100;
+//       let finalOffer = null;
+//       let discountAmount = 0;
+//       if (!categoryOffer && !productOffer) {
+//       } else if (productOffer && categoryOffer) {
+//         const productDiscountAmount =
+//           productOffer.discountType == "amount"
+//             ? productOffer.discountValue
+//             : (productOffer.discountValue * item.productId.price) / 100;
+//         const categoryDiscountAmount =
+//           categoryOffer.discountType == "amount"
+//             ? categoryOffer.discountValue
+//             : (categoryOffer.discountValue * item.productId.price) / 100;
 
-        discountAmount =
-          productDiscountAmount > categoryDiscountAmount
-            ? productDiscountAmount
-            : categoryDiscountAmount;
-        finalOffer =
-          productDiscountAmount > categoryDiscountAmount
-            ? productOffer
-            : categoryOffer;
-      } else if (categoryOffer || productOffer) {
-        finalOffer = categoryOffer || productOffer;
-        discountAmount =
-          finalOffer.discountType == "amount"
-            ? finalOffer.discountValue
-            : (finalOffer.discountValue * item.productId.price) / 100;
-      }
+//         discountAmount =
+//           productDiscountAmount > categoryDiscountAmount
+//             ? productDiscountAmount
+//             : categoryDiscountAmount;
+//         finalOffer =
+//           productDiscountAmount > categoryDiscountAmount
+//             ? productOffer
+//             : categoryOffer;
+//       } else if (categoryOffer || productOffer) {
+//         finalOffer = categoryOffer || productOffer;
+//         discountAmount =
+//           finalOffer.discountType == "amount"
+//             ? finalOffer.discountValue
+//             : (finalOffer.discountValue * item.productId.price) / 100;
+//       }
 
-      if (finalOffer) {
-        item.discountAmount = discountAmount;
-        item.discountPrice = Math.round(item.productId.price - discountAmount);
-        item.discountType = finalOffer.discountType;
-      } else {
-        item.discountAmount = 0;
-        item.discountPrice = item.productId.price;
-        item.discountTyp = "";
-      }
-    });
-    const netAmount = cart.items.reduce(
-      (total, item) => total + item.discountPrice * item.quantity,
-      0,
-    );
-    const totalDiscount = cart.items.reduce(
-      (total, item) => total + item.discountAmount * item.quantity,
-      0,
-    );
+//       if (finalOffer) {
+//         item.discountAmount = discountAmount;
+//         item.discountPrice = Math.round(item.productId.price - discountAmount);
+//         item.discountType = finalOffer.discountType;
+//       } else {
+//         item.discountAmount = 0;
+//         item.discountPrice = item.productId.price;
+//         item.discountTyp = "";
+//       }
+//     });
+//     const netAmount = cart.items.reduce(
+//       (total, item) => total + item.discountPrice * item.quantity,
+//       0,
+//     );
+//     const totalDiscount = cart.items.reduce(
+//       (total, item) => total + item.discountAmount * item.quantity,
+//       0,
+//     );
 
-    req.session.offer = cart.items.map((item) => ({
-      productId: item.productId._id,
-      discountAmount: item.discountAmount || 0,
-      discountPrice: item.discountPrice || item.productId.price,
-      discountType: item.discountType || null,
-    }));
-    req.session.cartTotal = cartTotal;
-    req.session.netAmount = netAmount;
-    req.session.totalDiscount = totalDiscount;
-    console.log("req.session.offer ", req.session.offer);
-    console.log("totalDiscount from get cart", totalDiscount);
+//     req.session.offer = cart.items.map((item) => ({
+//       productId: item.productId._id,
+//       discountAmount: item.discountAmount || 0,
+//       discountPrice: item.discountPrice || item.productId.price,
+//       discountType: item.discountType || null,
+//     }));
+//     req.session.cartTotal = cartTotal;
+//     req.session.netAmount = netAmount;
+//     req.session.totalDiscount = totalDiscount;
+//     console.log("req.session.offer ", req.session.offer);
+//     console.log("totalDiscount from get cart", totalDiscount);
 
-    return res.render("../views/user/cart", {
-      errorMessage: null,
-      categoryId: null,
-      priceRange: null,
-      cart,
-      title,
-      cartCount,
+//     return res.render("../views/user/cart", {
+//       errorMessage: null,
+//       categoryId: null,
+//       priceRange: null,
+//       cart,
+//       title,
+//       cartCount,
 
-      user: req.session.user || "",
-      sort: null,
-      query: null,
-    });
-  } catch (error) {
-    console.log("error n fetching cart", error);
-    res.json({ success: false, message: "Error in fetching cart" });
-  }
-};
+//       user: req.session.user || "",
+//       sort: null,
+//       query: null,
+//     });
+//   } catch (error) {
+//     console.log("error n fetching cart", error);
+//     res.json({ success: false, message: "Error in fetching cart" });
+//   }
+// };
 
-const addToCart = async (req, res) => {
-  console.log("from add to cart");
-  try {
-    if (!req.session.user) {
-      return res.json({ success: false, message: "User not registered" });
-    }
-    const user = req.session.user;
-    const userId = user._id;
+// const addToCart = async (req, res) => {
+//   console.log("from add to cart");
+//   try {
+//     if (!req.session.user) {
+//       return res.json({ success: false, message: "User not registered" });
+//     }
+//     const user = req.session.user;
+//     const userId = user._id;
 
-    const { productId } = req.body;
-    console.log("product id is ", productId);
+//     const { productId } = req.body;
+//     console.log("product id is ", productId);
 
-    if (!productId) {
-      return res.json({ success: false, message: "Product id is not found" });
-    }
-    const quantity = req.body.quantity || 1;
-    const subTotal = req.body.subTotal;
+//     if (!productId) {
+//       return res.json({ success: false, message: "Product id is not found" });
+//     }
+//     const quantity = req.body.quantity || 1;
+//     const subTotal = req.body.subTotal;
 
-    if (!user) {
-      return res.json({ success: false, message: "User not resistered" });
-    }
-    console.log("quantity is ", quantity);
+//     if (!user) {
+//       return res.json({ success: false, message: "User not resistered" });
+//     }
+//     console.log("quantity is ", quantity);
 
-    // Find the product and check stock
-    const product = await Product.findOne({ _id: productId });
+//     // Find the product and check stock
+//     const product = await Product.findOne({ _id: productId });
 
-    if (!product) {
-      return res.json({ success: false, message: "Product not found" });
-    }
+//     if (!product) {
+//       return res.json({ success: false, message: "Product not found" });
+//     }
 
-    const productStock = product.stock;
+//     const productStock = product.stock;
 
-    // Check if requested quantity exceeds available stock
-    if (quantity > productStock) {
-      return res.json({ success: false, message: "Out of stock" });
-    }
+//     // Check if requested quantity exceeds available stock
+//     if (quantity > productStock) {
+//       return res.json({ success: false, message: "Out of stock" });
+//     }
 
-    // Find the user's cart
-    let cart = await Cart.findOne({ userId });
+//     // Find the user's cart
+//     let cart = await Cart.findOne({ userId });
 
-    if (!cart) {
-      // Create a new cart if it doesn't exist
-      cart = new Cart({ userId, items: [{ productId, quantity }] });
-    } else {
-      // Check if the product is already in the cart
-      const itemIndex = cart.items.findIndex(
-        (item) => item.productId.toString() === productId,
-      );
+//     if (!cart) {
+//       // Create a new cart if it doesn't exist
+//       cart = new Cart({ userId, items: [{ productId, quantity }] });
+//     } else {
+//       // Check if the product is already in the cart
+//       const itemIndex = cart.items.findIndex(
+//         (item) => item.productId.toString() === productId,
+//       );
 
-      if (itemIndex > -1) {
-        cart.items[itemIndex].quantity += quantity;
+//       if (itemIndex > -1) {
+//         cart.items[itemIndex].quantity += quantity;
 
-        if (cart.items[itemIndex].quantity > productStock) {
-          return res.json({ success: false, message: "Out of stock" });
-        } else if (cart.items[itemIndex].quantity > 5) {
-          return res.json({
-            success: false,
-            message: "Cannot add more than 5 quantity of the same",
-          });
-        }
-      } else {
-        // Add the product to the cart if it's not already in
-        cart.items.push({ productId, quantity, subTotal });
-      }
-    }
+//         if (cart.items[itemIndex].quantity > productStock) {
+//           return res.json({ success: false, message: "Out of stock" });
+//         } else if (cart.items[itemIndex].quantity > 5) {
+//           return res.json({
+//             success: false,
+//             message: "Cannot add more than 5 quantity of the same",
+//           });
+//         }
+//       } else {
+//         // Add the product to the cart if it's not already in
+//         cart.items.push({ productId, quantity, subTotal });
+//       }
+//     }
 
-    // Save the cart after ensuring quantity is valid
-    await cart.save();
+//     // Save the cart after ensuring quantity is valid
+//     await cart.save();
 
-    console.log("Product added to cart!");
+//     console.log("Product added to cart!");
 
-    //remove the product from wishlist
-    const wishList = await WishList.findOne({ userId });
+//     //remove the product from wishlist
+//     const wishList = await WishList.findOne({ userId });
 
-    if (wishList) {
-      const wishListItem = wishList.items.find(
-        (item) => item.toString() == productId,
-      );
-      if (wishListItem) {
-        wishList.items.pull(productId);
-        await wishList.save();
-      }
-    } else {
-      console.log("No wishlist found for user:", userId);
-      // Optional: you could create a new wishlist document if needed
-    }
-    // Response after successfully adding to cart
-    res.json({ success: true, message: "Product added to cart!" });
-  } catch (error) {
-    console.log("Error in Adding Cart", error);
-    res.json({ success: false, message: "Something went wrong!" });
-  }
-};
+//     if (wishList) {
+//       const wishListItem = wishList.items.find(
+//         (item) => item.toString() == productId,
+//       );
+//       if (wishListItem) {
+//         wishList.items.pull(productId);
+//         await wishList.save();
+//       }
+//     } else {
+//       console.log("No wishlist found for user:", userId);
+//       // Optional: you could create a new wishlist document if needed
+//     }
+//     // Response after successfully adding to cart
+//     res.json({ success: true, message: "Product added to cart!" });
+//   } catch (error) {
+//     console.log("Error in Adding Cart", error);
+//     res.json({ success: false, message: "Something went wrong!" });
+//   }
+// };
 
-const deleteCart = async (req, res) => {
-  console.log("From delete Cart");
-  const { productId } = req.params;
-  const userId = req.session.user._id;
+// const deleteCart = async (req, res) => {
+//   console.log("From delete Cart");
+//   const { productId } = req.params;
+//   const userId = req.session.user._id;
 
-  console.log(`userId id ${userId} and product Id is ${productId}`);
-  try {
-    const cart = await Cart.findOne({ userId }).populate({
-      path: "items.productId",
-      model: "Product",
-      select: "productName price images stock categoryId",
-    });
-    if (!cart) {
-      console.log("can't find cart");
-    } else {
-      console.log("cart found");
-      cart.items = cart.items.filter(
-        (item) => item.productId._id?.toString() !== productId,
-      );
+//   console.log(`userId id ${userId} and product Id is ${productId}`);
+//   try {
+//     const cart = await Cart.findOne({ userId }).populate({
+//       path: "items.productId",
+//       model: "Product",
+//       select: "productName price images stock categoryId",
+//     });
+//     if (!cart) {
+//       console.log("can't find cart");
+//     } else {
+//       console.log("cart found");
+//       cart.items = cart.items.filter(
+//         (item) => item.productId._id?.toString() !== productId,
+//       );
 
-      await cart.save();
-     // fetching offers
-     const offers = await Offer.find({ status: "active" });
-     cart.items.forEach((item) => {
-      const productOffer = offers.find(
-        (offer) =>
-          offer.applicableTo == "product" &&
-          offer.productId?.toString() == item.productId._id?.toString(),
-      );
-      const categoryOffer = offers.find(
-        (offer) =>
-          offer.applicableTo == "category" &&
-          offer.categoryId?.toString() == item.productId.categoryId.toString(),
-      );
+//       await cart.save();
+//       // fetching offers
+//       const offers = await Offer.find({ status: "active" });
+//       cart.items.forEach((item) => {
+//         const productOffer = offers.find(
+//           (offer) =>
+//             offer.applicableTo == "product" &&
+//             offer.productId?.toString() == item.productId._id?.toString(),
+//         );
+//         const categoryOffer = offers.find(
+//           (offer) =>
+//             offer.applicableTo == "category" &&
+//             offer.categoryId?.toString() == item.productId.categoryId.toString(),
+//         );
 
-      let finalOffer = null;
-      let discountAmount = 0;
-      if (!categoryOffer && !productOffer) {
-      } else if (productOffer && categoryOffer) {
-        const productDiscountAmount =
-          productOffer.discountType == "amount"
-            ? productOffer.discountValue
-            : (productOffer.discountValue * item.productId.price) / 100;
-        const categoryDiscountAmount =
-          categoryOffer.discountType == "amount"
-            ? categoryOffer.discountValue
-            : (categoryOffer.discountValue * item.productId.price) / 100;
+//         let finalOffer = null;
+//         let discountAmount = 0;
+//         if (!categoryOffer && !productOffer) {
+//         } else if (productOffer && categoryOffer) {
+//           const productDiscountAmount =
+//             productOffer.discountType == "amount"
+//               ? productOffer.discountValue
+//               : (productOffer.discountValue * item.productId.price) / 100;
+//           const categoryDiscountAmount =
+//             categoryOffer.discountType == "amount"
+//               ? categoryOffer.discountValue
+//               : (categoryOffer.discountValue * item.productId.price) / 100;
 
-        discountAmount =
-          productDiscountAmount > categoryDiscountAmount
-            ? productDiscountAmount
-            : categoryDiscountAmount;
-        finalOffer =
-          productDiscountAmount > categoryDiscountAmount
-            ? productOffer
-            : categoryOffer;
-      } else if (categoryOffer || productOffer) {
-        finalOffer = categoryOffer || productOffer;
-        discountAmount =
-          finalOffer.discountType == "amount"
-            ? finalOffer.discountValue
-            : (finalOffer.discountValue * item.productId.price) / 100;
-      }
+//           discountAmount =
+//             productDiscountAmount > categoryDiscountAmount
+//               ? productDiscountAmount
+//               : categoryDiscountAmount;
+//           finalOffer =
+//             productDiscountAmount > categoryDiscountAmount
+//               ? productOffer
+//               : categoryOffer;
+//         } else if (categoryOffer || productOffer) {
+//           finalOffer = categoryOffer || productOffer;
+//           discountAmount =
+//             finalOffer.discountType == "amount"
+//               ? finalOffer.discountValue
+//               : (finalOffer.discountValue * item.productId.price) / 100;
+//         }
 
-      if (finalOffer) {
-        item.discountAmount = discountAmount;
-        item.discountPrice = Math.round(item.productId.price - discountAmount);
-        item.discountType = finalOffer.discountType;
-      } else {
-        item.discountAmount = 0;
-        item.discountPrice = item.productId.price;
-        item.discountTyp = "";
-      }
-    });
+//         if (finalOffer) {
+//           item.discountAmount = discountAmount;
+//           item.discountPrice = Math.round(item.productId.price - discountAmount);
+//           item.discountType = finalOffer.discountType;
+//         } else {
+//           item.discountAmount = 0;
+//           item.discountPrice = item.productId.price;
+//           item.discountTyp = "";
+//         }
+//       });
 
-    const netAmount = cart.items.reduce(
-      (total, item) => total + item.discountPrice * item.quantity,
-      0,
-    );
-    const totalDiscount = cart.items.reduce(
-      (total, item) => total + item.discountAmount * item.quantity,
-      0,
-    );
-      req.session.netAmount = netAmount;
-    req.session.totalDiscount = totalDiscount;
+//       const netAmount = cart.items.reduce(
+//         (total, item) => total + item.discountPrice * item.quantity,
+//         0,
+//       );
+//       const totalDiscount = cart.items.reduce(
+//         (total, item) => total + item.discountAmount * item.quantity,
+//         0,
+//       );
+//       req.session.netAmount = netAmount;
+//       req.session.totalDiscount = totalDiscount;
 
-      req.session.discountAmount = 0;
-      req.session.totalAmount = 0;
-      req.session.code = "";
-      console.log("removed from cart");
-      const cartItems=cart.items
-      return res.json({ success: true, message: "deleted from cart" ,cartItems,netAmount,totalDiscount});
-    }
-  } catch (error) {
-    console.log("error in fetching cart");
-    res.json({ success: false, message: "Error in ffetching cart" });
-  }
-};
+//       req.session.discountAmount = 0;
+//       req.session.totalAmount = 0;
+//       req.session.code = "";
+//       console.log("removed from cart");
+//       const cartItems = cart.items
+//       return res.json({ success: true, message: "deleted from cart", cartItems, netAmount, totalDiscount });
+//     }
+//   } catch (error) {
+//     console.log("error in fetching cart");
+//     res.json({ success: false, message: "Error in ffetching cart" });
+//   }
+// };
 
 const updateCart = async (req, res) => {
   console.log("from updateCart");
@@ -1859,7 +1793,7 @@ const updateCart = async (req, res) => {
 
     const productStock = product.stock;
     console.log("cart itmes ", cart.items);
-     const cartItems=cart.items
+    const cartItems = cart.items
     // Find item in cart
     const item = cart.items.find(
       (item) => item.productId._id.toString() === productId,
@@ -1889,7 +1823,7 @@ const updateCart = async (req, res) => {
 
     //fetching offers
     const offers = await Offer.find({ status: "active" });
-     cartItems.forEach((item) => {
+    cartItems.forEach((item) => {
       const productOffer = offers.find(
         (offer) =>
           offer.applicableTo == "product" &&
@@ -1949,7 +1883,7 @@ const updateCart = async (req, res) => {
       (total, item) => total + item.discountAmount * item.quantity,
       0,
     );
-      req.session.netAmount = netAmount;
+    req.session.netAmount = netAmount;
     req.session.totalDiscount = totalDiscount;
     req.session.discountAmount = 0;
     req.session.totalAmount = 0;
@@ -1958,7 +1892,7 @@ const updateCart = async (req, res) => {
 
     return res
       .status(200)
-      .json({ success: true, message: "Cart updated successfully" ,cartItems,netAmount,totalDiscount});
+      .json({ success: true, message: "Cart updated successfully", cartItems, netAmount, totalDiscount });
   } catch (error) {
     console.error("Error updating cart:", error);
     return res.status(500).json({ success: false, message: "Server error" });
@@ -2084,7 +2018,7 @@ const getCheckout = async (req, res) => {
     cartItems,
     shippingCharge,
     taxAmount,
-     couponCode: req.session.code || "",
+    couponCode: req.session.code || "",
     couponDiscountAmount: req.session.discountAmount || 0,
     offerDiscountAmount: req.session.totalDiscount || 0,
     totalAmount,
@@ -2104,8 +2038,8 @@ const placeOrder = async (req, res) => {
     //validatiing essential fields
     const useWallet = req.body.useWallet;
     console.log("useWallet ", useWallet);
-    if(useWallet){
-      paymentMethod='wallet'
+    if (useWallet) {
+      paymentMethod = 'wallet'
     }
 
     const userId = req.session.user._id;
@@ -2402,19 +2336,19 @@ const placeOrder = async (req, res) => {
         paymentDetails:
           paymentMethod == "Credit Card"
             ? {
-                cardNumber,
-                expiry,
-                cvv,
-                cardName,
-              }
+              cardNumber,
+              expiry,
+              cvv,
+              cardName,
+            }
             : paymentMethod == "UPI"
               ? {
-                  upiId,
-                }
+                upiId,
+              }
               : paymentMethod == "wallet"
                 ? {
-                    razorpayOrderId: razorpayOrder.id,
-                  }
+                  razorpayOrderId: razorpayOrder.id,
+                }
                 : null,
 
         items: orderItems,
@@ -2650,9 +2584,9 @@ const applyCoupon = async (req, res) => {
         message: `You Should Purchse for minimum ${coupon.minPurchase} to get this coupon`,
       });
     }
-  
-    console.log('userId',userId,'coupenCode',code);
-    
+
+    console.log('userId', userId, 'coupenCode', code);
+
     //check it is used by the same user
     const isUsed = await Order.findOne({
       userId,
@@ -2662,7 +2596,7 @@ const applyCoupon = async (req, res) => {
 
     if (isUsed) {
       console.log('this code is alredy used');
-      
+
       return res.json({
         success: false,
         message: "You have already used this coupon",
@@ -2675,8 +2609,8 @@ const applyCoupon = async (req, res) => {
       discountAmount = req.session.totalAmount * (coupon.discountValue / 100);
     }
 
-    console.log('req.session.netAmount',req.session.netAmount,'coupon.discountValue',coupon.discountValue);
-    
+    console.log('req.session.netAmount', req.session.netAmount, 'coupon.discountValue', coupon.discountValue);
+
     const finalAmount = req.session.netAmount - coupon.discountValue;
     console.log("finalAmount ", finalAmount);
 
@@ -2706,190 +2640,190 @@ const applyCoupon = async (req, res) => {
 };
 
 //get wishList
-const getWishList = async (req, res) => {
-  console.log("This is from user wish list");
-  try {
-    const userId = req.session.user._id;
-    if (!userId) {
-      console.log("userId is not found");
-      return res.json({ success: false, message: "User not registered" });
-    }
-    const wishList = await WishList.findOne({ userId }).populate("items");
+// const getWishList = async (req, res) => {
+//   console.log("This is from user wish list");
+//   try {
+//     const userId = req.session.user._id;
+//     if (!userId) {
+//       console.log("userId is not found");
+//       return res.json({ success: false, message: "User not registered" });
+//     }
+//     const wishList = await WishList.findOne({ userId }).populate("items");
 
-    let cartCount = 0;
+//     let cartCount = 0;
 
-    const cart = await Cart.findOne({ userId });
-    console.log("cart", cart);
-    if (cart) {
-      cartCount = cart.items.length || 0;
-    }
+//     const cart = await Cart.findOne({ userId });
+//     console.log("cart", cart);
+//     if (cart) {
+//       cartCount = cart.items.length || 0;
+//     }
 
-    const offers = await Offer.find({ status: "active" });
-    let products = [];
-    if (wishList) {
-      products = wishList.items;
-    }
+//     const offers = await Offer.find({ status: "active" });
+//     let products = [];
+//     if (wishList) {
+//       products = wishList.items;
+//     }
 
-    products.forEach((product) => {
-      const productOffer = offers.find(
-        (offer) =>
-          offer.applicableTo === "product" &&
-          offer.productId?.toString() === product._id.toString(),
-      );
-      const categoryOffer = offers.find(
-        (offer) =>
-          offer.applicableTo === "category" &&
-          offer.categoryId?.toString() === product.categoryId?.toString(),
-      );
+//     products.forEach((product) => {
+//       const productOffer = offers.find(
+//         (offer) =>
+//           offer.applicableTo === "product" &&
+//           offer.productId?.toString() === product._id.toString(),
+//       );
+//       const categoryOffer = offers.find(
+//         (offer) =>
+//           offer.applicableTo === "category" &&
+//           offer.categoryId?.toString() === product.categoryId?.toString(),
+//       );
 
-      let finalOffer = null;
-      let discountAmount = 0;
+//       let finalOffer = null;
+//       let discountAmount = 0;
 
-      if (productOffer && categoryOffer) {
-        const productDiscountAmount =
-          productOffer.discountType === "amount"
-            ? productOffer.discountValue
-            : (product.price * productOffer.discountValue) / 100;
+//       if (productOffer && categoryOffer) {
+//         const productDiscountAmount =
+//           productOffer.discountType === "amount"
+//             ? productOffer.discountValue
+//             : (product.price * productOffer.discountValue) / 100;
 
-        const categoryDiscountAmount =
-          categoryOffer.discountType === "amount"
-            ? categoryOffer.discountValue
-            : (product.price * categoryOffer.discountValue) / 100;
+//         const categoryDiscountAmount =
+//           categoryOffer.discountType === "amount"
+//             ? categoryOffer.discountValue
+//             : (product.price * categoryOffer.discountValue) / 100;
 
-        finalOffer =
-          productDiscountAmount > categoryDiscountAmount
-            ? productOffer
-            : categoryOffer;
-        discountAmount = Math.max(
-          productDiscountAmount,
-          categoryDiscountAmount,
-        );
-      } else if (productOffer || categoryOffer) {
-        finalOffer = productOffer || categoryOffer;
+//         finalOffer =
+//           productDiscountAmount > categoryDiscountAmount
+//             ? productOffer
+//             : categoryOffer;
+//         discountAmount = Math.max(
+//           productDiscountAmount,
+//           categoryDiscountAmount,
+//         );
+//       } else if (productOffer || categoryOffer) {
+//         finalOffer = productOffer || categoryOffer;
 
-        // Checking finalOffer before using its properties
-        if (finalOffer) {
-          discountAmount =
-            finalOffer.discountType === "amount"
-              ? finalOffer.discountValue
-              : (product.price * finalOffer.discountValue) / 100;
-        }
-      }
+//         // Checking finalOffer before using its properties
+//         if (finalOffer) {
+//           discountAmount =
+//             finalOffer.discountType === "amount"
+//               ? finalOffer.discountValue
+//               : (product.price * finalOffer.discountValue) / 100;
+//         }
+//       }
 
-      if (finalOffer) {
-        product.discountPrice = Math.round(product.price - discountAmount);
-        product.discountAmount = discountAmount;
-        product.finalDiscount = finalOffer.discountValue;
-        product.discountType = finalOffer.discountType;
-      } else {
-        product.discountPrice = product.price;
-      }
-    });
+//       if (finalOffer) {
+//         product.discountPrice = Math.round(product.price - discountAmount);
+//         product.discountAmount = discountAmount;
+//         product.finalDiscount = finalOffer.discountValue;
+//         product.discountType = finalOffer.discountType;
+//       } else {
+//         product.discountPrice = product.price;
+//       }
+//     });
 
-    res.render("user/wishList", {
-      wishList,
-      products,
-      categoryId: null,
-      priceRange: null,
-      cartCount: cartCount || 0,
-      sort: "",
-      query: "",
-      title: "your WishList",
-      user: req.session.user,
-    });
-  } catch (error) {
-    console.log("error is ", error);
-    return res.render("error in fetching wish list");
-  }
-};
+//     res.render("user/wishList", {
+//       wishList,
+//       products,
+//       categoryId: null,
+//       priceRange: null,
+//       cartCount: cartCount || 0,
+//       sort: "",
+//       query: "",
+//       title: "your WishList",
+//       user: req.session.user,
+//     });
+//   } catch (error) {
+//     console.log("error is ", error);
+//     return res.render("error in fetching wish list");
+//   }
+// };
 
-//post addToWishList
-const addToWishList = async (req, res) => {
-  console.log("from add to wishlist");
-  try {
-    const { productId } = req.body;
-    console.log("productId ", productId);
+// //post addToWishList
+// const addToWishList = async (req, res) => {
+//   console.log("from add to wishlist");
+//   try {
+//     const { productId } = req.body;
+//     console.log("productId ", productId);
 
-    const product = await Product.findOne({ _id: productId });
-    if (!product) {
-      console.log("product not found");
+//     const product = await Product.findOne({ _id: productId });
+//     if (!product) {
+//       console.log("product not found");
 
-      return res.json({ success: false, message: "Product not Found " });
-    }
-    if (!req.session.user) {
-      return res.json({ success: false, message: "You are not registered" });
-    }
-    const userId = req.session.user._id;
-    if (!userId) {
-      return res.json({ success: false, message: "User is not registered" });
-    }
-    let wishList = await WishList.findOne({ userId });
-    console.log("wishList ", wishList);
+//       return res.json({ success: false, message: "Product not Found " });
+//     }
+//     if (!req.session.user) {
+//       return res.json({ success: false, message: "You are not registered" });
+//     }
+//     const userId = req.session.user._id;
+//     if (!userId) {
+//       return res.json({ success: false, message: "User is not registered" });
+//     }
+//     let wishList = await WishList.findOne({ userId });
+//     console.log("wishList ", wishList);
 
-    if (!wishList) {
-      console.log("wish list not found");
+//     if (!wishList) {
+//       console.log("wish list not found");
 
-      wishList = new WishList({ userId, items: [productId] });
-      await wishList.save();
-      console.log("created wishlist ", wishList);
-      return res.json({
-        success: true,
-        message: "This item Added to wishlist",
-      });
-    } else {
-      console.log("wishlist found");
+//       wishList = new WishList({ userId, items: [productId] });
+//       await wishList.save();
+//       console.log("created wishlist ", wishList);
+//       return res.json({
+//         success: true,
+//         message: "This item Added to wishlist",
+//       });
+//     } else {
+//       console.log("wishlist found");
 
-      const itemExist = await wishList.items.find(
-        (item) => item.toString() == productId,
-      );
-      if (itemExist) {
-        console.log("This item is already in the wishlist");
-        return res.json({
-          success: false,
-          message: "This item is already in the wishlist",
-        });
-      }
-      wishList.items.push(productId);
-      await wishList.save();
-      console.log("This item Added to wishlist wishlist");
-      return res.json({
-        success: true,
-        message: "This item Added to wishlist",
-      });
-    }
-  } catch (error) {
-    console.log("error ", error);
-    return res.json({ success: false, message: "Error in fetchig product" });
-  }
-};
+//       const itemExist = await wishList.items.find(
+//         (item) => item.toString() == productId,
+//       );
+//       if (itemExist) {
+//         console.log("This item is already in the wishlist");
+//         return res.json({
+//           success: false,
+//           message: "This item is already in the wishlist",
+//         });
+//       }
+//       wishList.items.push(productId);
+//       await wishList.save();
+//       console.log("This item Added to wishlist wishlist");
+//       return res.json({
+//         success: true,
+//         message: "This item Added to wishlist",
+//       });
+//     }
+//   } catch (error) {
+//     console.log("error ", error);
+//     return res.json({ success: false, message: "Error in fetchig product" });
+//   }
+// };
 
-// deleteWishlistItem
-const deleteWishlistItem = async (req, res) => {
-  console.log("deleteWishlistItem");
-  try {
-    const userId = req.session.user._id;
-    const wishList = await WishList.findOne({ userId });
-    const { productId } = req.params;
-    console.log("productId ", productId);
+// // deleteWishlistItem
+// const deleteWishlistItem = async (req, res) => {
+//   console.log("deleteWishlistItem");
+//   try {
+//     const userId = req.session.user._id;
+//     const wishList = await WishList.findOne({ userId });
+//     const { productId } = req.params;
+//     console.log("productId ", productId);
 
-    if (
-      wishList &&
-      wishList.items.some((item) => item.toString() === productId)
-    ) {
-      wishList.items.pull(productId);
-      await wishList.save();
-      return res.json({ success: true, message: "Item removed from wishList" });
-    } else {
-      return res.json({
-        success: false,
-        message: "Item not found in wishList",
-      });
-    }
-  } catch (error) {
-    console.log("error", error);
-    return res.json({ success: false, message: "Error in fetching wishList" });
-  }
-};
+//     if (
+//       wishList &&
+//       wishList.items.some((item) => item.toString() === productId)
+//     ) {
+//       wishList.items.pull(productId);
+//       await wishList.save();
+//       return res.json({ success: true, message: "Item removed from wishList" });
+//     } else {
+//       return res.json({
+//         success: false,
+//         message: "Item not found in wishList",
+//       });
+//     }
+//   } catch (error) {
+//     console.log("error", error);
+//     return res.json({ success: false, message: "Error in fetching wishList" });
+//   }
+// };
 
 // get wallet
 const getWallet = async (req, res) => {
@@ -2904,15 +2838,15 @@ const getWallet = async (req, res) => {
     if (!wallet) {
       return res.json({ success: false, message: "Wallet no found" });
     }
-    let cart=[]
-    let cartCount=0
-    if(userId){
-       cart = await Cart.findOne({ userId });
-    if (cart) {
-    cartCount=cart.length ||0
+    let cart = []
+    let cartCount = 0
+    if (userId) {
+      cart = await Cart.findOne({ userId });
+      if (cart) {
+        cartCount = cart.length || 0
+      }
     }
-    }
-    
+
     const debitLength = wallet.transactions.filter(
       (transaction) => transaction.type == "debit",
     ).length;
@@ -2923,7 +2857,7 @@ const getWallet = async (req, res) => {
     const recentTransactions = wallet.transactions
       .sort((a, b) => new Date(b.date) - new Date(a.date)) // sort newest first
       .slice(0, 3);
-   
+
     res.render("user/wallet", {
       categoryId: null,
       priceRange: null,
@@ -2969,7 +2903,7 @@ const addMoney = async (req, res) => {
       description: "Fund Added",
     });
     await wallet.save();
-    return res.json({ success: true, message: "Fund Added succesfully" ,balance:wallet.balance});
+    return res.json({ success: true, message: "Fund Added succesfully", balance: wallet.balance });
   } catch (error) {
     console.log("error is ", error);
     return res.json({ success: false, message: "server error" });
@@ -3341,12 +3275,12 @@ const removeCoupon = async (req, res, next) => {
       req.session.discountAmount = 0;
       req.session.finalAmount = req.session.netAmount; // revert back to original
       req.session.code = "";
-      console.log('final amount',req.session.finalAmount );
-      
+      console.log('final amount', req.session.finalAmount);
+
       return res.json({
         success: true,
         message: "Coupon removed successfully",
-        finalAmount:req.session.finalAmount 
+        finalAmount: req.session.finalAmount
       });
     } catch (error) {
       console.log("Error removing coupon:", error);
@@ -3371,75 +3305,75 @@ const getContact = (req, res) => {
 };
 
 //adminside
-const getUsers=async(req,res)=>{
+const getUsers = async (req, res) => {
   console.log('getUsers');
   try {
-      const query = req.query.query || "";
-      const page = parseInt(req.query.page) || 1;
-      const limit = parseInt(req.query.limit) || 5;
-      const skip = (page - 1) * limit;
-  
-      console.log("query", query);
-  
-      let searchQuery = {};
-      if (query.trim()) {
-        searchQuery = {
-          $or: [
-            { name: { $regex: query, $options: "i" } },
-            { email: { $regex: query, $options: "i" } },
-          ],
-        };
-      }
-      const users = await User
-        .find(searchQuery)
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit);
-  
-      const totalUsers = await User.countDocuments();
-      const totalPages = Math.ceil(totalUsers / limit);
-  
-      console.log(`from userpage.page is ${page} and limit is ${limit}`);
-  
-      res.render("../views/admin/userManagement", {
-        users,
-        currentPage: page,
-        totalPages,
-        thisPage:'users',
-        title: "User Management",
-        successMessage: res.locals.successMessage || "",
-        errorMessage: res.locals.errorMessage || "",
-      });
-    } catch (error) {
-     console.log(error);
-     return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({success:false,message:statusMessages.SERVER_ERROR})
+    const query = req.query.query || "";
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 5;
+    const skip = (page - 1) * limit;
+
+    console.log("query", query);
+
+    let searchQuery = {};
+    if (query.trim()) {
+      searchQuery = {
+        $or: [
+          { name: { $regex: query, $options: "i" } },
+          { email: { $regex: query, $options: "i" } },
+        ],
+      };
     }
+    const users = await User
+      .find(searchQuery)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const totalUsers = await User.countDocuments();
+    const totalPages = Math.ceil(totalUsers / limit);
+
+    console.log(`from userpage.page is ${page} and limit is ${limit}`);
+
+    res.render("../views/admin/userManagement", {
+      users,
+      currentPage: page,
+      totalPages,
+      thisPage: 'users',
+      title: "User Management",
+      successMessage: res.locals.successMessage || "",
+      errorMessage: res.locals.errorMessage || "",
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: statusMessages.SERVER_ERROR })
+  }
 }
 
 //block user
-const blockUser=async(req,res)=>{
+const blockUser = async (req, res) => {
   console.log('blockUser');
-   const { userId } = req.params;
-    const { isActive } = req.body;
-  
-    try {
-      const blockUser = await User.findOneAndUpdate(
-        { _id: userId },
-        { isActive },
-        { new: true },
-      );
-  
-      if (!blockUser) {
-        console.log('User not found');
-        return res.status(StatusCodes.NOT_FOUND).json({success:false,message:statusMessages.NOT_FOUND("User ")})
-      }
-      console.log('Status updated');
-        return res.status(StatusCodes.OK).json({success:true,message:statusMessages.UPDATED("User")})
-    } catch (error) {
-     
-      console.log('Server Error');
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({success:false,message:statusMessages.SERVER_ERROR})
+  const { userId } = req.params;
+  const { isActive } = req.body;
+
+  try {
+    const blockUser = await User.findOneAndUpdate(
+      { _id: userId },
+      { isActive },
+      { new: true },
+    );
+
+    if (!blockUser) {
+      console.log('User not found');
+      return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: statusMessages.NOT_FOUND("User ") })
     }
+    console.log('Status updated');
+    return res.status(StatusCodes.OK).json({ success: true, message: statusMessages.UPDATED("User") })
+  } catch (error) {
+
+    console.log('Server Error');
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: statusMessages.SERVER_ERROR })
+  }
 }
 module.exports = {
   getLogin,
@@ -3453,10 +3387,10 @@ module.exports = {
   getResetPassword,
   postResetPassword,
   getAccount,
-  getCart,
-  addToCart,
+  
+  
   getCheckout,
-  deleteCart,
+ 
   updateCart,
   addAddress,
   updateUser,
@@ -3473,9 +3407,7 @@ module.exports = {
   deleteOrder,
   logout,
   applyCoupon,
-  getWishList,
-  addToWishList,
-  deleteWishlistItem,
+  
   getWallet,
   addMoney,
   cancelSingleProduct,
@@ -3484,8 +3416,8 @@ module.exports = {
   removeProfileImage,
   usertest,
   addAddresses,
-  getProductList,
-  getSingleProduct,
+  
+ 
   getAllCoupons,
   varifyPayment,
   getPaymentFailure,
