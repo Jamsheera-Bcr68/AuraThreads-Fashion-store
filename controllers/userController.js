@@ -365,7 +365,8 @@ const postLogin = async (req, res) => {
           });
           console.log("Auto-created wallet for returning user", user.email);
         }
-
+       
+        
         return res.redirect(redirectTo);
       } else {
         res.render("user/userLogin", {
@@ -451,6 +452,8 @@ const postResetPassword = async (req, res) => {
 };
 
 const getHome = async (req, res) => {
+  console.log('req.session.user',req.session.user);
+  
   const categories = await category
     .find({
       isDeleted: false

@@ -112,7 +112,8 @@ const addToWishList = async (req, res) => {
   try {
     const { productId } = req.body;
     console.log("productId ", productId);
-
+    console.log('req.session.user',req.session.user);
+    
     const product = await Product.findOne({ _id: productId });
     if (!product) {
       console.log("product not found");
@@ -120,14 +121,12 @@ const addToWishList = async (req, res) => {
       return res.status(statusCodes.NOT_FOUND).json({ success: false, message: statusMessages.NOT_FOUND("Product") });
     }
     if (!req.session.user) {
-        req.session.redirectTo='/user/productList'
+        
       return res.status(statusCodes.UNAUTHORIZED).json({ success: false, message: "You are not registered" });
     }
-     req.session.redirectTo=''
+     
     const userId = req.session.user._id;
-    if (!userId) {
-      return res.status(statusCodes.UNAUTHORIZED).json({ success: false, message: "User is not registered" });
-    }
+   
     let wishList = await WishList.findOne({ userId });
     console.log("wishList ", wishList);
 
