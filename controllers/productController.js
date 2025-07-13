@@ -1259,7 +1259,7 @@ const getSingleProduct = async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching product:", error);
-    res.status(500).render({
+    res.status(500).json({
       success: false,
       message: "Something went wrong. Please try again.",
     });
