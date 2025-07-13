@@ -208,21 +208,21 @@ jQuery(document).ready(function ($) {
           Swal.fire("Error!", data.message, "error");
         } else {
           const totalCol = document.getElementById(`col-${productId}`);
-          const cartItems=data.cartItems
+          const cartItems = data.cartItems
           console.log("finalPrice", finalPrice);
-          
-          console.log('cartItems',cartItems);
-          
+
+          console.log('cartItems', cartItems);
+
           totalCol.innerHTML = (quantity * finalPrice).toFixed(2);
-          let subTotal=document.getElementById('subTotal')
-          const originalCartTotal=cartItems.reduce((acc,item)=>acc+item.subTotal,0)
+          let subTotal = document.getElementById('subTotal')
+          const originalCartTotal = cartItems.reduce((acc, item) => acc + item.subTotal, 0)
           console.log(originalCartTotal);
-          subTotal.innerText=originalCartTotal.toFixed(2)
-          const netAmount=data.netAmount
-          const totalDiscount=data.totalDiscount
-          console.log('netAmount',netAmount,'totalDiscount',totalDiscount);
-          document.getElementById('offer').innerText=totalDiscount.toFixed(2)
-          document.getElementById('updatedCartTotal').innerText=netAmount.toFixed(2)
+          subTotal.innerText = originalCartTotal.toFixed(2)
+          const netAmount = data.netAmount
+          const totalDiscount = data.totalDiscount
+          console.log('netAmount', netAmount, 'totalDiscount', totalDiscount);
+          document.getElementById('offer').innerText = totalDiscount.toFixed(2)
+          document.getElementById('updatedCartTotal').innerText = netAmount.toFixed(2)
         }
       })
       .catch((error) => {
@@ -244,9 +244,9 @@ jQuery(document).ready(function ($) {
     });
     $("#amount").val(
       "$" +
-        $("#slider-range").slider("values", 0) +
-        " - $" +
-        $("#slider-range").slider("values", 1),
+      $("#slider-range").slider("values", 0) +
+      " - $" +
+      $("#slider-range").slider("values", 1),
     );
   };
   siteSliderRange();
@@ -475,26 +475,26 @@ removeBtns.forEach((btn) =>
             if (data && data.success) {
               Swal.fire({
 
-              icon: "success",
-              title: data.message,
-              showConfirmButton: false,
-              timer: 1000
-            })
+                icon: "success",
+                title: data.message,
+                showConfirmButton: false,
+                timer: 1000
+              })
 
               const row = document.getElementById(`row-${productId}`);
               if (row) row.remove();
-              const cartItems=data.cartItems
-              const count=cartItems.length ||0
-              if(count==0){
-                document.getElementById('cartHead').textContent='Your cart is empty.'
+              const cartItems = data.cartItems
+              const count = cartItems.length || 0
+              if (count == 0) {
+                document.getElementById('cartHead').textContent = 'Your cart is empty.'
               }
-              const subTotal=cartItems.reduce((acc,item)=>acc+(item.productId.price*item.quantity),0)
-              console.log('cart items',cartItems);
-              
-              console.log('subTotal',subTotal);
-              document.getElementById('subTotal').innerText=subTotal.toFixed(2)
-              document.getElementById('offer').innerText=data.totalDiscount.toFixed(2)
-              document.getElementById('updatedCartTotal').innerText=data.netAmount.toFixed(2)
+              const subTotal = cartItems.reduce((acc, item) => acc + (item.productId.price * item.quantity), 0)
+              console.log('cart items', cartItems);
+
+              console.log('subTotal', subTotal);
+              document.getElementById('subTotal').innerText = subTotal.toFixed(2)
+              document.getElementById('offer').innerText = data.totalDiscount.toFixed(2)
+              document.getElementById('updatedCartTotal').innerText = data.netAmount.toFixed(2)
             } else {
               Swal.fire("Error!", "Failed to remove the item.", "error");
             }
@@ -545,5 +545,140 @@ function applyCoupon(cartTotal) {
 }
 
 
-//wishlist
+//wishlist from product list
+
+const cartButton = document.querySelectorAll('.addToCart')
+cartButton.forEach(btn => btn.addEventListener('click', function () {
+  console.log('cart button clicked');
+
+  const productId = this.getAttribute('data-id')
+  console.log('product id is', productId);
+
+  fetch('/user/cart/add', {
+    method: 'post',
+    headers: {
+      'content-Type': 'application/json',
+      'CSRF-Token': csrfToken
+    },
+    body: JSON.stringify({ productId, quantity: Number(1) })
+  }).then(response => response.json())
+    .then(data => {
+      if (data && data.success) {
+        Swal.fire({
+          title: "Item Added to Cart!",
+          text: "You can continue shopping or view your cart.",
+          icon: "success",
+          showCancelButton: true,
+          confirmButtonText: "Show Cart",
+          cancelButtonText: "OK",
+          reverseButtons: true // optional: puts "OK" on the left
+        }).then((result) => {
+          if (result.isConfirmed) {
+            // Navigate to the cart page
+            window.location.href = "/user/cart";
+          }
+          // else do nothing (OK just closes the alert)
+        });
+      } else {
+        Swal.fire(data.message)
+      }
+    })
+
+
+}))
+
+document.addEventListener('DOMContentLoaded', function () {
+  console.log('Main.js: DOM fully loaded');
+
+  const wishlistIcons = document.querySelectorAll('.wishlist-icon');
+  if (wishlistIcons.length) {
+    wishlistIcons.forEach(icon => {
+      icon.addEventListener('click', function () {
+        const heart = this.querySelector('i');
+        const productId = heart.getAttribute('data-id');
+        const isNotInWishlist = heart.classList.contains('far');
+
+        if (isNotInWishlist) {
+          fetch('/user/wishList/add', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'CSRF-Token': csrfToken
+            },
+            body: JSON.stringify({ productId })
+          })
+          .then(response =>response.json())
+          .then(data=>{
+            if(data && data.success){
+              heart.classList.remove('far');
+              heart.classList.add('fas', 'wishlist-true');
+              Swal.fire({
+                title: "Item Added to Wishlist!",
+                text: "You can continue shopping or view your wishList.",
+                icon: "success",
+                showCancelButton: true,
+                confirmButtonText: "Show wishlist",
+                cancelButtonText: "OK",
+                reverseButtons: true
+              }).then(result => {
+                if (result.isConfirmed) {
+                  window.location.href = "/user/wishlist";
+                }
+              });
+            }else{
+               Swal.fire(data.message || 'Failed');
+            }
+          }).catch(err => {
+            console.error(err);
+            Swal.fire("Request failed");
+          });
+
+        } else {
+          fetch(`/user/wishList/delete/${productId}`, {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+              'CSRF-Token': csrfToken
+            },
+            body: JSON.stringify({ productId })
+          })
+          .then(response => {
+            if (!response.ok) throw new Error(`Server responded ${response.status}`);
+            return response.json();
+          })
+          .then(data => {
+            if (data.success) {
+              heart.classList.remove('fas', 'wishlist-true');
+              heart.classList.add('far');
+              Swal.fire({
+                icon: "success",
+                title: data.message || "Removed",
+                showConfirmButton: false,
+                timer: 1000
+              });
+            } else {
+              Swal.fire(data.message || 'Failed to remove');
+            }
+          }).catch(err => {
+            console.error(err);
+            Swal.fire("Request failed");
+          });
+        }
+      });
+    });
+  }
+
+  const addToCartButtons = document.querySelectorAll('.btn-outline-primary');
+  if (addToCartButtons.length) {
+    addToCartButtons.forEach(button => {
+      button.addEventListener('click', function (e) {
+        const productCard = e.target.closest('.card');
+        const productName = productCard.querySelector('.card-title').textContent;
+        console.log(`Added ${productName} to bag`);
+      });
+    });
+  }
+});
+
+
 

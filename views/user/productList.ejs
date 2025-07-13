@@ -183,9 +183,7 @@
                                                 ? 'disabled' : '' %>>
                                                 <%= product.stock===0 ? 'Out of Stock' : 'Add to Cart' %>
                                             </button>
-                                            <!-- <button class="btn addToWishList bg-success text-white"
-                                                style="margin-top: .5em;" data-id="<%= product._id %>">Add to
-                                                WishList</button> -->
+                                           
                                         </div>
                                     </div>
                                 </div>
@@ -241,45 +239,45 @@
 
             <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
             <script>
-             // var csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
+             
 
-                const cartButton = document.querySelectorAll('.addToCart')
-                cartButton.forEach(btn => btn.addEventListener('click', function () {
-                    const productId = this.getAttribute('data-id')
-                    console.log('product id is', productId);
+                // const cartButton = document.querySelectorAll('.addToCart')
+                // cartButton.forEach(btn => btn.addEventListener('click', function () {
+                //     const productId = this.getAttribute('data-id')
+                //     console.log('product id is', productId);
 
-                    fetch('/user/cart/add', {
-                        method: 'post',
-                        headers: {
-                            'content-Type': 'application/json',
-                              'CSRF-Token': csrfToken
-                        },
-                        body: JSON.stringify({ productId, quantity: Number(1) })
-                    }).then(response => response.json())
-                        .then(data => {
-                            if (data && data.success) {
-                                Swal.fire({
-                                    title: "Item Added to Cart!",
-                                    text: "You can continue shopping or view your cart.",
-                                    icon: "success",
-                                    showCancelButton: true,
-                                    confirmButtonText: "Show Cart",
-                                    cancelButtonText: "OK",
-                                    reverseButtons: true // optional: puts "OK" on the left
-                                }).then((result) => {
-                                    if (result.isConfirmed) {
-                                        // Navigate to the cart page
-                                        window.location.href = "/user/cart";
-                                    }
-                                    // else do nothing (OK just closes the alert)
-                                });
-                            } else {
-                                Swal.fire(data.message)
-                            }
-                        })
+                //     fetch('/user/cart/add', {
+                //         method: 'post',
+                //         headers: {
+                //             'content-Type': 'application/json',
+                //               'CSRF-Token': csrfToken
+                //         },
+                //         body: JSON.stringify({ productId, quantity: Number(1) })
+                //     }).then(response => response.json())
+                //         .then(data => {
+                //             if (data && data.success) {
+                //                 Swal.fire({
+                //                     title: "Item Added to Cart!",
+                //                     text: "You can continue shopping or view your cart.",
+                //                     icon: "success",
+                //                     showCancelButton: true,
+                //                     confirmButtonText: "Show Cart",
+                //                     cancelButtonText: "OK",
+                //                     reverseButtons: true // optional: puts "OK" on the left
+                //                 }).then((result) => {
+                //                     if (result.isConfirmed) {
+                //                         // Navigate to the cart page
+                //                         window.location.href = "/user/cart";
+                //                     }
+                //                     // else do nothing (OK just closes the alert)
+                //                 });
+                //             } else {
+                //                 Swal.fire(data.message)
+                //             }
+                //         })
 
 
-                }))
+                // }))
 
 
 
@@ -287,146 +285,146 @@
                     this.form.submit();
                 });
 
-                /* Sample JavaScript for the EJS template */
-                document.addEventListener('DOMContentLoaded', function () {
-                    console.log('Dress shop page loaded with <%= products.length %> dresses');
+                // /* Sample JavaScript for the EJS template */
+                // document.addEventListener('DOMContentLoaded', function () {
+                //     console.log('Dress shop page loaded with <%= products.length %> dresses');
 
-                    const wishlistIcons = document.querySelectorAll('.wishlist-icon');
+                //     const wishlistIcons = document.querySelectorAll('.wishlist-icon');
 
-                    wishlistIcons.forEach(icon => {
-                        icon.addEventListener('click', function () {
-                            console.log('wishlist icon clicked');
+                //     wishlistIcons.forEach(icon => {
+                //         icon.addEventListener('click', function () {
+                //             console.log('wishlist icon clicked');
 
-                            const heart = this.querySelector('i');
-                            const productId = heart.getAttribute('data-id');
+                //             const heart = this.querySelector('i');
+                //             const productId = heart.getAttribute('data-id');
 
-                            const isNotInWishlist = heart.classList.contains('far');
+                //             const isNotInWishlist = heart.classList.contains('far');
 
-                            if (isNotInWishlist) {
-                                console.log('Item not in wishlist');
+                //             if (isNotInWishlist) {
+                //                 console.log('Item not in wishlist');
 
-                                // Add to wishlist
-                                fetch('/user/wishList/add', {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json',
-                                        'CSRF-Token': csrfToken
-                                    },
-                                    body: JSON.stringify({ productId })
-                                })
-                                    .then(response => response.json())
-                                    .then(data => {
-                                        if (data && data.success) {
-                                            heart.classList.remove('far');
-                                            heart.classList.add('fas', 'wishlist-true'); // Make it filled and red
-                                            Swal.fire({
-                                                title: "Item Added to Wishlist!",
-                                                text: "You can continue shopping or view your wishList.",
-                                                icon: "success",
-                                                showCancelButton: true,
-                                                confirmButtonText: "Show wishlist",
-                                                cancelButtonText: "OK",
-                                                reverseButtons: true // optional: puts "OK" on the left
-                                            }).then((result) => {
-                                                if (result.isConfirmed) {
-                                                    // Navigate to the cart page
-                                                    window.location.href = "/user/wishlist";
-                                                }
-                                                // else do nothing (OK just closes the alert)
-                                            });
-                                        } else {
-                                            Swal.fire(data.message);
-                                        }
-                                    });
+                //                 // Add to wishlist
+                //                 fetch('/user/wishList/add', {
+                //                     method: 'POST',
+                //                     headers: {
+                //                         'Content-Type': 'application/json',
+                //                         'CSRF-Token': csrfToken
+                //                     },
+                //                     body: JSON.stringify({ productId })
+                //                 })
+                //                     .then(response => response.json())
+                //                     .then(data => {
+                //                         if (data && data.success) {
+                //                             heart.classList.remove('far');
+                //                             heart.classList.add('fas', 'wishlist-true'); // Make it filled and red
+                //                             Swal.fire({
+                //                                 title: "Item Added to Wishlist!",
+                //                                 text: "You can continue shopping or view your wishList.",
+                //                                 icon: "success",
+                //                                 showCancelButton: true,
+                //                                 confirmButtonText: "Show wishlist",
+                //                                 cancelButtonText: "OK",
+                //                                 reverseButtons: true // optional: puts "OK" on the left
+                //                             }).then((result) => {
+                //                                 if (result.isConfirmed) {
+                //                                     // Navigate to the cart page
+                //                                     window.location.href = "/user/wishlist";
+                //                                 }
+                //                                 // else do nothing (OK just closes the alert)
+                //                             });
+                //                         } else {
+                //                             Swal.fire(data.message);
+                //                         }
+                //                     });
 
-                            } else {
-                                console.log('item is in wishlist');
-                                console.log(productId);
+                //             } else {
+                //                 console.log('item is in wishlist');
+                //                 console.log(productId);
 
-                                // Remove from wishlist
-                                fetch(`/user/wishList/delete/${productId}`, {
-                                    method: 'DELETE',
-                                    headers: {
-                                        'Content-Type': 'application/json',
-                                        'CSRF-Token': csrfToken
-                                    },
-                                    body: JSON.stringify({ productId })
-                                })
-                                    .then(response => response.json())
-                                    .then(data => {
-                                        if (data && data.success) {
-                                            heart.classList.remove('fas', 'wishlist-true');
-                                            heart.classList.add('far'); // Make it outline
+                //                 // Remove from wishlist
+                //                 fetch(`/user/wishList/delete/${productId}`, {
+                //                     method: 'DELETE',
+                //                     headers: {
+                //                         'Content-Type': 'application/json',
+                //                         'CSRF-Token': csrfToken
+                //                     },
+                //                     body: JSON.stringify({ productId })
+                //                 })
+                //                     .then(response => response.json())
+                //                     .then(data => {
+                //                         if (data && data.success) {
+                //                             heart.classList.remove('fas', 'wishlist-true');
+                //                             heart.classList.add('far'); // Make it outline
                                             
-                                            Swal.fire({
-                                                icon: "success",
-                                                title: data.message,
-                                                showConfirmButton: false,
-                                                timer: 1000
-                                            })
+                //                             Swal.fire({
+                //                                 icon: "success",
+                //                                 title: data.message,
+                //                                 showConfirmButton: false,
+                //                                 timer: 1000
+                //                             })
 
-                                        } else {
-                                            Swal.fire(data.message);
-                                        }
-                                    }).catch(err=>{
-                                        console.log(err);
+                //                         } else {
+                //                             Swal.fire(data.message);
+                //                         }
+                //                     }).catch(err=>{
+                //                         console.log(err);
                                         
-                                        Swal.fire("Internal server error")
-                                    })
-                            }
-                        });
-                    });
+                //                         Swal.fire("Internal server error")
+                //                     })
+                //             }
+                //         });
+                //     });
 
 
-                    // Example of how you might handle add to cart functionality
-                    const addToCartButtons = document.querySelectorAll('.btn-outline-primary');
-                    addToCartButtons.forEach(button => {
-                        button.addEventListener('click', function (e) {
-                            const productCard = e.target.closest('.card');
-                            const productName = productCard.querySelector('.card-title').textContent;
-                            console.log(`Added ${productName} to bag`);
+                //     // Example of how you might handle add to cart functionality
+                //     const addToCartButtons = document.querySelectorAll('.btn-outline-primary');
+                //     addToCartButtons.forEach(button => {
+                //         button.addEventListener('click', function (e) {
+                //             const productCard = e.target.closest('.card');
+                //             const productName = productCard.querySelector('.card-title').textContent;
+                //             console.log(`Added ${productName} to bag`);
 
-                        });
-                    });
-                });
+                //         });
+                //     });
+                // });
 
 
-                const addToWishListBtn = document.querySelectorAll('.addToWishList')
-                addToWishListBtn.forEach(btn => btn.addEventListener('click', function () {
-                    const productId = this.getAttribute('data-id')
-                    console.log('wishlist btn clicked');
+                // const addToWishListBtn = document.querySelectorAll('.addToWishList')
+                // addToWishListBtn.forEach(btn => btn.addEventListener('click', function () {
+                //     const productId = this.getAttribute('data-id')
+                //     console.log('wishlist btn clicked');
 
-                    console.log('product id is', productId);
+                //     console.log('product id is', productId);
 
-                    fetch('/user/wishList/add', {
-                        method: 'post',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'CSRF-Token': csrfToken
-                        },
-                        body: JSON.stringify({ productId })
-                    }).then(response => response.json())
-                        .then(data => {
-                            if (data && data.success) {
-                                Swal.fire({
-                                    icon: "success", // or "warning", depending on your case
-                                    title: data.message,
-                                    showConfirmButton: false,
-                                    timer: 1000
-                                });
-                            } else {
-                                Swal.fire({
-                                    icon: "error",
-                                    title: data.message,
-                                    showConfirmButton: false,
-                                    timer: 1000
-                                });
-                            }
-                        }).catch(err=>{
-                            console.log(err);
-                            Swal.fire('server error')
-                        })
-                }))
+                //     fetch('/user/wishList/add', {
+                //         method: 'post',
+                //         headers: {
+                //             'Content-Type': 'application/json',
+                //             'CSRF-Token': csrfToken
+                //         },
+                //         body: JSON.stringify({ productId })
+                //     }).then(response => response.json())
+                //         .then(data => {
+                //             if (data && data.success) {
+                //                 Swal.fire({
+                //                     icon: "success", // or "warning", depending on your case
+                //                     title: data.message,
+                //                     showConfirmButton: false,
+                //                     timer: 1000
+                //                 });
+                //             } else {
+                //                 Swal.fire({
+                //                     icon: "error",
+                //                     title: data.message,
+                //                     showConfirmButton: false,
+                //                     timer: 1000
+                //                 });
+                //             }
+                //         }).catch(err=>{
+                //             console.log(err);
+                //             Swal.fire('server error')
+                //         })
+                // }))
 
             </script>
             </body>
