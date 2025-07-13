@@ -40,9 +40,32 @@ app.use(
     secret: "admin",
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: false },
+    cookie: {
+    secure: true,      
+    httpOnly: true,
+    sameSite: 'None'    
+  }
   }),
 );
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'https://www.aurathreads.store'
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like curl)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    } else {
+      return callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+}));
+
 
 app.use(cors());
 app.use(passport.initialize());
