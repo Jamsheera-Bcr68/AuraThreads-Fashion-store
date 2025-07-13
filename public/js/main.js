@@ -543,3 +543,7 @@ function applyCoupon(cartTotal) {
       });
   }
 }
+
+
+//wishlist
+

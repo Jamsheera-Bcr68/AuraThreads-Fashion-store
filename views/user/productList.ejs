@@ -234,10 +234,15 @@
         </div>
 
         <%- include('../partials/userFooter') %>
+        <script src="/js/jquery.magnific-popup.min.js"></script>
+            <script src="/js/aos.js"></script>
+            <script src="/js/main.js"></script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+
             <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
             <script>
-                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-                console.log('csrfToken ', csrfToken);
+              //const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                //console.log('csrfToken ', csrfToken);
 
                 const cartButton = document.querySelectorAll('.addToCart')
                 cartButton.forEach(btn => btn.addEventListener('click', function () {
@@ -248,7 +253,7 @@
                         method: 'post',
                         headers: {
                             'content-Type': 'application/json',
-                            'CSRF-Token': csrfToken
+                              'CSRF-Token': csrfToken
                         },
                         body: JSON.stringify({ productId, quantity: Number(1) })
                     }).then(response => response.json())
@@ -476,10 +481,6 @@
                 }))
 
             </script>
-            <script src="/js/jquery.magnific-popup.min.js"></script>
-            <script src="/js/aos.js"></script>
-            <script src="/js/main.js"></script>
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-</body>
+            </body>
 
 </html>
