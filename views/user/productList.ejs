@@ -241,8 +241,7 @@
 
             <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
             <script>
-              //const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-                //console.log('csrfToken ', csrfToken);
+             
 
                 const cartButton = document.querySelectorAll('.addToCart')
                 cartButton.forEach(btn => btn.addEventListener('click', function () {
@@ -291,64 +290,6 @@
                 /* Sample JavaScript for the EJS template */
                 document.addEventListener('DOMContentLoaded', function () {
                     console.log('Dress shop page loaded with <%= products.length %> dresses');
-
-                    // Toggle wishlist hearts
-                    // const wishlistIcons = document.querySelectorAll('.wishlist-icon');
-                    // wishlistIcons.forEach(icon => {
-                    //     icon.addEventListener('click', function () {
-                    //         const heart = this.querySelector('i');
-                    //         if (heart.classList.contains('far')) {
-                    //             heart.classList.remove('far');
-                    //             heart.classList.add('fas');
-
-
-                    //             productId = heart.getAttribute('data-id')
-                    //             console.log('product id is ', productId);
-
-                    //             fetch('/user/wishList/add', {
-                    //                 method: 'post',
-                    //                 headers: {
-                    //                     'Content-Type': 'application/json',
-                    //                     'CSRF-Token': csrfToken
-                    //                 },
-                    //                 body: JSON.stringify({ productId })
-                    //             }).then(response => response.json())
-                    //                 .then(data => {
-                    //                     if (data && data.success) {
-                    //                         heart.style.color = '#dc3545';
-                    //                         Swal.fire(data.message)
-                    //                     } else {
-                    //                         Swal.fire(data.message)
-                    //                     }
-                    //                 })
-
-                    //         } else {
-                    //             heart.classList.remove('fas');
-                    //             heart.classList.add('far');
-                    //             heart.style.color = '';
-
-                    //             productId = heart.getAttribute('data-id')
-                    //             console.log('product id to delete is ', productId);
-
-                    //             fetch(`/user/wishList/delete/${productId}`, {
-                    //                 method: 'post',
-                    //                 headers: {
-                    //                     'Content-Type': 'application/json',
-                    //                     'CSRF-Token': csrfToken
-                    //                 },
-                    //                 body: JSON.stringify({ productId })
-                    //             }).then(response => response.json())
-                    //                 .then(data => {
-                    //                     if (data && data.success) {
-                    //                         Swal.fire(data.message)
-                    //                     } else {
-                    //                         Swal.fire(data.message)
-                    //                     }
-                    //                 })
-                    //         }
-                    //     });
-                    // });
-
 
                     const wishlistIcons = document.querySelectorAll('.wishlist-icon');
 
@@ -427,7 +368,11 @@
                                         } else {
                                             Swal.fire(data.message);
                                         }
-                                    });
+                                    }).catch(err=>{
+                                        console.log(err);
+                                        
+                                        Swal.fire("Internal server error")
+                                    })
                             }
                         });
                     });
@@ -477,6 +422,9 @@
                                     timer: 1000
                                 });
                             }
+                        }).catch(err=>{
+                            console.log(err);
+                            Swal.fire('server error')
                         })
                 }))
 
