@@ -110,12 +110,12 @@ const getWishList = async (req, res) => {
 const addToWishList = async (req, res) => {
   console.log("from add to wishlist");
   try {
-    const { productId } = req.body;
-    console.log("productId ", productId);
+    const { variantId } = req.body;
+    console.log("productId ", variantId);
     console.log('req.session.user',req.session.user);
     
-    const product = await Product.findOne({ _id: productId });
-    if (!product) {
+    const variant = await Variant.findOne({ _id: variantId });
+    if (!variant) {
       console.log("product not found");
 
       return res.status(statusCodes.NOT_FOUND).json({ success: false, message: statusMessages.NOT_FOUND("Product") });
@@ -133,7 +133,7 @@ const addToWishList = async (req, res) => {
     if (!wishList) {
       console.log("wish list not found");
 
-      wishList = new WishList({ userId, items: [productId] });
+      wishList = new WishList({ userId, items: [variantId] });
       await wishList.save();
       console.log("created wishlist ", wishList);
       return res.status(statusCodes.OK).json({
@@ -144,7 +144,7 @@ const addToWishList = async (req, res) => {
       console.log("wishlist found");
 
       const itemExist = await wishList.items.find(
-        (item) => item.toString() == productId,
+        (item) => item.toString() == variantId,
       );
       if (itemExist) {
         console.log("This item is already in the wishlist");
@@ -153,7 +153,7 @@ const addToWishList = async (req, res) => {
           message: "This item is already in the wishlist",
         });
       }
-      wishList.items.push(productId);
+      wishList.items.push(variantId);
       await wishList.save();
       console.log("This item Added to wishlist wishlist");
       return res.status(statusCodes.OK).json({

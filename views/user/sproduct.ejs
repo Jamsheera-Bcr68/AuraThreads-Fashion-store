@@ -11,7 +11,15 @@
 </head>
 
 <body>
-
+<script src="/js/aos.js"></script>
+  <script src="/js/bootstrap.min.js"></script>
+  <script src="/js/jquery-3.3.1.min.js"></script>
+  <script src="/js/jquery-ui.js"></script>
+  <script src="/js/jquery.magnific-popup.min.js"></script>
+  <script src="/js/main.js"></script>
+  <script src="/js/owl.carousel.min.js"></script>
+  <script src="/js/popper.min.js"></script>
+  <script src="/js/slick.min.js"></script>
 
   <%- include('../partials/userHeader') %>
     <div class="container">
@@ -33,7 +41,17 @@
 
               <div class="product-container">
                 <!-- Product Gallery -->
-                <div class="product-gallery">
+               
+                 <div class="product-gallery">
+                  <% if(variants && variants.length>1){ %>
+                  <div  class="thumbnails">
+                    <% variants.forEach((variant, index)=> { %>
+                      <div  style="width: 50px;display: block;" class="thumbnail ">
+                       <a href='/user/products/<%= variant._id %>' ><img src="<%= variant.images[0] %>" alt="Image <%= index + 1 %>" /></a> 
+                      </div>
+                      <% }) %>
+                  </div>
+                <% } %>
                   <div class="main-image" id="mainImage">
                     <img src="<%= variant.images[0] %>" alt="<%= singleProduct.productName %>"
                       id="productMainImage" />
@@ -266,17 +284,20 @@
             <h2>Related Products</h2>
           </div>
         </div>
-        <div class="row product-container">
+        <div class="row product-container ">
           <div class="col-md-12">
             <div class="nonloop-block-3 owl-carousel">
               <% relatedProducts.forEach(product=> { %>
                 <div class="item">
                   <div class="block-4 text-center">
                     <figure class="block-4-image">
+                      <% if(singleProduct.discount){ %>
                        <span class="badge text-bg-warning text-wrap ">
     Save <%= singleProduct.discount %> <%= singleProduct.discountType === 'amount' ? '₹' : '%' %>
   </span>
+  <% } %>
                       <a href="/user/products/<%= product.mainVariant._id %>">
+                        
                         <img class="d-block mx-auto" src="/uploads/<%= product?.mainVariant?.images?.[0].split('/').pop() %>" alt="Image placeholder"
                           class="img-fluid">
                       </a>
@@ -307,11 +328,28 @@
 
     <%- include('../partials/userFooter') %>
 
+      <script src="js/main.js"></script>
       <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
       <script>
 
-      
-        // // Image zoom functionality
+  //      $('.nonloop-block-3').owlCarousel({
+  //   center: false,
+  //   items: 1,
+  //   loop: false,
+  //   margin: 20,
+  //   nav: true,
+  //   responsive:{
+  //     600:{
+  //       items: 2
+  //     },
+  //     1000:{
+  //       items: 3
+  //     }
+  //   }
+  // });
+       
+  
+  // Image zoom functionality
         // const mainImage = document.getElementById("productMainImage");
         // mainImage.addEventListener("click", function () {
         //   this.classList.toggle("zoomed");
@@ -332,7 +370,7 @@
         //   });
         // });
 
-        // // Quantity buttons
+        // // // Quantity buttons
         // const decreaseBtn = document.getElementById("decreaseQty");
         // const increaseBtn = document.getElementById("increaseQty");
         // const quantityInput = document.getElementById("quantity");
@@ -343,7 +381,7 @@
         //     quantityInput.value = value - 1;
         //   }
         // });
-
+// 
         // increaseBtn.addEventListener("click", function () {
         //   console.log('increse btn clicked');
 
@@ -493,6 +531,7 @@
         //       Swal.fire("Server Error")
         //     })
         //   }
+      
       </script>
 </body>
 

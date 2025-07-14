@@ -1,9 +1,10 @@
-const WishList=require('../model/wishListModel')
-const Cart=require('../model/cartModel')
-const Offer=require('../model/offerModel')
-const Product=require('../model/productModel')
-const statusCodes=require('../utils/statusCodes')
-const statusMessages=require('../utils/statusMessages')
+const WishList = require('../model/wishListModel')
+const Cart = require('../model/cartModel')
+const Offer = require('../model/offerModel')
+const Product = require('../model/productModel')
+const statusCodes = require('../utils/statusCodes')
+const statusMessages = require('../utils/statusMessages')
+const Variant = require('../model/variantModel')
 
 const getCart = async (req, res) => {
   let cartCount = 0;
@@ -145,7 +146,7 @@ const getCart = async (req, res) => {
     });
   } catch (error) {
     console.log("error n fetching cart", error);
-   return res.status(statusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message:statusMessages.SERVER_ERROR});
+    return res.status(statusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: statusMessages.SERVER_ERROR });
   }
 };
 
@@ -158,28 +159,28 @@ const addToCart = async (req, res) => {
     const user = req.session.user;
     const userId = user._id;
 
-    const { productId } = req.body;
-    console.log("product id is ", productId);
+    const { variantId } = req.body;
+    console.log("variantId  is ", variantId);
 
-    if (!productId) {
-      return res.json({ success: false, message: "Product id is not found" });
+    if (!variantId) {
+      return res.json({ success: false, message: "variantId is not found" });
     }
     const quantity = req.body.quantity || 1;
     const subTotal = req.body.subTotal;
 
     if (!user) {
-      return res.json({ success: false, message: "User not resistered" });
+      return res.json({ success: false, message: "PLease login first" });
     }
     console.log("quantity is ", quantity);
 
     // Find the product and check stock
-    const product = await Product.findOne({ _id: productId });
+    const variant = await Variant.findOne({ _id: variantId });
 
-    if (!product) {
+    if (!variant) {
       return res.json({ success: false, message: "Product not found" });
     }
 
-    const productStock = product.stock;
+    const productStock = variant.stock;
 
     // Check if requested quantity exceeds available stock
     if (quantity > productStock) {
@@ -188,14 +189,23 @@ const addToCart = async (req, res) => {
 
     // Find the user's cart
     let cart = await Cart.findOne({ userId });
+    let productId
+    if (variant && variant.productId) {
+      productId = variant.productId;
+    } else {
+      return res.json({ success: false, message: "Product ID missing in variant!" });
+    }
+
 
     if (!cart) {
       // Create a new cart if it doesn't exist
-      cart = new Cart({ userId, items: [{ productId, quantity }] });
+      console.log('no cart,vauant is,product id,quantity', variantId, productId, quantity);
+
+      cart = new Cart({ userId, items: [{ productId, variantId: variant._id, quantity }] });
     } else {
       // Check if the product is already in the cart
       const itemIndex = cart.items.findIndex(
-        (item) => item.productId.toString() === productId,
+        (item) => item.variantId?.toString() === variantId,
       );
 
       if (itemIndex > -1) {
@@ -211,11 +221,15 @@ const addToCart = async (req, res) => {
         }
       } else {
         // Add the product to the cart if it's not already in
-        cart.items.push({ productId, quantity, subTotal });
+        console.log('fount cart,variant id,product id,quantity', variantId, productId, quantity);
+        cart.items.push({ productId, variantId: variant._id, quantity, subTotal });
+        console.log('cart saved');
+        
       }
     }
 
-    // Save the cart after ensuring quantity is valid
+    console.log(cart);
+    
     await cart.save();
 
     console.log("Product added to cart!");
@@ -225,10 +239,10 @@ const addToCart = async (req, res) => {
 
     if (wishList) {
       const wishListItem = wishList.items.find(
-        (item) => item.toString() == productId,
+        (item) => item.toString() == variantId,
       );
       if (wishListItem) {
-        wishList.items.pull(productId);
+        wishList.items.pull(variantId);
         await wishList.save();
       }
     } else {
@@ -239,7 +253,7 @@ const addToCart = async (req, res) => {
     res.json({ success: true, message: "Product added to cart!" });
   } catch (error) {
     console.log("Error in Adding Cart", error);
-    res.json({ success: false, message: "Something went wrong!" });
+    return res.status(statusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: statusMessages.SERVER_ERROR });
   }
 };
 
@@ -342,8 +356,8 @@ const deleteCart = async (req, res) => {
     res.json({ success: false, message: "Error in ffetching cart" });
   }
 };
-module.exports={
-    getCart,
-    addToCart,
-    deleteCart
+module.exports = {
+  getCart,
+  addToCart,
+  deleteCart
 }

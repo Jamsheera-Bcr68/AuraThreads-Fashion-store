@@ -137,11 +137,11 @@
                                                     <span class="badge bg-danger">SALE</span>
                                                     <% } %>
 
-                                                        <% let isInWishlist=wishlist.includes(product._id.toString());
+                                                        <% let isInWishlist=wishlist.includes(product.mainVariant._id.toString());
                                                             %>
                                                             <div class="wishlist-icon">
                                                                 <i class="<%= isInWishlist ? 'fas fa-heart wishlist-true' : 'far fa-heart' %>"
-                                                                    data-id="<%= product._id %>">
+                                                                    data-id="<%= product.mainVariant?._id %>">
                                                                 </i>
                                                             </div>
                                     </div>
@@ -169,19 +169,17 @@
                                             </div>
                                         </div>
                                         <label style="font-weight: bold;" for="size">Size: <%= product.mainVariant.size %></label>
-                                        <!-- <p class="card-text small text-muted">
-                                            <%= product.description.substring(0, 60) %>...
-                                        </p> -->
+                                        
                                         <div class="mt-2 mb-3">
                                             <!-- <small class="text-muted">Available sizes: S,M,L,XL</small> -->
                                         </div>
                                     </div>
                                     <div class="card-footer bg-transparent border-top-0">
                                         <div class="d-grid">
-                                            <button data-id="<%= product._id %>"
-                                                class="btn addToCart bg-success text-white" <%=product.stock===0
+                                            <button data-id="<%= product.mainVariant._id %>"
+                                                class="btn addToCart bg-success text-white" <%=product.mainVariant.stock===0
                                                 ? 'disabled' : '' %>>
-                                                <%= product.stock===0 ? 'Out of Stock' : 'Add to Cart' %>
+                                                <%= product.mainVariant.stock===0 ? 'Out of Stock' : 'Add to Cart' %>
                                             </button>
                                            
                                         </div>

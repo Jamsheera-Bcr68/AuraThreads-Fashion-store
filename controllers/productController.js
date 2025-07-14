@@ -1107,7 +1107,7 @@ const getSingleProduct = async (req, res) => {
     }
 
     const productId=variant.productId
-    const variants=await Variant.find({productId}).populate('productId')
+    const variants=await Variant.find({productId,isDeleted:false}).populate('productId')
     console.log('variants',variants);
     
 
@@ -1248,7 +1248,7 @@ const getSingleProduct = async (req, res) => {
       variant,
       singleProduct,
       variants,
-       relatedProducts,
+      relatedProducts,
       categoryId: "",
       priceRange: "",
       finalOffer,

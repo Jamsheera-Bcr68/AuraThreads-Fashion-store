@@ -492,3 +492,14 @@
 </body>
 
 </html>
+
+//img varient display in sporuct 
+ <% if(variants && variants.length>1){ %>
+                  <div class="thumbnails">
+                    <% variants.forEach((variant, index)=> { %>
+                      <div style="width: 30px;" class="thumbnail ">
+                        <img src="<%= variant.images[0] %>" alt="Image <%= index + 1 %>" />
+                      </div>
+                      <% }) %>
+                  </div>
+                <% } %>

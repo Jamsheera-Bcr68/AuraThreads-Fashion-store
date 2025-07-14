@@ -18,7 +18,7 @@ app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(express.json({ limit: "10mb" }));
 dbConnect();
 app.use(cookieParser());
-//app.use(morgan('dev'));
+app.use(morgan('dev'));
 
 app.use("/uploads", express.static("uploads"));
 

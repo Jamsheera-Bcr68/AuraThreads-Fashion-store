@@ -554,8 +554,8 @@ const cartButton = document.querySelectorAll('.addToCart')
 cartButton.forEach(btn => btn.addEventListener('click', function () {
   console.log('cart button clicked');
 
-  const productId = this.getAttribute('data-id')
-  console.log('product id is', productId);
+  const variantId = this.getAttribute('data-id')
+  console.log('variant Id id is', variantId);
 
   fetch('/user/cart/add', {
     method: 'post',
@@ -563,7 +563,7 @@ cartButton.forEach(btn => btn.addEventListener('click', function () {
       'content-Type': 'application/json',
       'CSRF-Token': csrfToken
     },
-    body: JSON.stringify({ productId, quantity: Number(1) })
+    body: JSON.stringify({ variantId, quantity: Number(1) })
   }).then(response => response.json())
     .then(data => {
       if (data && data.success) {
@@ -598,7 +598,7 @@ document.addEventListener('DOMContentLoaded', function () {
     wishlistIcons.forEach(icon => {
       icon.addEventListener('click', function () {
         const heart = this.querySelector('i');
-        const productId = heart.getAttribute('data-id');
+        const variantId = heart.getAttribute('data-id');
         const isNotInWishlist = heart.classList.contains('far');
         console.log('wishlist button clicked')
         console.log(csrfToken);
@@ -611,7 +611,7 @@ document.addEventListener('DOMContentLoaded', function () {
               'Content-Type': 'application/json',
               'CSRF-Token': csrfToken
             },
-            body: JSON.stringify({ productId }),
+            body: JSON.stringify({ variantId }),
              credentials: 'include'
           })
           .then(response =>response.json())
@@ -641,13 +641,13 @@ document.addEventListener('DOMContentLoaded', function () {
           });
 
         } else {
-          fetch(`/user/wishList/delete/${productId}`, {
+          fetch(`/user/wishList/delete/${variantId}`, {
             method: 'DELETE',
             headers: {
               'Content-Type': 'application/json',
               'CSRF-Token': csrfToken
             },
-            body: JSON.stringify({ productId }),
+            body: JSON.stringify({ variantId }),
              credentials: 'include'
           })
           .then(response => {
