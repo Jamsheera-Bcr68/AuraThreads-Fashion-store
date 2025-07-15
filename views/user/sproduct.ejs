@@ -6,12 +6,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Product Details</title>
   <link rel="stylesheet" href="/css/singleproduct.css" />
-  <meta name="csrf-token" content="<%= csrfToken %>">  
+  <meta name="csrf-token" content="<%= csrfToken %>">
   <base href="/" />
 </head>
 
 <body>
-<script src="/js/aos.js"></script>
+  <script src="/js/aos.js"></script>
   <script src="/js/bootstrap.min.js"></script>
   <script src="/js/jquery-3.3.1.min.js"></script>
   <script src="/js/jquery-ui.js"></script>
@@ -41,28 +41,29 @@
 
               <div class="product-container">
                 <!-- Product Gallery -->
-               
-                 <div class="product-gallery">
+
+                <div class="product-gallery">
                   <% if(variants && variants.length>1){ %>
-                  <div  class="thumbnails">
-                    <% variants.forEach((variant, index)=> { %>
-                      <div  style="width: 50px;display: block;" class="thumbnail ">
-                       <a href='/user/products/<%= variant._id %>' ><img src="<%= variant.images[0] %>" alt="Image <%= index + 1 %>" /></a> 
+                    <div class="thumbnails">
+                      <% variants.forEach((variant, index)=> { %>
+                        <div style="width: 50px;display: block;" class="thumbnail ">
+                          <a href='/user/products/<%= variant._id %>'><img src="<%= variant.images[0] %>"
+                              alt="Image <%= index + 1 %>" /></a>
+                        </div>
+                        <% }) %>
+                    </div>
+                    <% } %>
+                      <div class="main-image" id="mainImage">
+                        <img src="<%= variant.images[0] %>" alt="<%= singleProduct.productName %>"
+                          id="productMainImage" />
                       </div>
-                      <% }) %>
-                  </div>
-                <% } %>
-                  <div class="main-image" id="mainImage">
-                    <img src="<%= variant.images[0] %>" alt="<%= singleProduct.productName %>"
-                      id="productMainImage" />
-                  </div>
-                  <div class="thumbnails">
-                    <% variant.images.forEach((image, index)=> { %>
-                      <div class="thumbnail" data-img="<%= image %>">
-                        <img src="<%= image %>" alt="Image <%= index + 1 %>" />
+                      <div class="thumbnails">
+                        <% variant.images.forEach((image, index)=> { %>
+                          <div class="thumbnail" data-img="<%= image %>">
+                            <img src="<%= image %>" alt="Image <%= index + 1 %>" />
+                          </div>
+                          <% }) %>
                       </div>
-                      <% }) %>
-                  </div>
                 </div>
 
                 <!-- Product Info -->
@@ -85,24 +86,25 @@
                   <div class="price-container">
                     <span class="price">₹ <%= singleProduct.discountPrice %></span>
                     <% if (finalOffer) { %>
-  <span class="original-price text-muted text-decoration-line-through">
-    ₹ <%= singleProduct.price %>
-  </span>
+                      <span class="original-price text-muted text-decoration-line-through">
+                        ₹ <%= singleProduct.price %>
+                      </span>
 
-  <span class="discount-badge">
-    Save <%= singleProduct.discount %> <%= singleProduct.discountType === 'amount' ? '₹' : '%' %>
-  </span>
-<% } %>
+                      <span class="discount-badge">
+                        Save <%= singleProduct.discount %>
+                          <%= singleProduct.discountType==='amount' ? '₹' : '%' %>
+                      </span>
+                      <% } %>
                   </div>
 
-                  
 
+                  size : <%= variant.size %>
                   <div class="stock <%= singleProduct.stock > 0 ? 'in-stock' : 'out-of-stock'%>">
                     <%= singleProduct.stock> 0 ? 'In Stock - Ships within 24 hours' :
                       'Out of stock ' %>
                   </div>
-                  
-          <!-- Error Banner (show only when needed) -->
+
+                  <!-- Error Banner (show only when needed) -->
                   <div class="error-banner" id="errorBanner" style="display: none">
                     <span class="icon">⚠️</span>
                     <div>
@@ -117,16 +119,17 @@
 
                       <button id="decreaseQty">-</button>
                       <input type="text" value="1" min="1" max="10" id="quantity">
-                      <button data-productId="<%= singleProduct._id %>" data-max="<%= singleProduct.stock %>"
+                      <button data-variant-id="<%= variant._id %>" data-max="<%= variant.stock %>"
                         id="increaseQty">+</button>
                     </div>
-                    <button class="add-to-cart" data-id="<%= singleProduct._id %>" id="addToCartBtn" style="width: 20%"
-                      <%=singleProduct.stock===0 ? 'disabled' : '' %>>
-                      <%= singleProduct.stock===0 ? 'Out of Stock' : 'Add to Cart' %>
+                    <button class="add-to-cart" data-id="<%= variant._id %>" id="addToCartBtn" style="width: 20%"
+                      <%= variant.stock===0 ? 'disabled' : '' %>>
+                      <%= variant.stock===0 ? 'Out of Stock' : 'Add to Cart' %>
                     </button>
                     <!-- <button class="buy-now" id="buyNowBtn" <%=singleProduct.stock===0 ? 'disabled' : '' %> ><a style="text-decoration: none; color: white;" href="/user/checkout">By Now</a></button> -->
-                    <button class="btn btn-outline-danger" type="button"  onclick="addToWishlist('<%= singleProduct._id %>')">
-                      <span style="font-size: 1.5rem;">♥</span>  Wishlist
+                    <button class="btn btn-outline-danger" type="button"
+                      onclick="addToWishlist('<%= variant._id %>')">
+                      <span style="font-size: 1.5rem;">♥</span> Wishlist
                     </button>
                   </div>
 
@@ -292,26 +295,29 @@
                   <div class="block-4 text-center">
                     <figure class="block-4-image">
                       <% if(singleProduct.discount){ %>
-                       <span class="badge text-bg-warning text-wrap ">
-    Save <%= singleProduct.discount %> <%= singleProduct.discountType === 'amount' ? '₹' : '%' %>
-  </span>
-  <% } %>
-                      <a href="/user/products/<%= product.mainVariant._id %>">
-                        
-                        <img class="d-block mx-auto" src="/uploads/<%= product?.mainVariant?.images?.[0].split('/').pop() %>" alt="Image placeholder"
-                          class="img-fluid">
-                      </a>
-                      
+                        <span class="badge text-bg-warning text-wrap ">
+                          Save <%= singleProduct.discount %>
+                            <%= singleProduct.discountType==='amount' ? '₹' : '%' %>
+                        </span>
+                        <% } %>
+                          <a href="/user/products/<%= product.mainVariant._id %>">
+
+                            <img class="d-block mx-auto"
+                              src="/uploads/<%= product?.mainVariant?.images?.[0].split('/').pop() %>"
+                              alt="Image placeholder" class="img-fluid">
+                          </a>
+
                     </figure>
                     <div class="block-4-text p-4">
                       <h3>
-                          <%= product.productName %>
-                       </h3>
-                     
+                        <%= product.productName %>
+                      </h3>
+
                       <p class="text-primary font-weight-bold mb-0" style="font-size: 14px;">
                         <% if (singleProduct.discount ) { %>
                           <span class="text-decoration-line-through text-muted">₹ <%= product.price.toFixed(2) %></span>
-                          <span class="text-danger fw-bold ms-2">₹ <%= (product.price - singleProduct.discountAmount).toFixed(2) %></span>
+                          <span class="text-danger fw-bold ms-2">₹ <%= (product.price -
+                              singleProduct.discountAmount).toFixed(2) %></span>
                           <% } else { %>
                             <span class="fw-bold">₹ <%= product.price.toFixed(2) %> </span>
                             <% } %>
@@ -330,209 +336,7 @@
 
       <script src="js/main.js"></script>
       <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-      <script>
-
-  //      $('.nonloop-block-3').owlCarousel({
-  //   center: false,
-  //   items: 1,
-  //   loop: false,
-  //   margin: 20,
-  //   nav: true,
-  //   responsive:{
-  //     600:{
-  //       items: 2
-  //     },
-  //     1000:{
-  //       items: 3
-  //     }
-  //   }
-  // });
-       
-  
-  // Image zoom functionality
-        // const mainImage = document.getElementById("productMainImage");
-        // mainImage.addEventListener("click", function () {
-        //   this.classList.toggle("zoomed");
-        // });
-
-        // // Thumbnail switching
-        // const thumbnails = document.querySelectorAll(".thumbnail");
-        // thumbnails.forEach((thumbnail) => {
-        //   thumbnail.addEventListener("click", function () {
-        //     const imgSrc = this.getAttribute("data-img");
-        //     document.getElementById("productMainImage").src = imgSrc;
-
-        //     // Update active thumbnail
-        //     document
-        //       .querySelector(".thumbnail.active")
-        //       .classList.remove("active");
-        //     this.classList.add("active");
-        //   });
-        // });
-
-        // // // Quantity buttons
-        // const decreaseBtn = document.getElementById("decreaseQty");
-        // const increaseBtn = document.getElementById("increaseQty");
-        // const quantityInput = document.getElementById("quantity");
-
-        // decreaseBtn.addEventListener("click", function () {
-        //   let value = parseInt(quantityInput.value) || 1;
-        //   if (value > 1) {
-        //     quantityInput.value = value - 1;
-        //   }
-        // });
-// 
-        // increaseBtn.addEventListener("click", function () {
-        //   console.log('increse btn clicked');
-
-        //   let value = parseInt(quantityInput.value) || 1;
-
-        //   const productId = increaseBtn.dataset.productId
-        //   console.log('Product id is ', productId);
-
-        //   const productStock = parseInt(increaseBtn.dataset.max)
-        //   console.log("product stock= ", productStock);
-        //   if (value > productStock - 1) {
-        //     Swal.fire("Out of Stock")
-        //   }
-        //   else if (value > 4) { // to prevent exceeding 5
-        //     Swal.fire("You Can't Add More than 5 Quantity")
-
-        //   } else {
-        //     quantityInput.value = value + 1;
-        //   }
-
-        // });
-
-
-        // // Tab switching
-        // const tabButtons = document.querySelectorAll(".tab-button");
-        // tabButtons.forEach((button) => {
-        //   button.addEventListener("click", function () {
-        //     const tabId = this.getAttribute("data-tab");
-
-        //     // Update active tab button
-        //     document
-        //       .querySelector(".tab-button.active")
-        //       .classList.remove("active");
-        //     this.classList.add("active");
-
-        //     // Update active tab content
-        //     document
-        //       .querySelector(".tab-content.active")
-        //       .classList.remove("active");
-        //     document.getElementById(tabId).classList.add("active");
-        //   });
-        // });
-
-        // // // Stock status demo - you would typically update this based on product data
-        // // const updateStockStatus = (status) => {
-        // //   document.getElementById("inStock").style.display = "none";
-        // //   document.getElementById("lowStock").style.display = "none";
-        // //   document.getElementById("soldOut").style.display = "none";
-        // //   document.getElementById("errorBanner").style.display = "none";
-
-        // //   const addToCartBtn = document.getElementById("addToCartBtn");
-        // //   const buyNowBtn = document.getElementById("buyNowBtn");
-
-        // //   switch (status) {
-        // //     case "in-stock":
-        // //       document.getElementById("inStock").style.display = "block";
-        // //       addToCartBtn.disabled = false;
-        // //       buyNowBtn.disabled = false;
-        // //       break;
-        // //     case "low-stock":
-        // //       document.getElementById("lowStock").style.display = "block";
-        // //       addToCartBtn.disabled = false;
-        // //       buyNowBtn.disabled = false;
-        // //       break;
-        // //     case "sold-out":
-        // //       document.getElementById("soldOut").style.display = "block";
-        // //       document.getElementById("errorBanner").style.display = "block";
-        // //       addToCartBtn.disabled = true;
-        // //       buyNowBtn.disabled = true;
-        // //       break;
-        // //   }
-        // // };
-
-        // // // Demo: Change stock status - you can remove this in production
-        // // Simulating stock status changes every few seconds for demo purposes
-        // // let demoStockIndex = 0;
-        // // const demoStockStatuses = ["in-stock", "low-stock", "sold-out"];
-
-        // // For demonstration, uncomment the following line to cycle through stock statuses
-        // // setInterval(() => {
-        // //     updateStockStatus(demoStockStatuses[demoStockIndex]);
-        // //     demoStockIndex = (demoStockIndex + 1) % demoStockStatuses.length;
-        // // }, 5000);
-
-        // // Initialize with in-stock status
-        // //updateStockStatus("in-stock");
-
-        // // Add to cart functionality (demo)
-        // // Add to cart functionality
-        // document.getElementById("addToCartBtn").addEventListener("click", function () {
-        //   const productId = this.getAttribute("data-id");
-        //   const quantity = parseInt(document.getElementById("quantity").value) || 1;
-
-        //   if (quantity > 5) {
-        //     return Swal.fire("You can add only up to 5 quantities");
-        //   }
-
-        //   fetch("/user/cart/add", {
-        //     method: "POST",
-        //     headers: { "Content-Type": "application/json",
-           
-        //      },
-        //     body: JSON.stringify({ productId, quantity }),
-        //   })
-        //     .then((response) => response.json()) // Fixed JSON response handling
-        //     .then((data) => {
-        //       if (data && data.success) {
-        //         Swal.fire(`Added ${quantity} item(s) to cart!`);
-        //       } else {
-        //         Swal.fire("Error adding to cart");
-        //       }
-        //     })
-        //     .catch((error) => {
-        //       console.error("Error:", error);
-        //       Swal.fire("An error occurred. Please try again.");
-        //     });
-        // });
-
-        // // Buy now functionality (demo)
-        // document
-        //   .getElementById("buyNowBtn")
-        //   .addEventListener("click", function () {
-        //     const quantity = document.getElementById("quantity").value;
-        //     Swal.fire(`Proceeding to checkout with ${quantity} item(s)!`);
-        //   }).then(()=>{
-        //     window.location.href='/user/checkout'
-        //   });
-
-        //   // add to wishlist
-        //   function addToWishlist(productId){
-        //     console.log('prouct id is ',productId)
-
-        //     fetch('/user/wishList/add',{
-        //       method:"POST",
-        //       headers:{"Content-Type":"application/json",
-        //       'CSRF-Token': csrfToken
-        //       },
-        //       body:JSON.stringify({productId})
-        //     }).then(res=>res.json())
-        //     .then(data=>{
-        //       if(data && data.success){
-        //         Swal.fire(data.message)
-        //       }else{
-        //         Swal.fire(data.message)
-        //       }
-        //     }).catch(error=>{
-        //       Swal.fire("Server Error")
-        //     })
-        //   }
-      
-      </script>
+     
 </body>
 
 </html>

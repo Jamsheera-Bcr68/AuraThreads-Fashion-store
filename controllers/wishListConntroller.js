@@ -1,10 +1,11 @@
-const WishList=require('../model/wishListModel')
-const Cart=require('../model/cartModel')
-const Offer=require('../model/offerModel')
-const Product=require('../model/productModel')
-const Variant=require('../model/variantModel')
-const statusCodes=require('../utils/statusCodes')
-const statusMessages=require('../utils/statusMessages')
+const WishList = require('../model/wishListModel')
+const Cart = require('../model/cartModel')
+const Offer = require('../model/offerModel')
+const Product = require('../model/productModel')
+const Variant = require('../model/variantModel')
+const statusCodes = require('../utils/statusCodes')
+const statusMessages = require('../utils/statusMessages')
+
 
 
 const getWishList = async (req, res) => {
@@ -13,11 +14,39 @@ const getWishList = async (req, res) => {
     const userId = req.session.user._id;
     if (!userId) {
       console.log("userId is not found");
-      return res.status(statusCodes.BAD_REQUEST).json({ success: false, message: "You are not registered" });
+      return res.status(statusCodes.BAD_REQUEST).json({ success: false, message: "You are not registered" })
     }
-    const wishList = await WishList.findOne({ userId }).populate("items");
-    const productIds = wishList.items.map(p => p._id);
-    const variants=await Variant.find({productId:{$in:productIds}})
+
+    const wishList = await WishList.findOne({ userId }).populate({
+      path: 'items',
+      populate: { path: 'productId' }
+    });
+
+    if (!wishList) {
+      return res.render("user/wishList", {
+        wishList: null,
+        variants: [],
+        categoryId: null,
+        priceRange: null,
+        cartCount: cartCount || 0,
+        sort: "",
+        query: "",
+        title: "Your WishList",
+        user: req.session.user,
+      });
+    }
+
+
+   // console.log('wishList', wishList);
+
+    const variantIds = wishList.items.map(v => v._id);
+    const productIds = wishList.items.map(item => item.productId?._id)
+
+
+    //console.log('productIds ', productIds);
+
+
+
 
     let cartCount = 0;
 
@@ -28,21 +57,21 @@ const getWishList = async (req, res) => {
     }
 
     const offers = await Offer.find({ status: "active" });
-    let products = [];
+    let variants = [];
     if (wishList) {
-      products = wishList.items;
+      variants = wishList.items;
     }
 
-    products.forEach((product) => {
+    variants.forEach((variant) => {
       const productOffer = offers.find(
         (offer) =>
           offer.applicableTo === "product" &&
-          offer.productId?.toString() === product._id.toString(),
+          offer.productId?.toString() === variant?.productId?._id.toString(),
       );
       const categoryOffer = offers.find(
         (offer) =>
           offer.applicableTo === "category" &&
-          offer.categoryId?.toString() === product.categoryId?.toString(),
+          offer.categoryId?.toString() === variant.categoryId?.toString(),
       );
 
       let finalOffer = null;
@@ -52,12 +81,12 @@ const getWishList = async (req, res) => {
         const productDiscountAmount =
           productOffer.discountType === "amount"
             ? productOffer.discountValue
-            : (product.price * productOffer.discountValue) / 100;
+            : (variant.productId.price * productOffer.discountValue) / 100;
 
         const categoryDiscountAmount =
           categoryOffer.discountType === "amount"
             ? categoryOffer.discountValue
-            : (product.price * categoryOffer.discountValue) / 100;
+            : (variant.productId.price * categoryOffer.discountValue) / 100;
 
         finalOffer =
           productDiscountAmount > categoryDiscountAmount
@@ -75,23 +104,23 @@ const getWishList = async (req, res) => {
           discountAmount =
             finalOffer.discountType === "amount"
               ? finalOffer.discountValue
-              : (product.price * finalOffer.discountValue) / 100;
+              : (variant.productId.price * finalOffer.discountValue) / 100;
         }
       }
 
       if (finalOffer) {
-        product.discountPrice = Math.round(product.price - discountAmount);
-        product.discountAmount = discountAmount;
-        product.finalDiscount = finalOffer.discountValue;
-        product.discountType = finalOffer.discountType;
+        variant.productId.discountPrice = Math.round(variant.productId.price - discountAmount);
+        variant.productId.discountAmount = discountAmount;
+        variant.productId.finalDiscount = finalOffer.discountValue;
+        variant.productId.discountType = finalOffer.discountType;
       } else {
-        product.discountPrice = product.price;
+        variant.productId.discountPrice = variant.productId.price;
       }
     });
 
     res.render("user/wishList", {
       wishList,
-      products,
+      variants,
       categoryId: null,
       priceRange: null,
       cartCount: cartCount || 0,
@@ -102,9 +131,10 @@ const getWishList = async (req, res) => {
     });
   } catch (error) {
     console.log("error is ", error);
-    return res.status(statusCodes.INTERNAL_SERVER_ERROR).json({success:false,message:statusMessages.SERVER_ERROR});
+    return res.status(statusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: statusMessages.SERVER_ERROR });
   }
 };
+
 
 //post addToWishList
 const addToWishList = async (req, res) => {
@@ -112,8 +142,8 @@ const addToWishList = async (req, res) => {
   try {
     const { variantId } = req.body;
     console.log("productId ", variantId);
-    console.log('req.session.user',req.session.user);
-    
+    console.log('req.session.user', req.session.user);
+
     const variant = await Variant.findOne({ _id: variantId });
     if (!variant) {
       console.log("product not found");
@@ -121,12 +151,12 @@ const addToWishList = async (req, res) => {
       return res.status(statusCodes.NOT_FOUND).json({ success: false, message: statusMessages.NOT_FOUND("Product") });
     }
     if (!req.session.user) {
-        
+
       return res.status(statusCodes.UNAUTHORIZED).json({ success: false, message: "You are not registered" });
     }
-     
+
     const userId = req.session.user._id;
-   
+
     let wishList = await WishList.findOne({ userId });
     console.log("wishList ", wishList);
 
@@ -163,7 +193,7 @@ const addToWishList = async (req, res) => {
     }
   } catch (error) {
     console.log("error ", error);
-    return res.status(statusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message:statusMessages.SERVER_ERROR });
+    return res.status(statusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: statusMessages.SERVER_ERROR });
   }
 };
 
@@ -173,14 +203,14 @@ const deleteWishlistItem = async (req, res) => {
   try {
     const userId = req.session.user._id;
     const wishList = await WishList.findOne({ userId });
-    const { productId } = req.params;
-    console.log("productId ", productId);
+    const { variantId } = req.params;
+    console.log("variantId ", variantId);
 
     if (
       wishList &&
-      wishList.items.some((item) => item.toString() === productId)
+      wishList.items.some((item) => item.toString() === variantId)
     ) {
-      wishList.items.pull(productId);
+      wishList.items.pull(variantId);
       await wishList.save();
       return res.status(statusCodes.OK).json({ success: true, message: "Item removed from wishList" });
     } else {
@@ -191,11 +221,11 @@ const deleteWishlistItem = async (req, res) => {
     }
   } catch (error) {
     console.log("error", error);
-    return res.status(statusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: statusMessages.SERVER_ERROR});
+    return res.status(statusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: statusMessages.SERVER_ERROR });
   }
 };
-module.exports={
-    getWishList,
-    addToWishList,
-    deleteWishlistItem
+module.exports = {
+  getWishList,
+  addToWishList,
+  deleteWishlistItem
 }

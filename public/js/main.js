@@ -155,9 +155,9 @@ jQuery(document).ready(function ($) {
           inputField.value = currentValue - 1;
           quantity = inputField.value;
           let productStock = 0;
-          let productId = button.dataset.productid;
+          let variantId = button.dataset.variantId;
           const finalPrice = button.getAttribute("data-finalPrice");
-          updateQuantity(quantity, productId, productStock, finalPrice);
+          updateQuantity(quantity,variantId, productStock, finalPrice);
         } else {
           inputField.value = 1;
         }
@@ -175,7 +175,8 @@ jQuery(document).ready(function ($) {
         console.log("current value ", currentValue);
 
         let productStock = parseInt(button.dataset.max);
-        console.log("productStock ", productStock);
+        console.log("variant stock ", productStock);
+
         if (currentValue >= productStock) {
           Swal.fire("This product is Out of Stock");
         } else if (currentValue > 4) {
@@ -183,22 +184,24 @@ jQuery(document).ready(function ($) {
         } else if (currentValue < 5) {
           inputField.value = currentValue + 1;
           quantity = inputField.value;
-          let productId = button.dataset.productid;
+          let variantId = button.dataset.variantId;
+          console.log('variant Id',variantId);
+          
           const finalPrice = button.getAttribute("data-finalPrice");
 
-          updateQuantity(quantity, productId, productStock, finalPrice);
+          updateQuantity(quantity, variantId, productStock, finalPrice);
         }
       });
     });
   }
 
-  function updateQuantity(quantity, productId, productStock, finalPrice) {
-    console.log("from use updatequantity");
+  function updateQuantity(quantity, variantId, productStock, finalPrice) {
+    console.log("from user updatequantity");
     console.log(
-      `quantity is ${quantity} and product id is ${productId} productStock is ${productStock}`,
+      `quantity is ${quantity} and variant id is ${variantId} productStock is ${productStock}`,
     );
 
-    fetch(`/user/cart/update/${productId}/${quantity}`, {
+    fetch(`/user/cart/update/${variantId}/${quantity}`, {
       method: "post",
       headers: {
         "Content-Type": "application/json",
@@ -210,7 +213,7 @@ jQuery(document).ready(function ($) {
         if (!data.success) {
           Swal.fire("Error!", data.message, "error");
         } else {
-          const totalCol = document.getElementById(`col-${productId}`);
+          const totalCol = document.getElementById(`col-${variantId}`);
           const cartItems = data.cartItems
           console.log("finalPrice", finalPrice);
 
@@ -230,6 +233,7 @@ jQuery(document).ready(function ($) {
       })
       .catch((error) => {
         console.log("error in fetching data", error);
+        Swal.fire ("Internal server Error")
       });
   }
 
@@ -325,8 +329,8 @@ jQuery(document).ready(function ($) {
 
     let value = parseInt(quantityInput.value) || 1;
 
-    const productId = increaseBtn.dataset.productId;
-    console.log("Product id is ", productId);
+    const variantId= increaseBtn.dataset.variantId;
+    console.log("Variant id is ", variantId);
 
     const productStock = parseInt(increaseBtn.dataset.max);
     console.log("product stock= ", productStock);
@@ -359,7 +363,7 @@ jQuery(document).ready(function ($) {
   document
     .getElementById("addToCartBtn")
     .addEventListener("click", function () {
-      const productId = this.getAttribute("data-id");
+      const variantId = this.getAttribute("data-id");
       const quantity = parseInt(document.getElementById("quantity").value) || 1;
 
       if (quantity > 5) {
@@ -372,7 +376,7 @@ jQuery(document).ready(function ($) {
           "Content-Type": "application/json",
           "CSRF-Token": csrfToken,
         },
-        body: JSON.stringify({ productId, quantity }),
+        body: JSON.stringify({ variantId, quantity }),
       })
         .then((response) => response.json()) // Fixed JSON response handling
         .then((data) => {
@@ -412,8 +416,8 @@ jQuery(document).ready(function ($) {
     });
 });
 // add to wishlist
-function addToWishlist(productId) {
-  console.log("prouct id is ", productId);
+function addToWishlist(variantId) {
+  console.log("prouct id is ", variantId);
 
   fetch("/user/wishList/add", {
     method: "POST",
@@ -421,7 +425,7 @@ function addToWishlist(productId) {
       "Content-Type": "application/json",
       "CSRF-Token": csrfToken,
     },
-    body: JSON.stringify({ productId }),
+    body: JSON.stringify({ variantId}),
   })
     .then((res) => res.json())
     .then((data) => {
@@ -454,8 +458,8 @@ const removeBtns = document.querySelectorAll(".js-remove-item");
 removeBtns.forEach((btn) =>
   btn.addEventListener("click", function (e) {
     e.preventDefault();
-    let productId = this.getAttribute("data-id");
-    console.log("prouct id is ", productId);
+    let variantId = this.getAttribute("data-id");
+    console.log("prouct id is ", variantId);
 
     Swal.fire({
       title: "Are you sure?",
@@ -466,7 +470,7 @@ removeBtns.forEach((btn) =>
       cancelButtonText: "Cancel",
     }).then((result) => {
       if (result.isConfirmed) {
-        fetch(`/user/cart/remove/${productId}`, {
+        fetch(`/user/cart/remove/${variantId}`, {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
@@ -484,26 +488,33 @@ removeBtns.forEach((btn) =>
                 timer: 1000
               })
 
-              const row = document.getElementById(`row-${productId}`);
+              const row = document.getElementById(`row-${variantId}`);
               if (row) row.remove();
               const cartItems = data.cartItems
               const count = cartItems.length || 0
               if (count == 0) {
                 document.getElementById('cartHead').textContent = 'Your cart is empty.'
               }
-              const subTotal = cartItems.reduce((acc, item) => acc + (item.productId.price * item.quantity), 0)
+              const subTotal = cartItems.reduce((acc, item) => acc + (item.productId.price* item.quantity), 0)
               console.log('cart items', cartItems);
 
               console.log('subTotal', subTotal);
               document.getElementById('subTotal').innerText = subTotal.toFixed(2)
+              console.log('subToal');
+              
               document.getElementById('offer').innerText = data.totalDiscount.toFixed(2)
+              console.log('offer');
+              
               document.getElementById('updatedCartTotal').innerText = data.netAmount.toFixed(2)
+              console.log('updated cart total');
+              
             } else {
               Swal.fire("Error!", "Failed to remove the item.", "error");
             }
           })
           .catch((error) => {
             console.error("Error:", error);
+            Swal.fire("server error")
           });
       }
     });
@@ -681,8 +692,8 @@ document.addEventListener('DOMContentLoaded', function () {
     addToCartButtons.forEach(button => {
       button.addEventListener('click', function (e) {
         const productCard = e.target.closest('.card');
-        const productName = productCard.querySelector('.card-title').textContent;
-        console.log(`Added ${productName} to bag`);
+        // productName = productCard.querySelector('.card-title').textContent;
+        //console.log(`Added ${productName} to bag`);
       });
     });
   }

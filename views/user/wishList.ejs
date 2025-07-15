@@ -18,10 +18,10 @@
 
     <div class="container">
       <h1 class="page-title">My Wishlist (<span id="count">
-          <%= products.length %>
+          <%= variants.length ||0 %>
         </span>)</h1>
 
-      <% if (products.length===0) { %>
+      <% if (variants.length===0) { %>
         <!-- Empty wishlist state -->
         <div class="wishlist-empty">
           <img src="/api/placeholder/100/100" alt="Empty wishlist">
@@ -33,56 +33,56 @@
           <!-- Wishlist items grid -->
           <div class="wishlist-grid text-center">
 
-            <% products.forEach(product=> { %>
+            <% variants.forEach(variant=> { %>
 
-              <div id="div-<%= product._id %>" class="wishlist-item position-relative">
+              <div id="div-<%= variant._id %>" class="wishlist-item position-relative">
 
-                <% if (product.discountPrice && product.discountPrice < product.price) { %>
+                <% if (variant.productId.discountPrice && variant.productId.discountPrice < variant.productId.price) { %>
                   <div style="width: 20%;height: 1.5em;"
                     class="badge bg-warning text-dark position-absolute top-0 start-0 m-2 fs-6 px-2 py-1 rounded">
-                    <% if (product.discountType==='percentage' ) { %>
-                      <%= product.finalDiscount %>% OFF
+                    <% if (variant.productId.discountType==='percentage' ) { %>
+                      <%= variant.productId.finalDiscount %>% OFF
                         <% } else { %>
-                          ₹<%= product.finalDiscount %> OFF
+                          ₹<%= variant.productId.finalDiscount %> OFF
                             <% } %>
                   </div>
                   <% } %>
 
-                    <img src="<%= product.images[0] || 'product.productName' %>" alt="<%= product.productName %>"
-                      class="item-image">
+                   <a href="/user/products/<%= variant._id %>"> <img src="<%= variant.images[0] || 'variant.productId.productName' %>" alt="<%= variant.productId.productName %>"
+                      class="item-image"></a>
 
                     <div class="item-info">
                       <h3 class="item-name">
-                        <%= product.productName %>
+                        <%= variant.productId.productName %>
                       </h3>
 
                       <div class="item-price">
-                        <% if (product.discountPrice && product.discountPrice < product.price) { %>
-                          <span class="fw-bold text-success">₹<%= product.discountPrice %></span>
-                          <span class="text-muted text-decoration-line-through ms-2">₹<%= product.price %></span>
+                        <% if (variant.productId.discountPrice && variant.productId.discountPrice < variant.productId.price) { %>
+                          <span class="fw-bold text-success">₹<%= variant.productId.discountPrice %></span>
+                          <span class="text-muted text-decoration-line-through ms-2">₹<%= variant.productId.price %></span>
                           <% } else { %>
-                            ₹<%= product.price %>
+                            ₹<%= variant.productId.price %>
                               <% } %>
                       </div>
 
                       <div class="item-meta">
-                        <span>Size: <%= product.sizes || 'S-XL' %></span>
+                        <span>Size: <%= variant.size  %></span>
                         <div class="item-rating">
-                          <%= '★' .repeat(Math.floor(product.rating || 4)) + '☆' .repeat(5 - Math.floor(product.rating
+                          <%= '★' .repeat(Math.floor(variant.productId.rating || 4)) + '☆' .repeat(5 - Math.floor(variant.productId.rating
                             || 4)) %>
-                            <span>(<%= product.reviewCount || 0 %>)</span>
+                            <span>(<%= variant.productId.reviewCount || 0 %>)</span>
                         </div>
                       </div>
 
                       <div class="item-actions text-center">
-                        <button onclick="addToCart('<%= product._id %>')"
-                          class="btn addToCart <%= product.stock === 0 ? 'btn-secondary' : 'bg-success text-white' %>"
-                          <%=product.stock===0 ? 'disabled="disabled"' : '' %>>
-                          <%= product.stock===0 ? 'Out of Stock' : 'Add to Cart' %>
+                        <button onclick="addToCart('<%= variant._id %>')"
+                          class="btn addToCart <%= variant.stock === 0 ? 'btn-secondary' : 'bg-success text-white' %>"
+                          <%=variant.productId.stock===0 ? 'disabled="disabled"' : '' %>>
+                          <%= variant.stock===0 ? 'Out of Stock' : 'Add to Cart' %>
                         </button>
 
                         <button class="btn bg-danger btnRemove text-white"
-                          onclick="remove('<%= product._id %>')">Remove</button>
+                          onclick="remove('<%= variant._id %>')">Remove</button>
                       </div>
                     </div>
               </div>
@@ -132,15 +132,15 @@
             });
           });
         });
-        function addToCart(productId) {
-          console.log('add to cart btn cliked', productId);
+        function addToCart(variantId) {
+          console.log('add to cart btn cliked', variantId);
           fetch('/user/cart/add', {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
               'CSRF-Token': csrfToken
             },
-            body: JSON.stringify({ productId })
+            body: JSON.stringify({ variantId })
           }).then(res => res.json())
             .then(data => {
               if (data && data.success) {
@@ -158,7 +158,7 @@
                 document.getElementById('count').innerHTML = parseInt(count - 1)
 
 
-                const div = document.getElementById(`div-${productId}`)
+                const div = document.getElementById(`div-${variantId}`)
                 if (div) {
                   div.remove()
                 }
@@ -170,11 +170,11 @@
             })
         }
 
-        function remove(productId) {
+        function remove(variantId) {
           console.log('from delete wishlist script');
-          console.log('productId ', productId);
+          console.log('productId ', variantId);
 
-          fetch(`/user/wishList/delete/${productId}`, {
+          fetch(`/user/wishList/delete/${variantId}`, {
             method: "DELETE",
             headers: { 'CSRF-Token': csrfToken }
           }).then(res => res.json())
@@ -191,7 +191,7 @@
                 console.log(count);
                 document.getElementById('count').innerHTML = parseInt(count - 1)
 
-                const div = document.getElementById(`div-${productId}`)
+                const div = document.getElementById(`div-${variantId}`)
                 if (div) {
                   div.remove()
                 }

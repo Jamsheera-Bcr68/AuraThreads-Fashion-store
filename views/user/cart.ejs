@@ -51,27 +51,29 @@
                     <tr>
                       <th class="product-thumbnail">Image</th>
                       <th class="product-name">Product</th>
-                      <th class="product-price">Price</th>
+                      <th class="product-price">Price (₹)</th>
                       <th class="product-discount">Offer per quantity</th>
                       <th>Final Price</th>
                       <th class="product-quantity">Quantity</th>
-                      <th class="product-total">Total</th>
+                      <th class="product-total">Total (₹)</th>
                       <th class="product-remove">Remove</th>
                     </tr>
                   </thead>
                   <tbody>
                     <% if (cart.items.length> 0) { %>
                       <% cart.items.forEach(item=> { %>
-                        <tr id="row-<%= item.productId._id %>">
+                        <tr id="row-<%= item.variantId._id %>">
                           <td class="product-thumbnail">
-                            <a href="/user/products/<%= item.productId._id %>"><img  src="<%= item.productId.images[0] %>" alt="Image" class="img-fluid"></a>
+                            <a href="/user/products/<%= item.variantId._id %>"><img  src="<%= item.variantId.images[0] %>" alt="Image" class="img-fluid"></a>
                           </td>
                           <td class="product-name">
-                            <h2 class="h5 text-black">
-                              <%= item.productId.productName %>
-                            </h2>
+                            <h4 class="h5 text-black">
+                              <%= item.productId.productName %> <br>
+                              <label style="font-size:medium;" for="Size:">Size :  </label><%= item.variantId.size %> <br>
+                              <label style="font-size:medium;" for="Color:">Color :  </label><%= item.variantId.color %> <br>
+                            </h4>
                           </td>
-                          <td style="font-weight: bold;">₹ <%= item.productId.price.toFixed(2) %>
+                          <td style="font-weight: bold;"> <%= item.productId.price.toFixed(2) %>
                           </td>
                           <td>
                             <% if(item.discountAmount) { %>
@@ -90,22 +92,22 @@
                                 <div class="input-group-append">
                                   <div class="input-group-append">
                                     <button class="btn btn-outline-primary js-btn-minus"
-                                      data-productId="<%= item.productId._id %>"   data-finalPrice="<%= (item.productId.price-item.discountAmount) %>" data-id="<%= item.quantity %>"
+                                      data-variant-id="<%= item.variantId._id %>"   data-finalPrice="<%= (item.productId.price-item.discountAmount) %>" data-id="<%= item.quantity %>"
                                       type="button">&minus;</button>
                                   </div>
                                   <input type="text" id="quantity" class="form-control text-center"
                                     value="<%= item.quantity %>" name="quantity-<%= item.id %>">
                                   <div class="input-group-append">
                                     <button class="btn btn-outline-primary js-btn-plus"
-                                      data-productId="<%= item.productId._id %>" data-finalPrice="<%= (item.productId.price-item.discountAmount) %>" data-max="<%= item.productId.stock %>"
+                                      data-variant-id="<%= item.variantId._id %>" data-finalPrice="<%= (item.productId.price-item.discountAmount) %>" data-max="<%= item.variantId.stock %>"
                                       data-id="<%= item.quantity %>" type="button">&plus;</button>
                                   </div>
                                 </div>
                           </td>
-                          <td  style="font-weight: bold;">₹ <span id="col-<%= item.productId._id %>"><%= (item.discountPrice * item.quantity).toFixed(2) %></span>
+                          <td  style="font-weight: bold;">₹ <span id="col-<%= item.variantId._id %>"><%= (item.discountPrice * item.quantity).toFixed(2) %></span>
                           </td>
                           <td>
-                            <button data-id="<%= item.productId._id %>"
+                            <button data-id="<%= item.variantId._id %>"
                               class="btn text-white btn-danger js-remove-item">X Remove</button>
 
                             

@@ -161,10 +161,8 @@ router.delete("/address/delete/:addressId", userController.deleteAddress)
 //user cart
 router.get("/cart", userAuth, cartController.getCart);
 router.post("/cart/add", cartController.addToCart);
-router.delete("/cart/remove/:productId", cartController.deleteCart);
-
-//user cartupdate
-router.post("/cart/update/:productId/:quantity/", userController.updateCart);
+router.delete("/cart/remove/:variantId", cartController.deleteCart);
+router.post("/cart/update/:variantId/:quantity",cartController.updateCart);
 
 //user forgot password
 router.post("/profile/change-password", userController.changePassword);
@@ -194,7 +192,7 @@ router.get("/removeCoupon", userController.removeCoupon);
 //user wishlist
 router.get("/wishList", userAuth, wishListController.getWishList);
 router.post("/wishList/add", wishListController.addToWishList);
-router.delete("/wishList/delete/:productId", wishListController.deleteWishlistItem);
+router.delete("/wishList/delete/:variantId", wishListController.deleteWishlistItem);
 
 // get wallet
 router.get("/wallet", userAuth, userController.getWallet);
