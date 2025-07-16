@@ -13,12 +13,14 @@
   <header>
     <%- include('../partials/userHeader') %>
   </header>
-<div><h1 style="text-align: center; font-weight: bold; color: #8c4790;">Checkout Information</h1></div>
+  <div>
+    <h1 style="text-align: center; font-weight: bold; color: #8c4790;">Checkout Information</h1>
+  </div>
   <div class="container" style="display: flex;max-width: 1500 px;">
-    
+
     <div class="col-md-6 col-12 checkout-container" style="width: 50%; background: #fdfcfc; border-radius: 10px;">
       <div class="checkout-form">
-       
+
 
         <!-- Contact Info -->
         <div class="form-section">
@@ -55,8 +57,8 @@
 
         <!-- Shipping Addresses -->
         <div class="form-section">
-          <h3 style="font-weight: bold;">Shipping Addresses</h3><span> <button
-              onclick="oppenAddressModal()" id="addAdressBtn">Add Adress</button></span>
+          <h3 style="font-weight: bold;">Shipping Addresses</h3><span> <button onclick="oppenAddressModal()"
+              id="addAdressBtn">Add Adress</button></span>
           <p>Select your address</p>
 
           <div class="addresses-container" style="display: flex; flex-wrap: wrap; gap: 20px;">
@@ -78,12 +80,12 @@
                     </p>
                     <p>
                       <%= address.state %>,
-                      <%= address.country %>
+                        <%= address.country %>
                     </p>
                     <p><strong>ZIP:</strong>
                       <%= address.zip %>
                     </p>
-                    
+
                   </label>
                 </div>
                 <% }); %>
@@ -166,8 +168,8 @@
       <!-- Promo Code -->
       <div class="form-group" style="margin-top: 25px;">
         <label for="coupon">Coupon Code</label>
-        <button style="background-color: #8c4790;color: white;margin-left: 10em;border: 0;border-radius: 5px;" onclick="openCouponModal()"
-          id="showCouponsBtn">Show  Coupons</button>
+        <button style="background-color: #8c4790;color: white;margin-left: 10em;border: 0;border-radius: 5px;"
+          onclick="openCouponModal()" id="showCouponsBtn">Show Coupons</button>
 
 
         <div style="display: flex;">
@@ -205,8 +207,8 @@
 
           <div class="form-group">
             <label for="cardnumber">Card Number</label>
-            <input type="text" id="cardnumber" placeholder="1234 5678 9012 3456"
-              value="<%= typeof cardnumber !== 'undefined' ? cardnumber : '' %>">
+            <input type="tel" id="cardnumber" placeholder="1234 5678 9012 3456" pattern="[0-9 ]*" maxlength="19"
+              inputmode="numeric" value="<%= typeof cardnumber !== 'undefined' ? cardnumber : '' %>">
           </div>
 
           <div class="row">
@@ -301,11 +303,11 @@
         <input type="hidden" id="address-id" name="id" />
         <div class="form-group">
           <label for="address-label">Label (e.g., Home, Work)</label>
-          <input type="text" id="address-label" name="label">
+          <input type="text" id="address-label" name="label" required>
         </div>
         <div class="form-group">
           <label for="address-line1">Address Line 1</label>
-          <input type="text" id="address-line1" name="line1">
+          <input type="text" id="address-line1" name="line1" required>
         </div>
         <div class="form-group">
           <label for="address-line2">Address Line 2 (Optional)</label>
@@ -313,26 +315,26 @@
         </div>
         <div class="form-group">
           <label for="address-city">City</label>
-          <input type="text" id="address-city" name="city">
+          <input type="text" id="address-city" name="city" required>
         </div>
         <div class="form-group">
           <label for="address-state">State/Province</label>
-          <input type="text" id="address-state" name="state">
+          <input type="text" id="address-state" name="state" required>
         </div>
         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
 
         <div class="form-group">
           <label for="address-zip">ZIP/Postal Code</label>
-          <input type="text" id="address-zip" name="zip">
+          <input type="text" id="address-zip" name="zip" required>
         </div>
         <div class="form-group">
           <label for="address-country">Country</label>
-          <input type="text" value="" name="country" id="address-country">
+          <input type="text" value="" name="country" id="address-country" required>
 
         </div>
         <div class="form-group">
           <label for="address-phone">Phone Number</label>
-          <input type="tel" id="address-phone" name="phone">
+          <input type="tel" id="address-phone" name="phone" required>
         </div>
         <div hidden class="form-group checkbox-group">
           <input type="checkbox" id="default" name="isDefault" value="true">
@@ -350,8 +352,10 @@
   </div>
 
   <%- include('../partials/userFooter') %> `
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
     <script>
       const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
       document.addEventListener("DOMContentLoaded", function () {
@@ -505,6 +509,8 @@
 
             }
             else if (data && data.success && data.razorpayOrderId) {
+              console.log(('data', data));
+
               const options = {
                 key: data.key_id,
                 amount: data.amount, // in paisa
@@ -542,6 +548,13 @@
                       }
                     });
                 },
+                modal: {
+                  ondismiss: function () {
+                    console.log('Checkout closed by user or payment failed.');
+                    Swal.fire("Payment Cancelled or Failed!");
+                    window.location.href = '/user/order-failure';
+                  }
+                },
                 prefill: {
                   name: data.user?.fullName || "",
                   email: data.user?.email || "",
@@ -557,7 +570,7 @@
             }
           })
           .catch((error) => {
-            Swal.fire(data.message || "Something went wrong.");
+            Swal.fire("Something went wrong.");
             console.log(error);
           });
       })
@@ -572,12 +585,12 @@
         console.log('Apply coupon button clicked');
         console.log('Code is:', code);
         if (code == '') {
-         return Swal.fire('Enter a Coupon Code')
+          return Swal.fire('Enter a Coupon Code')
         }
         // If coupon already applied, remove it
         if (isApplied) {
           console.log(isApplied);
-          
+
           fetch('/user/removeCoupon', {
             method: 'GET',
             headers: {
@@ -607,7 +620,7 @@
           return;
         }
         console.log(isApplied);
-        
+
         // If not applied, apply the coupon
         fetch('/user/applyCoupon', {
           method: 'POST',
@@ -623,7 +636,7 @@
             if (data.success) {
               document.getElementById('discountAmount').innerText = data.discountAmount;
               document.getElementById('finalAmount').innerText = data.finalAmount;
-              
+
               document.getElementById('coupon').value = code;
               Swal.fire({
                 icon: "success",
@@ -693,49 +706,115 @@
         }
       };
 
-      //const addAddressForm = document.getElementById('addAddressForm');
-
-
-
-      // addAddressForm.onsubmit = function (e) {
-      //   e.preventDefault();  // Prevent normal form submission
-      //   console.log('addAddressForm submitted');
-
-      //   const formData = new FormData(this);
-      //   const formObject = Object.fromEntries(formData);
-      //   console.log('form data', formObject);
-
-      //   fetch('/user/address/add', {
-      //     method: "POST",
-      //     headers: {
-      //       "Content-Type": "application/json",
-      //       'CSRF-Token': formObject._csrf  // Use _csrf from hidden input if needed
-      //     },
-      //     body: JSON.stringify(formObject)
-      //   }).then(res => res.json())
-      //     .then(data => {
-      //       if (data && data.message) {
-      //         Swal.fire(data.message);
-      //         // Optional: refresh address list or close modal
-      //       } else {
-      //         Swal.fire("Error: " + (data.message || "Unknown error"));
-      //       }
-      //     }).catch(error => {
-      //       console.error(error);
-      //       Swal.fire("Server Error");
-      //     });
-      // }
-
-
 
 
       const addAddressForm = document.getElementById('addAddressForm')
       addAddressForm.addEventListener('submit', function (e) {
-         e.preventDefault()
+        e.preventDefault()
         console.log('addAddressForm submitted');
         const formData = new FormData(this)
         const formObject = Object.fromEntries(formData)
         console.log('form data', formObject);
+
+
+        const label = formObject.label.trim()
+        if (!label) {
+
+          return Swal.fire("Label is required")
+
+        }
+        if (/^\d/.test(label)) {
+
+          return Swal.fire("Label cannot start with numbers")
+        }
+        if (label.length < 3) {
+
+          return Swal.fire("Label should contain  atleast 3 charectors")
+        }
+        const line1 = formObject.line1.trim()
+        console.log("line1");
+
+        if (!line1) {
+
+          return Swal.fire('Address line cannot be empty')
+        }
+        if (/^\d/.test(line1) || /^\d/.test(formObject.line2)) {
+
+          return Swal.fire("Address lines cannot start with numbers")
+        }
+        if (line1.length < 3) {
+
+          return Swal.fire("AddressLine should contain atleast 3 charectors")
+        }
+        const city = formObject.city.trim()
+        console.log("city");
+        if (!city) {
+
+          return Swal.fire('City cannot be empty')
+        }
+        if (/^\d/.test(city)) {
+
+          return Swal.fire("City cannot start with numbers")
+        }
+        if (city.length < 3) {
+
+          return Swal.fire("City should contain atleast 3 charectors")
+        }
+        const country = formObject.country.trim()
+        console.log("country");
+        if (!country) {
+
+          return Swal.fire("Country Cannot be empty")
+        }
+        if (/^\d/.test(country)) {
+
+          return Swal.fire("Country cannot start with numbers")
+        }
+        if (country.length < 3) {
+
+
+          return Swal.fire("Country should contain atleast 3 charectors")
+        }
+
+        const state = formObject.state.trim()
+        console.log("state");
+        if (!state) {
+
+          return Swal.fire("State Cannot be empty")
+        }
+        if (/^\d/.test(state)) {
+
+          return Swal.fire("State cannot start with numbers")
+        }
+        if (state.length < 3) {
+
+          return Swal.fire("State should contain atleast 3 charectors")
+        }
+
+
+        const post = formObject.zip.trim()
+        console.log("post");
+        if (!post) {
+
+          return Swal.fire("Post Cannot be empty")
+        }
+        if (!/^\d+$/.test(post)) {
+
+          return Swal.fire("Invalid post code")
+        }
+        const phone = formObject.phone.trim()
+          if (!phone) {
+
+          return Swal.fire("Phone Cannot be empty")
+        }
+         if (!/^\d+$/.test(phone)) {
+
+          return Swal.fire("Invalid  phone number")
+        }
+        if(phone.length<10){
+        return Swal.fire('invalid phone number')
+        }
+
         fetch('/user/address/add', {
           method: "POST",
           headers: {
@@ -746,14 +825,14 @@
         }).then(res => res.json())
           .then(data => {
             if (data && data.success) {
-               Swal.fire({
+              Swal.fire({
 
                 icon: "success",
                 title: data.message,
                 showConfirmButton: false,
                 timer: 1000
-              }).then(()=>{
-                location.reload()
+              }).then(() => {
+                addDiv(data.newAddress)
               })
               cancelAddressForm()
             } else {
@@ -779,6 +858,46 @@
         const formObject = Object.fromEntries(formData)
         console.log('form data', formObject);
 
+        const email = formObject.email.trim()
+        if (!email) {
+          return Swal.fire("Email is required")
+        }
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+          Swal.fire('Please enter a valid email address!');
+
+          return;
+        }
+
+        if (email.length < 5 || email.length > 254) {
+          Swal.fire('Please enter a valid email');
+
+          return;
+        }
+
+        const phone = formObject.phone.trim()
+        console.log(phone);
+
+
+        if (!phone) {
+          return Swal.fire('Phone number is required')
+        }
+        const phoneRegex = /^\d+$/;
+        if (!phoneRegex.test(phone)) {
+          Swal.fire('Phone number must contain only digits.');
+
+          return;
+        }
+
+        if (phone.length !== 10) {
+          Swal.fire('Phone number must be exactly 10 digits.');
+
+          return;
+        }
+        const fullName = formObject.fullName.trim()
+        if (!fullName) {
+          return Swal.fire("enter your fullname")
+        }
         try {
           const response = await fetch('/user/profile/update', {
             method: "PATCH",
@@ -828,6 +947,39 @@
         }
       })
 
+      const cardInput = document.getElementById('cardnumber');
+      cardInput.addEventListener('input', function () {
+        this.value = this.value.replace(/[^\d\s]/g, '');
+      });
+
+      function addDiv(address) {
+        const container = document.querySelector('.addresses-container')
+        const index = container.querySelectorAll('.address-box').length;
+
+        const html = `
+    <div class="address-box" style="border: 1px solid #ccc; padding: 15px; width: 45%; position: relative;">
+      <input type="radio" name="selectedAddress" value="${address._id}" id="address-${index}" style="position: absolute; top: 10px; right: 10px;">
+      <label for="address-${index}">
+        <p><strong>Label:</strong> ${address.label}</p>
+        <p>${address.line1 || '-'}</p>
+        <p>${address.city}</p>
+        <p>${address.state}, ${address.country}</p>
+        <p><strong>ZIP:</strong> ${address.zip}</p>
+      </label>
+    </div>
+  `;
+
+        // If "No saved addresses" message exists, remove it:
+        const noAddress = container.querySelector('p');
+        if (noAddress && noAddress.textContent.includes('No saved addresses')) {
+          noAddress.remove();
+        }
+
+        // Append new box
+        container.insertAdjacentHTML('beforeend', html);
+      }
+
+      
     </script>
 
 </body>

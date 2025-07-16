@@ -15,6 +15,8 @@ const transporter = require("../config/nodeMailer");
 const productController=require('../controllers/productController')
 const wishListController=require('../controllers/wishListConntroller')
 const cartController=require('../controllers/cartController')
+const orderController=require('../controllers/orderController')
+const addressController=require('../controllers/adressController')
 
 router.use(csrfProtection);
 
@@ -47,25 +49,13 @@ router.get(
     prompt: "select_account",
   }),
 );
-
-//get product listing page
-router.get("/productList", productController.getProductList);
-//get home page
-router.get("/home", userController.getHome);
-
-router.get("/products/:variantId", productController.getSingleProduct);
-
 //google authenticaion
 router.post("/google/callback", userController.postRegister);
-
 //googleuser set password
 router.get("/setPassword", userController.getSetPassword);
 
 //post google user passwrd
 router.post("/setPassword", userController.postSetPassword);
-
-
-
 //get forgot password
 router.get("/forgot-password", async (req, res) => {
   console.log("from forgot password");
@@ -124,14 +114,23 @@ router.get("/reset-password/:token", userController.getResetPassword);
 
 //reset post
 router.post("/reset-password", userController.postResetPassword);
+//user forgot password
+router.post("/profile/change-password", userController.changePassword);
+
+
+//get home page
+router.get("/home", userController.getHome);
+
+//product controller
+router.get("/products/:variantId", productController.getSingleProduct);
+router.get("/productList", productController.getProductList);
 
 
 
 //user account
 router.get("/account", userAuth, userController.getAccount);
 
-//add anew address
-router.post("/address/add", userController.addAddress);
+
 router.patch("/profile/update", userController.updateUser);
 
 router.get("/emailChangeOtp", userController.getEmailChangeOtp);
@@ -146,16 +145,19 @@ router.post(
   upload.single("profilePic"),
   userController.addProfileImage,
 );
-
-router.post("/addres/add", userController.addAddresses);
 //removing profile image
 router.post("/removeProfileImage", userController.removeProfileImage);
 
+
+//address controller
+//router.post("/addres/add", addressController.addAddresses);
+//add anew address
+router.post("/address/add", addressController.addAddress);
 //user edit address
-router.post("/address/edit/:editAddressId", userController.editAddress);
+router.post("/address/edit/:editAddressId", addressController.editAddress);
 
 //user delete address
-router.delete("/address/delete/:addressId", userController.deleteAddress)
+router.delete("/address/delete/:addressId", addressController.deleteAddress)
 
 
 //user cart
@@ -163,17 +165,16 @@ router.get("/cart", userAuth, cartController.getCart);
 router.post("/cart/add", cartController.addToCart);
 router.delete("/cart/remove/:variantId", cartController.deleteCart);
 router.post("/cart/update/:variantId/:quantity",cartController.updateCart);
+router.get("/checkout", userAuth, cartController.getCheckout);
 
-//user forgot password
-router.post("/profile/change-password", userController.changePassword);
-//get user checkout
-router.get("/checkout", userAuth, userController.getCheckout);
-router.post("/place-order", userController.placeOrder);
 
-router.get("/order-success", userAuth, userController.getOrderSuccess);
+//orderController
+router.post("/place-order",orderController.placeOrder);
+router.post("/varifyPayment", orderController.varifyPayment);
+router.get("/order-success", userAuth, orderController.getOrderSuccess);
+router.get("/order-failure", orderController.getPaymentFailure);
 
 //user all orderpage
-
 router.get("/orders", userAuth, userController.getOrders);
 //get orderdetails page
 router.get("/order-details/:orderId", userAuth, userController.getOrderDetails);
@@ -212,13 +213,6 @@ router.post("/return-product", userAuth, userController.returnProduct);
 
 router.post("/test", userController.usertest);
 
-//router.get('/allcoupons',userController.getAllCoupons)
-
-//varify payment
-router.post("/varifyPayment", userController.varifyPayment);
-
-//payment failure
-router.get("/order-failure", userController.getPaymentFailure);
 
 //get contact page
 router.get("/contact", userController.getContact);

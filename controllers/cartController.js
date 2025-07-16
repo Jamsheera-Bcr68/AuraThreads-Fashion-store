@@ -7,6 +7,10 @@ const statusMessages = require('../utils/statusMessages')
 const Variant = require('../model/variantModel')
 const { default: mongoose } = require('mongoose')
 const messages = require('dote/src/messages')
+const User=require('../model/userModel')
+const Wallet=require('../model/walletModel')
+const Address=require('../model/addressModel')
+const Coupon=require('../model/coupenModel')
 
 const getCart = async (req, res) => {
   let cartCount = 0;
@@ -566,9 +570,108 @@ const updateCart = async (req, res) => {
     return res.status(statusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: statusMessages.SERVER_ERROR });
   }
 };
+
+const getCheckout = async (req, res) => {
+  console.log("this is from user checkout page");
+  const userId = req.session.user._id;
+  if (!userId) {
+    return res.status(statusCodes.UNAUTHORIZED).json({ success: false, message: statusMessages.NOT_FOUND("User") });
+  }
+  const user = await User.findOne({ _id: userId });
+  if (!user) {
+    console.log("User is not found");
+
+    return res.status(statusCodes.UNAUTHORIZED).json({ success: false, message: statusMessages.NOT_FOUND("User") });
+  }
+  
+
+  const wallet = await Wallet.findOne({ userId });
+  // console.log('wallet ', wallet);
+
+  if (!wallet) {
+    return res.status(statusCodes.NOT_FOUND).json({ success: false, message: statusMessages.NOT_FOUND("Wallet") });
+  }
+  const cart = await Cart.findOne({ userId }).populate({
+    path:"items.productId",
+    from:"Product",
+    select:"productName price "
+  }).populate({
+    path:'items.variantId',
+    from:"Variant",
+    select:" size color stock images"
+  })
+  console.log('cart items from checkout',cart.items);
+  
+  if (cart) {
+    cartCount = cart.items.length;
+    console.log("cart count is ", cartCount);
+  } else {
+    console.log("cart not found");
+    res.status(statusCodes.NOT_FOUND).json({ success: false, message: statusMessages.NOT_FOUND("Cart") });
+  }
+
+  const shippingCharge = cart.items.length > 0 ? 50.0 : 0;
+  const taxAmount = 0.0;
+  let totalAmount = 0;
+  let subTotal = 0;
+  let cartItems = cart.items.map((item) => {
+    subTotal = item.productId.price * item.quantity;
+    totalAmount += subTotal;
+    req.session.totalAmount = totalAmount;
+    return {
+      productName: item.productId.productName,
+      price: item.productId.price,
+      quantity: item.quantity,
+      subTotal,
+      totalAmount,
+      code: req.session.code || "",
+      images: item.variantId.images,
+      color:item.variantId.color,
+      size:item.variantId.size
+    };
+  });
+  //fetching address
+
+  const addresses = await Address.find({ userId });
+  if (!addresses) {
+    return res.json({
+      success: false,
+      message: "You dont have any saved address",
+    });
+  }
+  const offerDiscountAmount = req.session.totalDiscount;
+  console.log("offerDiscountAmount", offerDiscountAmount);
+
+  //getting available coupons
+  const coupons = await Coupon.find({
+    isActive: true,
+    expiryDate: { $gte: new Date() },
+  });
+
+  return res.render("user/userCkeckout", {
+    categoryId: null,
+    priceRange: null,
+    cartCount: cartCount || "",
+    user: req.session.user || "",
+    sort: null,
+    query: null,
+    addresses: addresses || "",
+    user,
+    cartItems,
+    shippingCharge,
+    taxAmount,
+    couponCode: req.session.code || "",
+    couponDiscountAmount: req.session.discountAmount || 0,
+    offerDiscountAmount: req.session.totalDiscount || 0,
+    totalAmount,
+    wallet,
+    coupons,
+  });
+};
 module.exports = {
   getCart,
   addToCart,
   updateCart,
-  deleteCart
+  deleteCart,
+  getCheckout
 }

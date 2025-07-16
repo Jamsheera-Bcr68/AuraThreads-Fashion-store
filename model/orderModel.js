@@ -10,6 +10,7 @@ const orderSchema = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Product",
       },
+      variantId:{type:mongoose.Schema.Types.ObjectId,ref:'Variant'},
       quantity: Number,
       status: { type: String, default: "active" },
       isReturned: { type: Boolean, default: false },

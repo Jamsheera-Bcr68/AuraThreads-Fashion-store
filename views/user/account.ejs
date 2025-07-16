@@ -165,7 +165,7 @@
                   <div class="row">
                     <% addresses.forEach(function(address, index) { %>
                       <!-- Address Card -->
-                      <div id="div-<%= address._id %>" class="col-md-6 mb-4">
+                      <div id="div-<%= address._id %>" class="col-md-6 mb-4 addresscard">
                         <div class="address-card">
 
                           <% if (address.isDefault) { %>
@@ -595,8 +595,8 @@
                   showConfirmButton: false,
                   timer: 1000
                 });
-                const fullname=document.getElementById('fullName')
-                fullname.innerText=data.fullName
+                const fullname = document.getElementById('fullName')
+                fullname.innerText = data.fullName
                 if (data.newEmail) {
                   console.log('new emial', data.newEmail);
 
@@ -624,13 +624,13 @@
             console.log(formObject);
             const label = formObject.label.trim()
             if (!label) {
-              closeAddModal()
+
               return Swal.fire("Label is required")
 
             }
             if (/^\d/.test(label)) {
               closeAddModal()
-              return Swal.fire("Label cannot start with numbers")
+              return Swal.fire({ text: "Label cannot start with numbers", })
             }
             if (label.length < 3) {
               closeAddModal()
@@ -737,7 +737,7 @@
                     showConfirmButton: false,
                     timer: 1000
                   }).then(() => {
-                    location.reload()
+                    addDiv(data.newAddress)
                   })
                   closeAddModal()
 
@@ -752,6 +752,38 @@
                 closeAddModal()
               })
           })
+
+          function addDiv(address) {
+            const row = document.querySelector('#address-list .row');
+
+            const cardHtml = `
+    <div id="div-${address._id}" class="col-md-6 mb-4 addresscard">
+      <div class="address-card">
+        ${address.isDefault ? '<h5>Default Address</h5>' : ''}
+        <h4>${address.label}</h4>
+        <p>${address.line1}${address.line2 ? ', ' + address.line2 : ''}</p>
+        <p>${address.city}, ${address.state} ${address.zip}</p>
+        <p>${address.country}</p>
+        <p>Phone: ${address.phone}</p>
+        <button style="font-weight: bold;" class="edit-btn"
+          onclick="editAddress('${address._id}', '${address.label}', '${address.line1}', '${address.line2}', '${address.city}', '${address.state}', '${address.zip}', '${address.country}', '${address.phone}', ${address.isDefault})">
+          Edit
+        </button>
+        <button style="font-weight: bold;" class="delete-btn"
+          onclick="deleteAddress('${address._id}')">
+          Delete
+        </button>
+      </div>
+    </div>
+  `;
+
+            // Remove "No saved addresses" message if present:
+            const noAddressMsg = document.querySelector('#address-list > p');
+            if (noAddressMsg) noAddressMsg.remove();
+
+            row.insertAdjacentHTML('beforeend', cardHtml);
+          }
+
           //DELETE ADDRESS
 
           const deleteAddressForm = document.getElementById('delete-address-form')
@@ -947,8 +979,8 @@
                     title: data.message,
                     showConfirmButton: false,
                     timer: 1000
-                  }).then(()=>{
-                    location.reload()
+                  }).then(() => {
+                    updateAddress(data.address)
                   })
                   const modalElement = document.getElementById('editAddressModal');
                   const editModal = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);
@@ -962,6 +994,36 @@
               })
 
           })
+
+
+
+          function updateAddress(address) {
+            const card = document.getElementById(`div-${address._id}`);
+            if (!card) {
+              console.error('Address card not found');
+              return;
+            }
+
+            // update the div
+            card.innerHTML = `
+    <div class="address-card">
+      ${address.isDefault ? '<h5>Default Address</h5>' : ''}
+      <h4>${address.label}</h4>
+      <p>${address.line1}${address.line2 ? ', ' + address.line2 : ''}</p>
+      <p>${address.city}, ${address.state} ${address.zip}</p>
+      <p>${address.country}</p>
+      <p>Phone: ${address.phone}</p>
+      <button style="font-weight: bold;" class="edit-btn"
+        onclick="editAddress('${address._id}', '${address.label}', '${address.line1}', '${address.line2}', '${address.city}', '${address.state}', '${address.zip}', '${address.country}', '${address.phone}', ${address.isDefault})">
+        Edit
+      </button>
+      <button style="font-weight: bold;" class="delete-btn"
+        onclick="deleteAddress('${address._id}')">
+        Delete
+      </button>
+    </div>
+  `;
+          }
 
           function deleteAddress(addressId) {
             // Show the delete confirmation modal
@@ -1285,11 +1347,11 @@
               .then(() => {
                 Swal.fire({
                   icon: "success",
-                  title:"Referral code copied to clipboard!" ,
+                  title: "Referral code copied to clipboard!",
                   showConfirmButton: false,
                   timer: 1000
                 })
-               
+
               })
               .catch(() => {
                 Swal.fire("Failed to copy!");

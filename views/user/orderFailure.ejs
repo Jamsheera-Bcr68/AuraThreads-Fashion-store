@@ -6,14 +6,18 @@
     <title>order order-failure</title>
     <link rel="stylesheet" href="/css/orderFailure.css">
 </head>
-<body>
-    <div class="container">
-    <div class="icon">❌</div>
-    <h1>Payment Failed</h1>
+<body >
+  <header> <%- include('../partials/userHeader') %></header>
+ <div class="outer">
+  <div class="div-container">
+    
+    <h1 style="color: red;">Payment Failed</h1>
     <p>We're sorry, but your transaction could not be completed.</p>
     <p>Please try again or contact support if the problem persists.</p>
-    <a href="/user/checkout" class="btn">Try Again</a>
-    <a href="/user/userOrders" class="btn">View your All Orders</a>
+    <a href="/user/checkout" class="btn bg-success text-white">Try Again</a>
+    <a href="/user/userOrders" class="btn bg-primary text-white mt-1">View your All Orders</a>
   </div>
+ </div>
+ <header> <%- include('../partials/userFooter') %></header>
 </body>
 </html>

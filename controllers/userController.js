@@ -30,8 +30,7 @@ const getRegister = async (req, res) => {
   res.render("user/register", { errorMessage: null });
 };
 
-//  Generate OTP
-const generateOTP = () =>
+//  Generate OTp const generateOTP = () =>
   Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP = () => Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
 
 //Handle post Register
@@ -853,135 +852,135 @@ const getAccount = async (req, res) => {
   }
 };
 
-//add address
-const addAddress = async (req, res) => {
-  console.log("from add adress");
-  const { label, line1, line2, city, state, zip, country, phone } = req.body;
-  console.log(
-    ` label is ${label} line1 is ${line1} line2 is ${line2} city is ${city} state is ${state} zip is ${zip} country is ${country} phone is ${phone}`,
-  );
-  const isDefault = req.body.isDefault || false;
-  console.log(`is defsult is ${isDefault}`);
+// //add address
+// const addAddress = async (req, res) => {
+//   console.log("from add adress");
+//   const { label, line1, line2, city, state, zip, country, phone } = req.body;
+//   console.log(
+//     ` label is ${label} line1 is ${line1} line2 is ${line2} city is ${city} state is ${state} zip is ${zip} country is ${country} phone is ${phone}`,
+//   );
+//   const isDefault = req.body.isDefault || false;
+//   console.log(`is defsult is ${isDefault}`);
 
-  try {
-    const userId = req.session.user._id;
-    console.log("user is ", userId);
-    const address = await Address.find({ userId })
+//   try {
+//     const userId = req.session.user._id;
+//     console.log("user is ", userId);
+//     const address = await Address.find({ userId })
 
-    if (address.length == 4) {
-      return res.json({ success: false, message: "You can only add 4 addresses" })
-    }
-    // If isDefault is true, update all other addresses to false for the same user
-    if (isDefault) {
-      await Address.updateMany({ userId }, { isDefault: false });
-      const newAddress = new Address({
-        userId,
-        label,
-        line1,
-        line2,
-        phone,
-        city,
-        state,
-        zip,
-        country,
-        isDefault,
-      });
-      await newAddress.save();
-      console.log("adress saved as default");
+//     if (address.length == 4) {
+//       return res.json({ success: false, message: "You can only add 4 addresses" })
+//     }
+//     // If isDefault is true, update all other addresses to false for the same user
+//     if (isDefault) {
+//       await Address.updateMany({ userId }, { isDefault: false });
+//       const newAddress = new Address({
+//         userId,
+//         label,
+//         line1,
+//         line2,
+//         phone,
+//         city,
+//         state,
+//         zip,
+//         country,
+//         isDefault,
+//       });
+//       await newAddress.save();
+//       console.log("adress saved as default");
 
-      return res.json({ success: true, message: "New Address added successfully", address: newAddress });
-    } else {
-      const newAddress = new Address({
-        userId,
-        line1,
-        line2,
-        phone,
-        city,
-        state,
-        zip,
-        country,
-        isDefault,
-      });
-      await newAddress.save();
-      console.log("adress is saves as not default");
-      return res.status(201).json({ success: true, message: "Address added successfully" });
-    }
-  } catch (error) {
-    console.log("error in fetching adress", error);
-    return res.json({ success: false, message: "error in fetching adress" });
-  }
-};
+//       return res.json({ success: true, message: "New Address added successfully", address: newAddress });
+//     } else {
+//       const newAddress = new Address({
+//         userId,
+//         line1,
+//         line2,
+//         phone,
+//         city,
+//         state,
+//         zip,
+//         country,
+//         isDefault,
+//       });
+//       await newAddress.save();
+//       console.log("adress is saves as not default");
+//       return res.status(201).json({ success: true, message: "Address added successfully" });
+//     }
+//   } catch (error) {
+//     console.log("error in fetching adress", error);
+//     return res.json({ success: false, message: "error in fetching adress" });
+//   }
+// };
 
 //edit adress
-const editAddress = async (req, res) => {
-  const addressId = req.params.editAddressId;
-  console.log("address id is ", addressId);
+// const editAddress = async (req, res) => {
+//   const addressId = req.params.editAddressId;
+//   console.log("address id is ", addressId);
 
-  const { label, line1, line2, city, state, zip, country, phone } = req.body;
-  console.log(`Address id is ${addressId} ant type is ${typeof addressId}`);
-  console.log(
-    ` label is ${label} line1 is ${line1} line2 is ${line2} city is ${city} state is ${state} zip is ${zip} country is ${country} phone is ${phone}`,
-  );
-  const isDefault = req.body.isDefault || false;
-  console.log(`is defsult is ${isDefault}`);
-  const userId = req.session.user._id;
-  try {
-    console.log("user id is ", userId);
+//   const { label, line1, line2, city, state, zip, country, phone } = req.body;
+//   console.log(`Address id is ${addressId} ant type is ${typeof addressId}`);
+//   console.log(
+//     ` label is ${label} line1 is ${line1} line2 is ${line2} city is ${city} state is ${state} zip is ${zip} country is ${country} phone is ${phone}`,
+//   );
+//   const isDefault = req.body.isDefault || false;
+//   console.log(`is defsult is ${isDefault}`);
+//   const userId = req.session.user._id;
+//   try {
+//     console.log("user id is ", userId);
 
-    const address = await Address.findOne({
-      _id: new mongoose.Types.ObjectId(addressId),
-    });
+//     const address = await Address.findOne({
+//       _id: new mongoose.Types.ObjectId(addressId),
+//     });
 
-    if (!address) {
-      console.log("address not found");
+//     if (!address) {
+//       console.log("address not found");
 
-      return res.json({ success: false, message: "address not found" });
-    } else {
-      console.log("address fount");
-      if (isDefault) {
-        await Address.updateMany({ userId }, { isDefault: false });
-      }
-      (address.label = label), (address.line1 = line1);
-      address.line2 = line2;
-      address.city = city;
-      address.state = state;
-      address.zip = zip;
-      address.country = country;
-      address.phone = phone;
+//       return res.json({ success: false, message: "address not found" });
+//     } else {
+//       console.log("address fount");
+//       if (isDefault) {
+//         await Address.updateMany({ userId }, { isDefault: false });
+//       }
+//       (address.label = label), (address.line1 = line1);
+//       address.line2 = line2;
+//       address.city = city;
+//       address.state = state;
+//       address.zip = zip;
+//       address.country = country;
+//       address.phone = phone;
 
-      await address.save();
-      console.log("adress saved successfully");
-      return res.json({ success: true, message: "Addres edited successfully" });
-    }
-  } catch (error) {
-    return res.json({ success: false, message: "error in fetching address" });
-  }
-};
+//       await address.save();
+//       console.log("adress saved successfully");
+//       return res.json({ success: true, message: "Addres edited successfully" });
+//     }
+//   } catch (error) {
+//     return res.json({ success: false, message: "error in fetching address" });
+//   }
+// };
 
-//delete address
-const deleteAddress = async (req, res) => {
-  console.log("from user delete adress");
-  const addressId = req.params.addressId;
-  console.log("addressid is"), addressId;
+// //delete address
+// const deleteAddress = async (req, res) => {
+//   console.log("from user delete adress");
+//   const addressId = req.params.addressId;
+//   console.log("addressid is"), addressId;
 
-  try {
-    const address = await Address.findOneAndDelete({ _id: addressId });
-    if (!address) {
-      console.log("address not fount");
-      return res.json({ success: false, message: "Address not Found" });
-    } else {
-      console.log("account deleted success fully");
-      return res.json({
-        success: true,
-        message: "Address Deleted Successfully",
-      });
-    }
-  } catch (error) {
-    console.log("error in fetching address", error);
+//   try {
+//     const address = await Address.findOneAndDelete({ _id: addressId });
+//     if (!address) {
+//       console.log("address not fount");
+//       return res.json({ success: false, message: "Address not Found" });
+//     } else {
+//       console.log("account deleted success fully");
+//       return res.json({
+//         success: true,
+//         message: "Address Deleted Successfully",
+//       });
+//     }
+//   } catch (error) {
+//     console.log("error in fetching address", error);
 
-    res.json({ success: false, message: "error in fetching address" });
-  }
-};
+//     res.json({ success: false, message: "error in fetching address" });
+//   }
+// };
 //edit profile'
 
 const updateUser = async (req, res) => {
@@ -1165,56 +1164,56 @@ const addProfileImage = async (req, res) => {
   }
 };
 
-const addAddresses = async (req, res) => {
-  const { label, line1, line2, city, state, zip, country, phone } = req.body;
-  console.log(
-    ` label is ${label} line1 is ${line1} line2 is ${line2} city is ${city} state is ${state} zip is ${zip} country is ${country} phone is ${phone}`,
-  );
-  const isDefault = req.body.isDefault || false;
-  console.log(`is defsult is ${isDefault}`);
+// const addAddresses = async (req, res) => {
+//   const { label, line1, line2, city, state, zip, country, phone } = req.body;
+//   console.log(
+//     ` label is ${label} line1 is ${line1} line2 is ${line2} city is ${city} state is ${state} zip is ${zip} country is ${country} phone is ${phone}`,
+//   );
+//   const isDefault = req.body.isDefault || false;
+//   console.log(`is defsult is ${isDefault}`);
 
-  try {
-    const userId = req.session.user._id;
-    console.log("user is ", userId);
+//   try {
+//     const userId = req.session.user._id;
+//     console.log("user is ", userId);
 
-    // If isDefault is true, update all other addresses to false for the same user
-    if (isDefault) {
-      await Address.updateMany({ userId }, { isDefault: false });
-      const newAddress = new Address({
-        userId,
-        line1,
-        line2,
-        phone,
-        city,
-        state,
-        zip,
-        country,
-        isDefault,
-      });
-      await newAddress.save();
-      console.log("adress saved as default");
-      res.redirect("/user/checkout");
-    } else {
-      const newAddress = new Address({
-        userId,
-        line1,
-        line2,
-        phone,
-        city,
-        state,
-        zip,
-        country,
-        isDefault,
-      });
-      await newAddress.save();
-      console.log("adress is saves as not default");
-      res.redirect("/user/checkout");
-    }
-  } catch (error) {
-    console.log("error in fetching adress", error);
-    res.redirect("/user/checkout");
-  }
-};
+//     // If isDefault is true, update all other addresses to false for the same user
+//     if (isDefault) {
+//       await Address.updateMany({ userId }, { isDefault: false });
+//       const newAddress = new Address({
+//         userId,
+//         line1,
+//         line2,
+//         phone,
+//         city,
+//         state,
+//         zip,
+//         country,
+//         isDefault,
+//       });
+//       await newAddress.save();
+//       console.log("adress saved as default");
+//       res.redirect("/user/checkout");
+//     } else {
+//       const newAddress = new Address({
+//         userId,
+//         line1,
+//         line2,
+//         phone,
+//         city,
+//         state,
+//         zip,
+//         country,
+//         isDefault,
+//       });
+//       await newAddress.save();
+//       console.log("adress is saves as not default");
+//       res.redirect("/user/checkout");
+//     }
+//   } catch (error) {
+//     console.log("error in fetching adress", error);
+//     res.redirect("/user/checkout");
+//   }
+// };
 //removeProfileImage
 const removeProfileImage = async (req, res) => {
   console.log("from removeProfileImage");
@@ -1240,486 +1239,6 @@ const removeProfileImage = async (req, res) => {
   });
 };
 
-// const getCart = async (req, res) => {
-//   let cartCount = 0;
-//   console.log("this is from get cart");
-//   try {
-//     const user = req.session.user;
-//     const userId = user._id;
-//     if (!userId) {
-//       console.log("User not registered");
-//       return res.json({
-//         success: false,
-//         message: "Please register to add to cart",
-//       });
-//     }
-//     console.log("user id is ", userId);
-//     let title;
-
-//     let cart = await Cart.findOne({ userId }).populate({
-//       path: "items.productId",
-//       model: "Product",
-//       select: "productName price images stock categoryId",
-//     });
-//     if (!cart) {
-//       console.log("No existing cart");
-//       try {
-//         cart = new Cart({ userId: userId, items: [] });
-//         console.log("new empty cart is created");
-//       } catch (error) {
-//         console.log("error in creating new cart" + error);
-//       }
-//       await cart.save();
-//     }
-
-//     //console.log("Cart Items:", JSON.stringify(cart.items, null, 2));
-//     cart.items.forEach((item) => {
-//       if (item.productId.images && item.productId.images.length > 0) {
-//         item.productId.images = item.productId.images.map((image) =>
-//           image.replace(/\\/g, "/"),
-//         );
-//       }
-//     });
-//     cartCount = cart.items.length;
-//     title =
-//       cart.items.length > 0
-//         ? `Displaying your  cart itmes`
-//         : "Your cart is empty";
-
-//     let cartTotal = cart.items.reduce(
-//       (sum, item) => sum + item.productId.price * item.quantity,
-//       0,
-//     );
-//     console.log("cart total", cartTotal);
-
-//     //fetching offers
-//     const offers = await Offer.find({ status: "active" });
-//     cart.items.forEach((item) => {
-//       const productOffer = offers.find(
-//         (offer) =>
-//           offer.applicableTo == "product" &&
-//           offer.productId?.toString() == item.productId._id?.toString(),
-//       );
-//       const categoryOffer = offers.find(
-//         (offer) =>
-//           offer.applicableTo == "category" &&
-//           offer.categoryId?.toString() == item.productId.categoryId.toString(),
-//       );
-
-//       let finalOffer = null;
-//       let discountAmount = 0;
-//       if (!categoryOffer && !productOffer) {
-//       } else if (productOffer && categoryOffer) {
-//         const productDiscountAmount =
-//           productOffer.discountType == "amount"
-//             ? productOffer.discountValue
-//             : (productOffer.discountValue * item.productId.price) / 100;
-//         const categoryDiscountAmount =
-//           categoryOffer.discountType == "amount"
-//             ? categoryOffer.discountValue
-//             : (categoryOffer.discountValue * item.productId.price) / 100;
-
-//         discountAmount =
-//           productDiscountAmount > categoryDiscountAmount
-//             ? productDiscountAmount
-//             : categoryDiscountAmount;
-//         finalOffer =
-//           productDiscountAmount > categoryDiscountAmount
-//             ? productOffer
-//             : categoryOffer;
-//       } else if (categoryOffer || productOffer) {
-//         finalOffer = categoryOffer || productOffer;
-//         discountAmount =
-//           finalOffer.discountType == "amount"
-//             ? finalOffer.discountValue
-//             : (finalOffer.discountValue * item.productId.price) / 100;
-//       }
-
-//       if (finalOffer) {
-//         item.discountAmount = discountAmount;
-//         item.discountPrice = Math.round(item.productId.price - discountAmount);
-//         item.discountType = finalOffer.discountType;
-//       } else {
-//         item.discountAmount = 0;
-//         item.discountPrice = item.productId.price;
-//         item.discountTyp = "";
-//       }
-//     });
-//     const netAmount = cart.items.reduce(
-//       (total, item) => total + item.discountPrice * item.quantity,
-//       0,
-//     );
-//     const totalDiscount = cart.items.reduce(
-//       (total, item) => total + item.discountAmount * item.quantity,
-//       0,
-//     );
-
-//     req.session.offer = cart.items.map((item) => ({
-//       productId: item.productId._id,
-//       discountAmount: item.discountAmount || 0,
-//       discountPrice: item.discountPrice || item.productId.price,
-//       discountType: item.discountType || null,
-//     }));
-//     req.session.cartTotal = cartTotal;
-//     req.session.netAmount = netAmount;
-//     req.session.totalDiscount = totalDiscount;
-//     console.log("req.session.offer ", req.session.offer);
-//     console.log("totalDiscount from get cart", totalDiscount);
-
-//     return res.render("../views/user/cart", {
-//       errorMessage: null,
-//       categoryId: null,
-//       priceRange: null,
-//       cart,
-//       title,
-//       cartCount,
-
-//       user: req.session.user || "",
-//       sort: null,
-//       query: null,
-//     });
-//   } catch (error) {
-//     console.log("error n fetching cart", error);
-//     res.json({ success: false, message: "Error in fetching cart" });
-//   }
-// };
-
-// const addToCart = async (req, res) => {
-//   console.log("from add to cart");
-//   try {
-//     if (!req.session.user) {
-//       return res.json({ success: false, message: "User not registered" });
-//     }
-//     const user = req.session.user;
-//     const userId = user._id;
-
-//     const { productId } = req.body;
-//     console.log("product id is ", productId);
-
-//     if (!productId) {
-//       return res.json({ success: false, message: "Product id is not found" });
-//     }
-//     const quantity = req.body.quantity || 1;
-//     const subTotal = req.body.subTotal;
-
-//     if (!user) {
-//       return res.json({ success: false, message: "User not resistered" });
-//     }
-//     console.log("quantity is ", quantity);
-
-//     // Find the product and check stock
-//     const product = await Product.findOne({ _id: productId });
-
-//     if (!product) {
-//       return res.json({ success: false, message: "Product not found" });
-//     }
-
-//     const productStock = product.stock;
-
-//     // Check if requested quantity exceeds available stock
-//     if (quantity > productStock) {
-//       return res.json({ success: false, message: "Out of stock" });
-//     }
-
-//     // Find the user's cart
-//     let cart = await Cart.findOne({ userId });
-
-//     if (!cart) {
-//       // Create a new cart if it doesn't exist
-//       cart = new Cart({ userId, items: [{ productId, quantity }] });
-//     } else {
-//       // Check if the product is already in the cart
-//       const itemIndex = cart.items.findIndex(
-//         (item) => item.productId.toString() === productId,
-//       );
-
-//       if (itemIndex > -1) {
-//         cart.items[itemIndex].quantity += quantity;
-
-//         if (cart.items[itemIndex].quantity > productStock) {
-//           return res.json({ success: false, message: "Out of stock" });
-//         } else if (cart.items[itemIndex].quantity > 5) {
-//           return res.json({
-//             success: false,
-//             message: "Cannot add more than 5 quantity of the same",
-//           });
-//         }
-//       } else {
-//         // Add the product to the cart if it's not already in
-//         cart.items.push({ productId, quantity, subTotal });
-//       }
-//     }
-
-//     // Save the cart after ensuring quantity is valid
-//     await cart.save();
-
-//     console.log("Product added to cart!");
-
-//     //remove the product from wishlist
-//     const wishList = await WishList.findOne({ userId });
-
-//     if (wishList) {
-//       const wishListItem = wishList.items.find(
-//         (item) => item.toString() == productId,
-//       );
-//       if (wishListItem) {
-//         wishList.items.pull(productId);
-//         await wishList.save();
-//       }
-//     } else {
-//       console.log("No wishlist found for user:", userId);
-//       // Optional: you could create a new wishlist document if needed
-//     }
-//     // Response after successfully adding to cart
-//     res.json({ success: true, message: "Product added to cart!" });
-//   } catch (error) {
-//     console.log("Error in Adding Cart", error);
-//     res.json({ success: false, message: "Something went wrong!" });
-//   }
-// };
-
-// const deleteCart = async (req, res) => {
-//   console.log("From delete Cart");
-//   const { productId } = req.params;
-//   const userId = req.session.user._id;
-
-//   console.log(`userId id ${userId} and product Id is ${productId}`);
-//   try {
-//     const cart = await Cart.findOne({ userId }).populate({
-//       path: "items.productId",
-//       model: "Product",
-//       select: "productName price images stock categoryId",
-//     });
-//     if (!cart) {
-//       console.log("can't find cart");
-//     } else {
-//       console.log("cart found");
-//       cart.items = cart.items.filter(
-//         (item) => item.productId._id?.toString() !== productId,
-//       );
-
-//       await cart.save();
-//       // fetching offers
-//       const offers = await Offer.find({ status: "active" });
-//       cart.items.forEach((item) => {
-//         const productOffer = offers.find(
-//           (offer) =>
-//             offer.applicableTo == "product" &&
-//             offer.productId?.toString() == item.productId._id?.toString(),
-//         );
-//         const categoryOffer = offers.find(
-//           (offer) =>
-//             offer.applicableTo == "category" &&
-//             offer.categoryId?.toString() == item.productId.categoryId.toString(),
-//         );
-
-//         let finalOffer = null;
-//         let discountAmount = 0;
-//         if (!categoryOffer && !productOffer) {
-//         } else if (productOffer && categoryOffer) {
-//           const productDiscountAmount =
-//             productOffer.discountType == "amount"
-//               ? productOffer.discountValue
-//               : (productOffer.discountValue * item.productId.price) / 100;
-//           const categoryDiscountAmount =
-//             categoryOffer.discountType == "amount"
-//               ? categoryOffer.discountValue
-//               : (categoryOffer.discountValue * item.productId.price) / 100;
-
-//           discountAmount =
-//             productDiscountAmount > categoryDiscountAmount
-//               ? productDiscountAmount
-//               : categoryDiscountAmount;
-//           finalOffer =
-//             productDiscountAmount > categoryDiscountAmount
-//               ? productOffer
-//               : categoryOffer;
-//         } else if (categoryOffer || productOffer) {
-//           finalOffer = categoryOffer || productOffer;
-//           discountAmount =
-//             finalOffer.discountType == "amount"
-//               ? finalOffer.discountValue
-//               : (finalOffer.discountValue * item.productId.price) / 100;
-//         }
-
-//         if (finalOffer) {
-//           item.discountAmount = discountAmount;
-//           item.discountPrice = Math.round(item.productId.price - discountAmount);
-//           item.discountType = finalOffer.discountType;
-//         } else {
-//           item.discountAmount = 0;
-//           item.discountPrice = item.productId.price;
-//           item.discountTyp = "";
-//         }
-//       });
-
-//       const netAmount = cart.items.reduce(
-//         (total, item) => total + item.discountPrice * item.quantity,
-//         0,
-//       );
-//       const totalDiscount = cart.items.reduce(
-//         (total, item) => total + item.discountAmount * item.quantity,
-//         0,
-//       );
-//       req.session.netAmount = netAmount;
-//       req.session.totalDiscount = totalDiscount;
-
-//       req.session.discountAmount = 0;
-//       req.session.totalAmount = 0;
-//       req.session.code = "";
-//       console.log("removed from cart");
-//       const cartItems = cart.items
-//       return res.json({ success: true, message: "deleted from cart", cartItems, netAmount, totalDiscount });
-//     }
-//   } catch (error) {
-//     console.log("error in fetching cart");
-//     res.json({ success: false, message: "Error in ffetching cart" });
-//   }
-// };
-
-// const updateCart = async (req, res) => {
-//   console.log("from updateCart");
-//   console.log("Received Params:", req.params); // Log received params
-
-//   const { productId } = req.params;
-//   const quantity = parseInt(req.params.quantity);
-
-//   // Validate request parameters
-//   if (!productId || isNaN(quantity) || quantity < 1) {
-//     return res
-//       .status(400)
-//       .json({ success: false, message: "Invalid request data" });
-//   }
-
-//   try {
-//     console.log(`Updating product ${productId} with quantity ${quantity}`);
-//     const userId = req.session.user._id;
-
-//     // Find cart and product
-
-//     const product = await Product.findById(productId);
-//     const cart = await Cart.findOne({ userId }).populate({
-//       path: "items.productId",
-//       model: "Product",
-//       select: "productName price images stock categoryId",
-//     });
-//     const price = product.price;
-//     const subTotal = price * quantity;
-//     if (!cart) {
-//       return res.json({ success: false, message: "Cart not found" });
-//     }
-
-//     if (!product) {
-//       return res.json({ success: false, message: "Product not found" });
-//     }
-
-//     const productStock = product.stock;
-//     console.log("cart itmes ", cart.items);
-//     const cartItems = cart.items
-//     // Find item in cart
-//     const item = cart.items.find(
-//       (item) => item.productId._id.toString() === productId,
-//     );
-
-//     if (!item) {
-//       return res.json({
-//         success: false,
-//         message: "Item not found in your cart",
-//       });
-//     }
-
-//     console.log("Item found in cart");
-
-//     // Ensure quantity does not exceed stock before updating
-//     if (quantity > productStock) {
-//       console.log("Out of stock, requested quantity:", quantity);
-//       return res.json({ success: false, message: "Out of stock" });
-//     }
-
-//     // Update quantity
-//     item.quantity = quantity;
-//     item.subTotal = subTotal;
-
-//     // Save cart update
-//     await cart.save();
-
-//     //fetching offers
-//     const offers = await Offer.find({ status: "active" });
-//     cartItems.forEach((item) => {
-//       const productOffer = offers.find(
-//         (offer) =>
-//           offer.applicableTo == "product" &&
-//           offer.productId?.toString() == item.productId._id?.toString(),
-//       );
-//       const categoryOffer = offers.find(
-//         (offer) =>
-//           offer.applicableTo == "category" &&
-//           offer.categoryId?.toString() == item.productId.categoryId.toString(),
-//       );
-
-//       let finalOffer = null;
-//       let discountAmount = 0;
-//       if (!categoryOffer && !productOffer) {
-//       } else if (productOffer && categoryOffer) {
-//         const productDiscountAmount =
-//           productOffer.discountType == "amount"
-//             ? productOffer.discountValue
-//             : (productOffer.discountValue * item.productId.price) / 100;
-//         const categoryDiscountAmount =
-//           categoryOffer.discountType == "amount"
-//             ? categoryOffer.discountValue
-//             : (categoryOffer.discountValue * item.productId.price) / 100;
-
-//         discountAmount =
-//           productDiscountAmount > categoryDiscountAmount
-//             ? productDiscountAmount
-//             : categoryDiscountAmount;
-//         finalOffer =
-//           productDiscountAmount > categoryDiscountAmount
-//             ? productOffer
-//             : categoryOffer;
-//       } else if (categoryOffer || productOffer) {
-//         finalOffer = categoryOffer || productOffer;
-//         discountAmount =
-//           finalOffer.discountType == "amount"
-//             ? finalOffer.discountValue
-//             : (finalOffer.discountValue * item.productId.price) / 100;
-//       }
-
-//       if (finalOffer) {
-//         item.discountAmount = discountAmount;
-//         item.discountPrice = Math.round(item.productId.price - discountAmount);
-//         item.discountType = finalOffer.discountType;
-//       } else {
-//         item.discountAmount = 0;
-//         item.discountPrice = item.productId.price;
-//         item.discountTyp = "";
-//       }
-//     });
-
-//     const netAmount = cart.items.reduce(
-//       (total, item) => total + item.discountPrice * item.quantity,
-//       0,
-//     );
-//     const totalDiscount = cart.items.reduce(
-//       (total, item) => total + item.discountAmount * item.quantity,
-//       0,
-//     );
-//     req.session.netAmount = netAmount;
-//     req.session.totalDiscount = totalDiscount;
-//     req.session.discountAmount = 0;
-//     req.session.totalAmount = 0;
-//     req.session.code = "";
-//     console.log("Cart saved successfully");
-
-//     return res
-//       .status(200)
-//       .json({ success: true, message: "Cart updated successfully", cartItems, netAmount, totalDiscount });
-//   } catch (error) {
-//     console.error("Error updating cart:", error);
-//     return res.status(500).json({ success: false, message: "Server error" });
-//   }
-// };
 
 const changePassword = async (req, res) => {
   console.log("from user forgot password");
@@ -1765,460 +1284,8 @@ const changePassword = async (req, res) => {
   }
 };
 
-const getCheckout = async (req, res) => {
-  console.log("this is from user checkout page");
-  const userId = req.session.user._id;
-  if (!userId) {
-    return res.json({ success: false, message: "user not fount" });
-  }
-  const user = await User.findOne({ _id: userId });
-  if (!user) {
-    console.log("User is not found");
 
-    return res.json({ success: false, message: "user not found" });
-  }
 
-  const wallet = await Wallet.findOne({ userId });
-  // console.log('wallet ', wallet);
-
-  if (!wallet) {
-    return res.json({ success: false, message: "wallet not found" });
-  }
-  const cart = await Cart.findOne({ userId }).populate("items.productId");
-  if (cart) {
-    cartCount = cart.items.length;
-    console.log("cart count is ", cartCount);
-  } else {
-    console.log("cart not fount");
-  }
-
-  const shippingCharge = cart.items.length > 0 ? 50.0 : 0;
-  const taxAmount = 0.0;
-  let totalAmount = 0;
-  let subTotal = 0;
-  let cartItems = cart.items.map((item) => {
-    subTotal = item.productId.price * item.quantity;
-    totalAmount += subTotal;
-    req.session.totalAmount = totalAmount;
-    return {
-      productName: item.productId.productName,
-      price: item.productId.price,
-      quantity: item.quantity,
-      subTotal,
-      totalAmount,
-      code: req.session.code || "",
-      images: item.productId.images,
-    };
-  });
-  //fetching address
-
-  const addresses = await Address.find({ userId });
-  if (!addresses) {
-    return res.json({
-      success: false,
-      message: "You dont have any saved address",
-    });
-  }
-  const offerDiscountAmount = req.session.totalDiscount;
-  console.log("offerDiscountAmount", offerDiscountAmount);
-
-  //getting available coupons
-  const coupons = await Coupon.find({
-    isActive: true,
-    expiryDate: { $gte: new Date() },
-  });
-
-  return res.render("user/userCkeckout", {
-    categoryId: null,
-    priceRange: null,
-    cartCount: cartCount || "",
-    user: req.session.user || "",
-    sort: null,
-    query: null,
-    addresses: addresses || "",
-    user,
-    cartItems,
-    shippingCharge,
-    taxAmount,
-    couponCode: req.session.code || "",
-    couponDiscountAmount: req.session.discountAmount || 0,
-    offerDiscountAmount: req.session.totalDiscount || 0,
-    totalAmount,
-    wallet,
-    coupons,
-  });
-};
-
-const placeOrder = async (req, res) => {
-  console.log("from place order");
-
-  try {
-    let { paymentMethod, paymentDetails, totalAmount } = req.body;
-    console.log("total amount ", totalAmount);
-
-    let addressId = req.body.addressId?.trim();
-    //validatiing essential fields
-    const useWallet = req.body.useWallet;
-    console.log("useWallet ", useWallet);
-    if (useWallet) {
-      paymentMethod = 'wallet'
-    }
-
-    const userId = req.session.user._id;
-    const cart = await Cart.findOne({ userId });
-    //console.log('cart is ', cart);
-    if (cart.items.length < 1) {
-      return res.json({ success: false, message: "No items found" });
-    }
-    //console.log('Cart items are ', cart.items);
-
-    if (!cart) {
-      return res.json({ success: false, message: "Cart  is not found" });
-    }
-
-    if (addressId == "" || paymentMethod == "" || totalAmount == "") {
-      // console.log('missing reuired fileds', addressId, paymentMethod, paymentDetails, totalAmount);
-
-      return res.status(400).send("Missing required fields");
-    }
-    // console.log("address id ", addressId, ' type ', typeof (addressId));
-    addressId = new mongoose.Types.ObjectId(addressId);
-    // console.log("address id ", addressId, 'new type ', typeof (addressId));
-    // console.log('paymentDetails', paymentDetails);
-    let { upiId, cardNumber, expiry, cvv, cardName } = paymentDetails;
-    if (paymentMethod == "Credit Card") {
-      if (cardNumber == "" || expiry == "" || cvv == "" || cardName == "") {
-        return res.json({
-          success: false,
-          message: "Payment details are missing",
-        });
-      }
-    } else if (paymentMethod == "UPI") {
-      upiId = paymentDetails?.upiId;
-      if (!upiId) {
-        return res.json({ success: false, message: "UPI id is missing" });
-      }
-      console.log(upiId);
-    } else {
-    }
-
-    //fetching full address from database
-
-    const address = await Address.findById(addressId);
-    if (!address) {
-      console.log("address is not found");
-      return res.json({
-        success: false,
-        message: "Selected address is not found",
-      });
-    }
-
-    //checking product availability
-    let items = cart.items;
-
-    for (let item of items) {
-      const product = await Product.findById(item.productId);
-
-      if (!product) {
-        return res
-          .status(404)
-          .json({ success: false, message: "Product not found" });
-      }
-
-      if (product.stock < item.quantity) {
-        console.log("the product is out of stock from route");
-
-        return res.status(400).json({
-          success: false,
-          message: ` ${product.productName} is out of stock`,
-        });
-      }
-    }
-
-    const createdAt = new Date();
-    const deliveryDate = new Date(
-      createdAt.getTime() + 5 * 24 * 60 * 60 * 1000,
-    ); // Add 5 days
-
-    const coupenDiscountAmount = req.session.discountAmount || 0;
-    console.log("coupenDiscountAmount", coupenDiscountAmount);
-
-    const offerDiscountAmount = req.session.totalDiscount || 0;
-    console.log("offerDiscountAmount ", offerDiscountAmount);
-
-    const finalAmount =
-      totalAmount - coupenDiscountAmount - offerDiscountAmount;
-    console.log("final amount discount amount ", finalAmount);
-
-    const shippingCharge = 50.0;
-    const orderTotal = finalAmount + shippingCharge;
-    console.log("orderTotal ", orderTotal);
-
-    const isCouponApplied = req.session.code ? true : false;
-    const couponCode = req.session.code || "";
-
-    const isOfferApplied = req.session.offer ? true : false;
-
-    //order above 1000 not allow to py COD
-    if (finalAmount > 1000 && paymentMethod == "COD") {
-      console.log("Order above 1000 cannot use COD");
-
-      return res.json({
-        success: false,
-        message: "Order above 1000 cannot use COD",
-      });
-    }
-    // razorpay id
-
-    // const options = {
-    //   amount: finalAmount * 100,
-    //   currency: 'INR',
-    //   receipt: "receipt_" + Date.now()
-    // }
-    // const razorpayOrder = await razorpay.orders.create(options);
-
-    //////
-    let orderItems = await Promise.all(
-      cart.items.map(async (item) => {
-        const product = await Product.findById(item.productId);
-        console.log("product is ", product);
-
-        const offers = await Offer.find({ status: "active" });
-        // Simulate logic for getting final offer (you should already have this logic)
-        let finalOffer = null;
-        let offerDiscount = 0;
-
-        const productOffer = offers.find(
-          (offer) =>
-            offer.applicableTo == "product" &&
-            offer.productId?.toString() == product._id?.toString(),
-        );
-        const categoryOffer = offers.find(
-          (offer) =>
-            offer.applicableTo == "category" &&
-            offer.categoryId?.toString() == product.categoryId.toString(),
-        );
-
-        console.log("categoryOffer", categoryOffer);
-
-        // const productOffer = await Offer.findOne({ productId: product._id, isActive: true });
-        console.log("productOffer", productOffer);
-
-        if (productOffer && categoryOffer) {
-          let productDiscountAmount = 0;
-          let categoryDiscountAmount = 0;
-          if (productOffer.discountType == "amount") {
-            productDiscountAmount = productOffer.discountValue;
-            console.log("productDiscountAmount amount ", productDiscountAmount);
-          } else if (productOffer.discountType == "percentage") {
-            productDiscountAmount =
-              (product.price * productOffer.discountValue) / 100;
-            console.log(
-              "productDiscountAmount percentage ",
-              productDiscountAmount,
-            );
-          }
-
-          //category
-          if (categoryOffer.discountType == "amount") {
-            categoryDiscountAmount = categoryOffer.discountValue;
-            console.log(
-              "categoryDiscountAmount amount ",
-              categoryDiscountAmount,
-            );
-          } else if (categoryOffer.discountType == "percentage") {
-            categoryDiscountAmount =
-              (product.price * categoryOffer.discountValue) / 100;
-            console.log(
-              "categoryDiscountAmount percentage ",
-              categoryDiscountAmount,
-            );
-          }
-
-          finalOffer =
-            productDiscountAmount > categoryDiscountAmount
-              ? productOffer
-              : categoryOffer;
-          console.log("finalOffer", finalOffer);
-        } else if (productOffer) {
-          finalOffer = productOffer;
-          console.log("only product offer exist");
-        } else if (categoryOffer) {
-          finalOffer = categoryOffer;
-          console.log("only category offer exist");
-        }
-
-        if (finalOffer) {
-          if (finalOffer.discountType == "amount") {
-            offerDiscount = item.quantity * finalOffer.discountValue;
-          } else if (finalOffer.discountType == "percentage") {
-            offerDiscount =
-              (item.quantity * product.price * finalOffer.discountValue) / 100;
-          }
-          console.log("final discount amount for this item is ", offerDiscount);
-        }
-
-        return {
-          productId: item.productId,
-          quantity: item.quantity,
-          offerId: finalOffer ? finalOffer._id : null,
-          offerApplied: finalOffer ? true : false,
-          offerDiscount: offerDiscount || 0,
-        };
-      }),
-    );
-
-    // if payment method is COD
-    if (paymentMethod == "COD") {
-      const newOrder = new Order({
-        userId: req.session.user._id,
-        address,
-        coupenDiscountAmount,
-        offerDiscountAmount,
-        isCouponApplied,
-        isOfferApplied,
-        couponCode,
-        finalAmount,
-        paymentMethod,
-        totalAmount,
-        status: "Pending",
-        items: orderItems,
-        createdAt,
-        deliveryDate,
-        orderTotal,
-        shippingCharge,
-        useWallet,
-      });
-      await newOrder.save();
-
-      //update stock
-      for (let item of cart.items) {
-        await Product.findByIdAndUpdate(item.productId, {
-          $inc: { stock: -item.quantity },
-        });
-      }
-
-      //making cart empty
-
-      // making cart empty
-      await Cart.updateOne({ userId }, { $set: { items: [] } });
-      req.session.discountAmount = 0;
-      req.session.finalAmount = 0;
-      req.session.code = "";
-      req.session.appliedCoupon = null;
-      req.session.offer = null;
-      req.session.cartTotal = 0;
-      req.session.netAmount = 0;
-      req.session.totalDiscount = 0;
-
-      let orderId = newOrder._id;
-
-      return res.json({
-        success: true,
-        message: "Order Placed Succesfully",
-        paymentMethod,
-        orderId,
-      });
-    } else {
-      const options = {
-        amount: orderTotal * 100,
-        currency: "INR",
-        receipt: "receipt_" + Date.now(),
-      };
-      const razorpayOrder = await razorpay.orders.create(options);
-
-      // check for wallet
-      const wallet = await Wallet.findOne({ userId });
-      if (useWallet == true) {
-        if (!wallet) {
-          return res.json({ success: false, message: "Wallet not found" });
-        }
-        if (wallet.balance < orderTotal) {
-          console.log("insufficient balance");
-          return res.json({ success: false, message: "Insufficient balance" });
-        }
-        paymentMethod = "wallet";
-      }
-      //creating new order document
-      req.session.tempOrder = {
-        userId: req.session.user._id,
-        address,
-        coupenDiscountAmount,
-        offerDiscountAmount,
-        isCouponApplied,
-        isOfferApplied,
-        couponCode,
-        finalAmount,
-        shippingCharge,
-        orderTotal,
-        paymentMethod,
-        totalAmount,
-
-        status: paymentMethod === "COD" ? "Pending" : "Processing",
-        paymentDetails:
-          paymentMethod == "Credit Card"
-            ? {
-              cardNumber,
-              expiry,
-              cvv,
-              cardName,
-            }
-            : paymentMethod == "UPI"
-              ? {
-                upiId,
-              }
-              : paymentMethod == "wallet"
-                ? {
-                  razorpayOrderId: razorpayOrder.id,
-                }
-                : null,
-
-        items: orderItems,
-        createdAt,
-        deliveryDate,
-        useWallet,
-      };
-      return res.json({
-        success: true,
-        message: "Order completed successfully",
-
-        paymentMethod,
-        razorpayOrderId: razorpayOrder.id, // sending razor pay datas to front end
-        amount: razorpayOrder.amount,
-        currency: razorpayOrder.currency,
-
-        key_id: process.env.RAZORPAY_KEY_ID,
-        user: req.session.user,
-      });
-    }
-
-    ////////////////
-  } catch (error) {
-    console.log("error in placing order", error);
-    return res.json({ success: false, message: "Error in placing order" });
-  }
-};
-
-const getOrderSuccess = async (req, res) => {
-  try {
-    console.log("from order success page");
-    const orderId = req.query.orderId;
-    console.log("order id is ", orderId);
-    console.log("type of order id ", typeof orderId);
-
-    const order = await Order.findOne({ _id: orderId }).populate(
-      "items.productId",
-    );
-    console.log("order.items", order.items);
-
-    res.render("user/orderSuccess", { title: "Order Success", order });
-  } catch (error) {
-    console.log(error);
-    res.status(500).send("Something went wrong");
-  }
-};
-
-//user get all orders page
 
 const getOrders = async (req, res) => {
   console.log("from user all orders page");
@@ -2461,191 +1528,7 @@ const applyCoupon = async (req, res) => {
   }
 };
 
-//get wishList
-// const getWishList = async (req, res) => {
-//   console.log("This is from user wish list");
-//   try {
-//     const userId = req.session.user._id;
-//     if (!userId) {
-//       console.log("userId is not found");
-//       return res.json({ success: false, message: "User not registered" });
-//     }
-//     const wishList = await WishList.findOne({ userId }).populate("items");
 
-//     let cartCount = 0;
-
-//     const cart = await Cart.findOne({ userId });
-//     console.log("cart", cart);
-//     if (cart) {
-//       cartCount = cart.items.length || 0;
-//     }
-
-//     const offers = await Offer.find({ status: "active" });
-//     let products = [];
-//     if (wishList) {
-//       products = wishList.items;
-//     }
-
-//     products.forEach((product) => {
-//       const productOffer = offers.find(
-//         (offer) =>
-//           offer.applicableTo === "product" &&
-//           offer.productId?.toString() === product._id.toString(),
-//       );
-//       const categoryOffer = offers.find(
-//         (offer) =>
-//           offer.applicableTo === "category" &&
-//           offer.categoryId?.toString() === product.categoryId?.toString(),
-//       );
-
-//       let finalOffer = null;
-//       let discountAmount = 0;
-
-//       if (productOffer && categoryOffer) {
-//         const productDiscountAmount =
-//           productOffer.discountType === "amount"
-//             ? productOffer.discountValue
-//             : (product.price * productOffer.discountValue) / 100;
-
-//         const categoryDiscountAmount =
-//           categoryOffer.discountType === "amount"
-//             ? categoryOffer.discountValue
-//             : (product.price * categoryOffer.discountValue) / 100;
-
-//         finalOffer =
-//           productDiscountAmount > categoryDiscountAmount
-//             ? productOffer
-//             : categoryOffer;
-//         discountAmount = Math.max(
-//           productDiscountAmount,
-//           categoryDiscountAmount,
-//         );
-//       } else if (productOffer || categoryOffer) {
-//         finalOffer = productOffer || categoryOffer;
-
-//         // Checking finalOffer before using its properties
-//         if (finalOffer) {
-//           discountAmount =
-//             finalOffer.discountType === "amount"
-//               ? finalOffer.discountValue
-//               : (product.price * finalOffer.discountValue) / 100;
-//         }
-//       }
-
-//       if (finalOffer) {
-//         product.discountPrice = Math.round(product.price - discountAmount);
-//         product.discountAmount = discountAmount;
-//         product.finalDiscount = finalOffer.discountValue;
-//         product.discountType = finalOffer.discountType;
-//       } else {
-//         product.discountPrice = product.price;
-//       }
-//     });
-
-//     res.render("user/wishList", {
-//       wishList,
-//       products,
-//       categoryId: null,
-//       priceRange: null,
-//       cartCount: cartCount || 0,
-//       sort: "",
-//       query: "",
-//       title: "your WishList",
-//       user: req.session.user,
-//     });
-//   } catch (error) {
-//     console.log("error is ", error);
-//     return res.render("error in fetching wish list");
-//   }
-// };
-
-// //post addToWishList
-// const addToWishList = async (req, res) => {
-//   console.log("from add to wishlist");
-//   try {
-//     const { productId } = req.body;
-//     console.log("productId ", productId);
-
-//     const product = await Product.findOne({ _id: productId });
-//     if (!product) {
-//       console.log("product not found");
-
-//       return res.json({ success: false, message: "Product not Found " });
-//     }
-//     if (!req.session.user) {
-//       return res.json({ success: false, message: "You are not registered" });
-//     }
-//     const userId = req.session.user._id;
-//     if (!userId) {
-//       return res.json({ success: false, message: "User is not registered" });
-//     }
-//     let wishList = await WishList.findOne({ userId });
-//     console.log("wishList ", wishList);
-
-//     if (!wishList) {
-//       console.log("wish list not found");
-
-//       wishList = new WishList({ userId, items: [productId] });
-//       await wishList.save();
-//       console.log("created wishlist ", wishList);
-//       return res.json({
-//         success: true,
-//         message: "This item Added to wishlist",
-//       });
-//     } else {
-//       console.log("wishlist found");
-
-//       const itemExist = await wishList.items.find(
-//         (item) => item.toString() == productId,
-//       );
-//       if (itemExist) {
-//         console.log("This item is already in the wishlist");
-//         return res.json({
-//           success: false,
-//           message: "This item is already in the wishlist",
-//         });
-//       }
-//       wishList.items.push(productId);
-//       await wishList.save();
-//       console.log("This item Added to wishlist wishlist");
-//       return res.json({
-//         success: true,
-//         message: "This item Added to wishlist",
-//       });
-//     }
-//   } catch (error) {
-//     console.log("error ", error);
-//     return res.json({ success: false, message: "Error in fetchig product" });
-//   }
-// };
-
-// // deleteWishlistItem
-// const deleteWishlistItem = async (req, res) => {
-//   console.log("deleteWishlistItem");
-//   try {
-//     const userId = req.session.user._id;
-//     const wishList = await WishList.findOne({ userId });
-//     const { productId } = req.params;
-//     console.log("productId ", productId);
-
-//     if (
-//       wishList &&
-//       wishList.items.some((item) => item.toString() === productId)
-//     ) {
-//       wishList.items.pull(productId);
-//       await wishList.save();
-//       return res.json({ success: true, message: "Item removed from wishList" });
-//     } else {
-//       return res.json({
-//         success: false,
-//         message: "Item not found in wishList",
-//       });
-//     }
-//   } catch (error) {
-//     console.log("error", error);
-//     return res.json({ success: false, message: "Error in fetching wishList" });
-//   }
-// };
 
 // get wallet
 const getWallet = async (req, res) => {
@@ -2994,100 +1877,6 @@ const usertest = (req, res, next) => {
   }
 };
 
-const varifyPayment = async (req, res, next) => {
-  console.log("varifyPayment");
-  try {
-    const {
-      razorpay_order_id,
-      razorpay_payment_id,
-      razorpay_signature,
-      orderId,
-    } = req.body;
-    console.log(
-      "razorpay_order_id, razorpay_payment_id, razorpay_signature, orderId",
-      razorpay_order_id,
-      razorpay_payment_id,
-      razorpay_signature,
-      orderId,
-    );
-
-    const body = razorpay_order_id + "|" + razorpay_payment_id;
-    console.log("body ", body);
-
-    const expectedSgnature = crypto
-      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
-      .update(body.toString())
-      .digest("hex");
-
-    if (expectedSgnature == razorpay_signature) {
-      console.log("payment verified");
-      const newOrder = new Order(req.session.tempOrder);
-      console.log(newOrder);
-      await newOrder.save();
-
-      //update wallet
-      const userId = req.session.user._id;
-      const wallet = await Wallet.findOne({ userId });
-
-      if (newOrder.useWallet == true) {
-        wallet.balance = wallet.balance - newOrder.finalAmount;
-        wallet.transactions.push({
-          amount: newOrder.finalAmount,
-          type: "debit",
-          date: new Date(),
-          description: "Orer placed using wallet",
-        });
-
-        await wallet.save();
-      }
-
-      let cart = await Cart.findOne({ userId });
-      for (let item of cart.items) {
-        await Product.findByIdAndUpdate(item.productId, {
-          $inc: { stock: -item.quantity },
-        });
-      }
-
-      // making cart empty
-      await Cart.updateOne({ userId }, { $set: { items: [] } });
-      req.session.discountAmount = 0;
-      req.session.finalAmount = 0;
-      req.session.code = "";
-      req.session.appliedCoupon = null;
-      req.session.offer = null;
-      req.session.cartTotal = 0;
-      req.session.netAmount = 0;
-      req.session.totalDiscount = 0;
-
-      let orderId = newOrder._id;
-
-      res.json({
-        success: true,
-        message: "Payment verified successfully",
-        orderId,
-      });
-    } else {
-      console.log("signature is not matching");
-      throw new Error("Signature is not matching");
-    }
-  } catch (error) {
-    console.log(error);
-    next(error);
-  }
-};
-
-const getPaymentFailure = async (req, res, next) => {
-  console.log("getPaymentFailure");
-  try {
-    res.render("user/orderFailure", {
-      title: "Order Failure",
-      order: req.session.tempOrder,
-    });
-  } catch (error) {
-    console.log(error);
-    next();
-  }
-};
 
 const removeCoupon = async (req, res, next) => {
   console.log("removeCoupon");
@@ -3210,20 +1999,16 @@ module.exports = {
   postResetPassword,
   getAccount,
   
-  
-  getCheckout,
  
-  
-  addAddress,
   updateUser,
-  editAddress,
-  deleteAddress,
+
+  
   changePassword,
   getOtp,
   getSetPassword,
   postSetPassword,
-  placeOrder,
-  getOrderSuccess,
+  
+ 
   getOrders,
   getOrderDetails,
   deleteOrder,
@@ -3237,12 +2022,9 @@ module.exports = {
   addProfileImage,
   removeProfileImage,
   usertest,
-  addAddresses,
-  
  
   getAllCoupons,
-  varifyPayment,
-  getPaymentFailure,
+  
   removeCoupon,
   getContact,
   emailChangeOtpVerifyOtp,
