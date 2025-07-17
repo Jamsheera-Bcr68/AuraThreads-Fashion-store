@@ -19,16 +19,16 @@ const orderController=require('../controllers/orderController')
 const addressController=require('../controllers/adressController')
 const WalletController=require('../controllers/walletController')
 
-router.use(csrfProtection);
+//router.use(csrfProtection);
 
-router.use((req, res, next) => {
-  try {
-    res.locals.csrfToken = req.csrfToken();
-  } catch (err) {
-    res.locals.csrfToken = null;
-  }
-  next();
-});
+// router.use((req, res, next) => {
+//   try {
+//     res.locals.csrfToken = req.csrfToken();
+//   } catch (err) {
+//     res.locals.csrfToken = null;
+//   }
+//   next();
+// });
 //display register page
 router.get("/register", userController.getRegister);
 
