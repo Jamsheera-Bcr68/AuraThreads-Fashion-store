@@ -7,6 +7,7 @@
   <title>User Profile</title>
   <meta name="csrf-token" content="<%= csrfToken %>">
   <link rel="stylesheet" href="/css/acount.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
 </head>
@@ -17,6 +18,10 @@
       width: 25em;
       height: 18em;
       margin-left: 40%;
+    }
+
+    .eye-pwd {
+      display: flex;
     }
   </style>
   <%- include('../partials/userHeader') %>
@@ -447,17 +452,30 @@
             <form id="forgot-password-form" action="/profile/change-password" method="POST">
               <div class="form-group">
                 <label for="current-password">Current Password</label>
-                <input type="password" id="current-password" name="currentPassword" required />
+                <div style="border: .5px solid rgb(80, 77, 77);border-radius: 5px;" class="eye-pwd"><input
+                    style="border: none;" type="password" id="current-password" name="currentPassword" required />
+                  <span id="eye" onclick="change()"  style="width: 3em; margin-top: 0.5em; " ><i class="fa-solid fa-eye-slash"></i></span>
+                      <!-- <span style="width: 3em; margin-top: 0.5em; " ></span><i class="fa-solid fa-eye"></i></span> -->
+                </div>
               </div>
 
               <div class="form-group">
                 <label for="new-password">New Password</label>
-                <input type="password" id="new-password" name="newPassword" required />
+                <div style="border: .5px solid rgb(80, 77, 77);border-radius: 5px;" class="eye-pwd"><input
+                    style="border: none;" type="password" id="new-password" name="newPassword" required />
+                  <span id="neweye" onclick="newchange()"  style="width: 3em; margin-top: 0.5em; " ><i class="fa-solid fa-eye-slash"></i></span>
+                      <!-- <span style="width: 3em; margin-top: 0.5em; " ></span><i class="fa-solid fa-eye"></i></span> -->
+                </div>
               </div>
 
               <div class="form-group">
                 <label for="confirm-password">Confirm New Password</label>
-                <input type="password" id="confirm-password" name="confirmPassword" required />
+                <div style="border: .5px solid rgb(80, 77, 77);border-radius: 5px;" class="eye-pwd"><input
+                    style="border: none;" type="password" id="confirm-password" name="confirmPassword" required />
+                  <span id="neweye" onclick="confchange()"  style="width: 3em; margin-top: 0.5em; " ><i class="fa-solid fa-eye-slash"></i></span>
+                      <!-- <span style="width: 3em; margin-top: 0.5em; " ></span><i class="fa-solid fa-eye"></i></span> -->
+                </div>
+                
               </div>
 
               <div class="modal-actions">
@@ -531,6 +549,8 @@
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
         <script>
           const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+          
           // Initialize the page
           document.addEventListener("DOMContentLoaded", function () {
             const lastSection = localStorage.getItem("activeSection") || "profile-details";
@@ -552,7 +572,6 @@
                 }
               });
             }
-
 
 
           });
@@ -1078,6 +1097,8 @@
           }
 
           function closeForgotPassword() {
+            const pwdform=document.getElementById('forgot-password-form')
+            pwdform.reset()
             document.getElementById("forgot-password-modal").style.display = "none";
           }
           //handle forgot password
@@ -1390,6 +1411,36 @@
             row.appendChild(card);
           }
 
+         function change(){
+          const currentPassword = document.getElementById('current-password')
+          const icon=document.getElementById('eye')
+          if(currentPassword.type=='text'){
+            currentPassword.type='password'
+            
+          }else{
+            currentPassword.type='text'
+          }
+
+         }
+      function newchange(){
+        const input = document.getElementById('new-password')
+          const icon=document.getElementById('eye')
+          if(input.type=='text'){
+            input.type='password'
+            
+          }else{
+            input.type='text'
+          }
+      }
+
+      function confchange(){
+        const input=document.getElementById('confirm-password')
+        if(input.type=='text'){
+          input.type='password'
+        }else{
+          input.type='text'
+        }
+      }
         </script>
 
 </body>

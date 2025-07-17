@@ -852,136 +852,6 @@ const getAccount = async (req, res) => {
   }
 };
 
-// //add address
-// const addAddress = async (req, res) => {
-//   console.log("from add adress");
-//   const { label, line1, line2, city, state, zip, country, phone } = req.body;
-//   console.log(
-//     ` label is ${label} line1 is ${line1} line2 is ${line2} city is ${city} state is ${state} zip is ${zip} country is ${country} phone is ${phone}`,
-//   );
-//   const isDefault = req.body.isDefault || false;
-//   console.log(`is defsult is ${isDefault}`);
-
-//   try {
-//     const userId = req.session.user._id;
-//     console.log("user is ", userId);
-//     const address = await Address.find({ userId })
-
-//     if (address.length == 4) {
-//       return res.json({ success: false, message: "You can only add 4 addresses" })
-//     }
-//     // If isDefault is true, update all other addresses to false for the same user
-//     if (isDefault) {
-//       await Address.updateMany({ userId }, { isDefault: false });
-//       const newAddress = new Address({
-//         userId,
-//         label,
-//         line1,
-//         line2,
-//         phone,
-//         city,
-//         state,
-//         zip,
-//         country,
-//         isDefault,
-//       });
-//       await newAddress.save();
-//       console.log("adress saved as default");
-
-//       return res.json({ success: true, message: "New Address added successfully", address: newAddress });
-//     } else {
-//       const newAddress = new Address({
-//         userId,
-//         line1,
-//         line2,
-//         phone,
-//         city,
-//         state,
-//         zip,
-//         country,
-//         isDefault,
-//       });
-//       await newAddress.save();
-//       console.log("adress is saves as not default");
-//       return res.status(201).json({ success: true, message: "Address added successfully" });
-//     }
-//   } catch (error) {
-//     console.log("error in fetching adress", error);
-//     return res.json({ success: false, message: "error in fetching adress" });
-//   }
-// };
-
-//edit adress
-// const editAddress = async (req, res) => {
-//   const addressId = req.params.editAddressId;
-//   console.log("address id is ", addressId);
-
-//   const { label, line1, line2, city, state, zip, country, phone } = req.body;
-//   console.log(`Address id is ${addressId} ant type is ${typeof addressId}`);
-//   console.log(
-//     ` label is ${label} line1 is ${line1} line2 is ${line2} city is ${city} state is ${state} zip is ${zip} country is ${country} phone is ${phone}`,
-//   );
-//   const isDefault = req.body.isDefault || false;
-//   console.log(`is defsult is ${isDefault}`);
-//   const userId = req.session.user._id;
-//   try {
-//     console.log("user id is ", userId);
-
-//     const address = await Address.findOne({
-//       _id: new mongoose.Types.ObjectId(addressId),
-//     });
-
-//     if (!address) {
-//       console.log("address not found");
-
-//       return res.json({ success: false, message: "address not found" });
-//     } else {
-//       console.log("address fount");
-//       if (isDefault) {
-//         await Address.updateMany({ userId }, { isDefault: false });
-//       }
-//       (address.label = label), (address.line1 = line1);
-//       address.line2 = line2;
-//       address.city = city;
-//       address.state = state;
-//       address.zip = zip;
-//       address.country = country;
-//       address.phone = phone;
-
-//       await address.save();
-//       console.log("adress saved successfully");
-//       return res.json({ success: true, message: "Addres edited successfully" });
-//     }
-//   } catch (error) {
-//     return res.json({ success: false, message: "error in fetching address" });
-//   }
-// };
-
-// //delete address
-// const deleteAddress = async (req, res) => {
-//   console.log("from user delete adress");
-//   const addressId = req.params.addressId;
-//   console.log("addressid is"), addressId;
-
-//   try {
-//     const address = await Address.findOneAndDelete({ _id: addressId });
-//     if (!address) {
-//       console.log("address not fount");
-//       return res.json({ success: false, message: "Address not Found" });
-//     } else {
-//       console.log("account deleted success fully");
-//       return res.json({
-//         success: true,
-//         message: "Address Deleted Successfully",
-//       });
-//     }
-//   } catch (error) {
-//     console.log("error in fetching address", error);
-
-//     res.json({ success: false, message: "error in fetching address" });
-//   }
-// };
-//edit profile'
 
 const updateUser = async (req, res) => {
   console.log("from user update");
@@ -1164,57 +1034,7 @@ const addProfileImage = async (req, res) => {
   }
 };
 
-// const addAddresses = async (req, res) => {
-//   const { label, line1, line2, city, state, zip, country, phone } = req.body;
-//   console.log(
-//     ` label is ${label} line1 is ${line1} line2 is ${line2} city is ${city} state is ${state} zip is ${zip} country is ${country} phone is ${phone}`,
-//   );
-//   const isDefault = req.body.isDefault || false;
-//   console.log(`is defsult is ${isDefault}`);
 
-//   try {
-//     const userId = req.session.user._id;
-//     console.log("user is ", userId);
-
-//     // If isDefault is true, update all other addresses to false for the same user
-//     if (isDefault) {
-//       await Address.updateMany({ userId }, { isDefault: false });
-//       const newAddress = new Address({
-//         userId,
-//         line1,
-//         line2,
-//         phone,
-//         city,
-//         state,
-//         zip,
-//         country,
-//         isDefault,
-//       });
-//       await newAddress.save();
-//       console.log("adress saved as default");
-//       res.redirect("/user/checkout");
-//     } else {
-//       const newAddress = new Address({
-//         userId,
-//         line1,
-//         line2,
-//         phone,
-//         city,
-//         state,
-//         zip,
-//         country,
-//         isDefault,
-//       });
-//       await newAddress.save();
-//       console.log("adress is saves as not default");
-//       res.redirect("/user/checkout");
-//     }
-//   } catch (error) {
-//     console.log("error in fetching adress", error);
-//     res.redirect("/user/checkout");
-//   }
-// };
-//removeProfileImage
 const removeProfileImage = async (req, res) => {
   console.log("from removeProfileImage");
   const userId = req.session.user._id;
@@ -1284,151 +1104,6 @@ const changePassword = async (req, res) => {
   }
 };
 
-
-
-
-const getOrders = async (req, res) => {
-  console.log("from user all orders page");
-  try {
-    const userId = req.session.user._id;
-    if (!userId) {
-      console.log("user not found");
-
-      res.json({ success: false, message: "User not found" });
-    }
-
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 5;
-    const skip = (page - 1) * limit;
-    const orders = await Order.find({ userId })
-      .populate("items.productId")
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
-    if (!orders) {
-      console.log("orders are not found");
-
-      res.json({ success: false, message: "orders are not found" });
-    }
-    // console.log('your orders are ', orders);
-
-    const totalOrders = orders.length;
-    // console.log('total orders', totalOrders);
-
-    const totalPages = Math.ceil(totalOrders / limit);
-    //console.log('totalPages ', totalPages);
-
-    //get cart count
-    const cart = await Cart.findOne({ userId }).populate("items.productId");
-    let cartCount = 0;
-    if (cart) {
-      cartCount = cart.items.length;
-      //  console.log('cart count is ', cartCount);
-    } else {
-      console.log("cart not fount");
-    }
-    // order status updating
-    const activeOrders = await Order.find({
-      status: { $nin: ["cancelled", "returned"] },
-    });
-    for (const order of activeOrders) {
-      if (order.deliveryDate <= new Date()) {
-        order.status = "Delivered";
-        await order.save();
-      }
-    }
-
-    res.render("user/userOrders", {
-      title: "See Your All-Orders",
-      orders,
-      totalPages,
-      currentPage: page || 1,
-      skip,
-      limit,
-      categoryId: null,
-      priceRange: null,
-      cartCount: cartCount || "",
-      user: req.session.user || "",
-      sort: null,
-      query: null,
-    });
-  } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: "error in fetching orders" });
-  }
-};
-
-//get order details page
-const getOrderDetails = async (req, res) => {
-  console.log("from user order details page");
-  try {
-    const orderId = req.params.orderId;
-    console.log(" orderId ", orderId);
-
-    //fetching orders
-    const order = await Order.findOne({ _id: orderId }).populate(
-      "items.productId",
-    );
-    if (!order) {
-      res.json({ success: false, message: "Order not found" });
-    }
-    res.render("user/orderDetails", { title: "order details page", order });
-  } catch (error) {
-    console.log("error:", error);
-    res.json({ success: false, message: "Error in fetching order detais" });
-  }
-};
-
-//delete order
-const deleteOrder = async (req, res) => {
-  console.log("form order delete route");
-  try {
-    let orderId = req.params.orderId;
-    console.log("order id ", orderId);
-    if (!orderId) {
-      console.log("order id is not fount");
-      return res.json({ success: false, message: "order id is not getting" });
-    }
-
-    orderId = new mongoose.Types.ObjectId(orderId);
-    const order = await Order.findOne({ _id: orderId });
-    order.status = "cancelled";
-    order.items.forEach((item) => (item.status = "cancelled"));
-    order.save();
-    const finalAmount = order.finalAmount;
-
-    // restoring wallet
-    if (order.useWallet == true) {
-      const wallet = await Wallet.findOne({ userId: req.session.user._id });
-      wallet.balance = wallet.balance + finalAmount;
-      wallet.transactions.push({
-        type: "credit",
-        amount: finalAmount,
-        date: new Date(),
-        description: "Order Cancelled,Amount refunded",
-      });
-      await wallet.save();
-    }
-
-    // restoring stock
-
-    for (item of order.items) {
-      const product = await Product.findById(item.productId);
-      console.log(
-        `user cancelling before restoring ${product.productName} is ${product.stock}`,
-      );
-      product.stock = product.stock + item.quantity;
-      await product.save();
-      console.log(`after restoring ${product.productName} is ${product.stock}`);
-    }
-
-    console.log("order cancelled succeccfully");
-    return res.json({ success: true, message: "Order cancelled successfully" });
-  } catch (error) {
-    console.log("error is ", error);
-    return res.json({ success: false, message: "error in deleteing cart" });
-  }
-};
 
 const logout = async (req, res) => {
   console.log("from user logout");
@@ -1528,92 +1203,38 @@ const applyCoupon = async (req, res) => {
   }
 };
 
+// //add money to wallet
+// const addMoney = async (req, res) => {
+//   console.log("from add money to wallet ");
+//   try {
+//     let { amount } = req.body;
+//     console.log("req.body ", req.body);
 
+//     if (!amount) {
+//       console.log("enter an amount");
+//       return res.json({ success: false, message: "Enter a amount" });
+//     }
+//     const userId = req.session.user._id;
+//     const wallet = await Wallet.findOne({ userId });
+//     if (!wallet) {
+//       console.log("Wallet is not found");
+//       return res.json({ success: false, message: "Wallet is not found" });
+//     }
 
-// get wallet
-const getWallet = async (req, res) => {
-  console.log("from user wallet");
-
-  try {
-    const userId = req.session.user._id;
-    if (!userId) {
-      return res.json({ success: false, message: "You are not registered" });
-    }
-    const wallet = await Wallet.findOne({ userId });
-    if (!wallet) {
-      return res.json({ success: false, message: "Wallet no found" });
-    }
-    let cart = []
-    let cartCount = 0
-    if (userId) {
-      cart = await Cart.findOne({ userId });
-      if (cart) {
-        cartCount = cart.length || 0
-      }
-    }
-
-    const debitLength = wallet.transactions.filter(
-      (transaction) => transaction.type == "debit",
-    ).length;
-    const creditLength = wallet.transactions.filter(
-      (transaction) => transaction.type == "credit",
-    ).length;
-
-    const recentTransactions = wallet.transactions
-      .sort((a, b) => new Date(b.date) - new Date(a.date)) // sort newest first
-      .slice(0, 3);
-
-    res.render("user/wallet", {
-      categoryId: null,
-      priceRange: null,
-      cartCount,
-      sort: "",
-      query: "",
-      title: "your Wallet",
-      user: req.session.user,
-      wallet,
-      recentTransactions,
-      debitLength,
-      creditLength,
-    });
-  } catch (error) {
-    console.log("error is ", error);
-    return res.json({ success: false, message: "Server error" });
-  }
-};
-
-//add money to wallet
-const addMoney = async (req, res) => {
-  console.log("from add money to wallet ");
-  try {
-    let { amount } = req.body;
-    console.log("req.body ", req.body);
-
-    if (!amount) {
-      console.log("enter an amount");
-      return res.json({ success: false, message: "Enter a amount" });
-    }
-    const userId = req.session.user._id;
-    const wallet = await Wallet.findOne({ userId });
-    if (!wallet) {
-      console.log("Wallet is not found");
-      return res.json({ success: false, message: "Wallet is not found" });
-    }
-
-    wallet.balance = wallet.balance + parseInt(amount);
-    wallet.transactions.push({
-      type: "credit",
-      amount: parseInt(amount),
-      date: new Date(),
-      description: "Fund Added",
-    });
-    await wallet.save();
-    return res.json({ success: true, message: "Fund Added succesfully", balance: wallet.balance });
-  } catch (error) {
-    console.log("error is ", error);
-    return res.json({ success: false, message: "server error" });
-  }
-};
+//     wallet.balance = wallet.balance + parseInt(amount);
+//     wallet.transactions.push({
+//       type: "credit",
+//       amount: parseInt(amount),
+//       date: new Date(),
+//       description: "Fund Added",
+//     });
+//     await wallet.save();
+//     return res.json({ success: true, message: "Fund Added succesfully", balance: wallet.balance });
+//   } catch (error) {
+//     console.log("error is ", error);
+//     return res.json({ success: false, message: "server error" });
+//   }
+// };
 
 const cancelSingleProduct = async (req, res) => {
   console.log("cancelSingleProduct");
@@ -2007,16 +1628,12 @@ module.exports = {
   getOtp,
   getSetPassword,
   postSetPassword,
+
   
- 
-  getOrders,
-  getOrderDetails,
-  deleteOrder,
+  
   logout,
   applyCoupon,
-  
-  getWallet,
-  addMoney,
+ 
   cancelSingleProduct,
   returnProduct,
   addProfileImage,

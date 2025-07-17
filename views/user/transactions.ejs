@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Transactions</title>
+    <link rel="stylesheet" href="/css/wallet.css">
+</head>
+<body>
+      <%- include('../partials/userHeader') %>
+    <div class="container">
+         <!-- Transactions Tab -->
+            <div  id="transactions">
+                <h3 class="section-header" style="color:#8c4790; margin-top: 2em;" >Transaction History</h3>
+
+
+                <table class="table" style="border: 1px solid black; ">
+                    <thead style="font-weight: bold ; font-size: 1.5em;">
+                        <tr  >
+                            <th>Date</th>
+                            <th>Transaction Type</th>
+                            <th>Description</th>
+                            <th>Status</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody style="font-size: 1em;color: black;font-weight: bold;">
+                        <% transactions.forEach(tr=> { %>
+                            <tr>
+                                <td>
+                                    <%= tr.date.toLocaleDateString() %>
+                                </td>
+                                <td>
+                                    <span
+                                        style="background-color: <%= tr.type === 'debit' ? 'red' : 'green' %>; color: white;">
+                                        <%= tr.type %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <%= tr.description %>
+                                </td>
+                                <td><span class="status-badge status-completed">Completed</span></td>
+                                <td class="<%= tr.type === 'debit' ? 'amount-debit' : 'amount-credit' %>">
+                                    <%= tr.amount %>
+                                </td>
+                            </tr>
+                            <% }) %>
+                    </tbody>
+                </table>
+
+
+            </div>
+
+    </div>
+    <nav class="mt-5">
+                    <ul class="pagination justify-content-center">
+
+                        <!-- Previous Button -->
+                        <nav>
+                            <ul class="pagination justify-content-center">
+                                <% if (currentPage> 1) { %>
+                                    <li class="page-item">
+                                        <a class="page-link"
+                                            href="?page=<%= currentPage - 1 %>&categoryId=<%= categoryId %>&priceRange=<%= priceRange %>&sort=<%= sort %>&query=<%= query %>">Previous</a>
+                                    </li>
+                                    <% } %>
+
+                                        <% for (let i=1; i <=totalPages; i++) { %>
+                                            <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                                                <a class="page-link"
+                                                    href="?page=<%= i %>&categoryId=<%= categoryId %>&priceRange=<%= priceRange %>&sort=<%= sort %>&query=<%= query %>">
+                                                    <%= i %>
+                                                </a>
+                                            </li>
+                                            <% } %>
+
+                                                <% if (currentPage < totalPages) { %>
+                                                    <li class="page-item">
+                                                        <a class="page-link"
+                                                            href="?page=<%= currentPage + 1 %>&categoryId=<%= categoryId %>&priceRange=<%= priceRange %>&sort=<%= sort %>&query=<%= query %>">Next</a>
+                                                    </li>
+                                                    <% } %>
+                            </ul>
+                        </nav>
+
+                    </ul>
+                </nav>
+
+     <%- include('../partials/userFooter') %>
+</body>
+</html>

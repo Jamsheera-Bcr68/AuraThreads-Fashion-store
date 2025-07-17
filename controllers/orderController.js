@@ -1,15 +1,17 @@
 
-const Cart=require('../model/cartModel')
-const Address=require('../model/addressModel')
-const Product=require('../model/productModel')
-const Order=require('../model/orderModel')
-const Variant=require('../model/variantModel')
+const Cart = require('../model/cartModel')
+const Address = require('../model/addressModel')
+const Product = require('../model/productModel')
+const Order = require('../model/orderModel')
+const Variant = require('../model/variantModel')
 const statusCodes = require('../utils/statusCodes')
 const statusMessages = require('../utils/statusMessages')
-const Offer=require('../model/offerModel')
-const Wallet=require('../model/walletModel')
+const Offer = require('../model/offerModel')
+const Wallet = require('../model/walletModel')
 const razorpay = require("../config/razorPay");
 const crypto = require("crypto");
+const path = require('path')
+const mongoose = require('mongoose')
 
 
 const placeOrder = async (req, res) => {
@@ -17,8 +19,8 @@ const placeOrder = async (req, res) => {
 
   try {
     let { paymentMethod, paymentDetails } = req.body;
-   let totalAmount=Number(req.body.totalAmount)
-    
+    let totalAmount = Number(req.body.totalAmount)
+
     console.log("total amount ", totalAmount);
 
     let addressId = req.body.addressId?.trim();
@@ -32,8 +34,8 @@ const placeOrder = async (req, res) => {
     const userId = req.session.user._id;
     const cart = await Cart.findOne({ userId });
 
-        if (!cart) {
-      return res.status(statusCodes.NOT_FOUND).json({ success: false, message:statusMessages.NOT_FOUND('Cart') });
+    if (!cart) {
+      return res.status(statusCodes.NOT_FOUND).json({ success: false, message: statusMessages.NOT_FOUND('Cart') });
     }
 
     if (cart.items.length < 1) {
@@ -41,7 +43,7 @@ const placeOrder = async (req, res) => {
     }
     //console.log('Cart items are ', cart.items);
 
-    
+
 
     if (addressId == "" || paymentMethod == "" || totalAmount == "") {
       console.log('missing reuired fileds', addressId, paymentMethod, paymentDetails, totalAmount);
@@ -49,9 +51,9 @@ const placeOrder = async (req, res) => {
       return res.status(statusCodes.BAD_REQUEST).send("Missing required fields");
     }
     console.log(' reuired fileds  addressId, paymentMethod, paymentDetails, totalAmount', addressId, paymentMethod, paymentDetails, totalAmount);
-    
-    
-    
+
+
+
     let { upiId, cardNumber, expiry, cvv, cardName } = paymentDetails;
     if (paymentMethod == "Credit Card") {
       if (cardNumber == "" || expiry == "" || cvv == "" || cardName == "") {
@@ -89,7 +91,7 @@ const placeOrder = async (req, res) => {
       if (!variant) {
         return res
           .status(statusCodes.NOT_FOUND)
-          .json({ success: false, message:statusCodes.NOT_FOUND('Variant') });
+          .json({ success: false, message: statusCodes.NOT_FOUND('Variant') });
       }
 
       if (variant.stock < item.quantity) {
@@ -135,7 +137,7 @@ const placeOrder = async (req, res) => {
         message: "Order above 1000 cannot use COD",
       });
     }
-    
+
     let orderItems = await Promise.all(
       cart.items.map(async (item) => {
         const variant = await Variant.findById(item.variantId).populate('productId')
@@ -215,11 +217,11 @@ const placeOrder = async (req, res) => {
           }
           console.log("final discount amount for this item is ", offerDiscount);
         }
-        console.log('Item is ',item);
-        
+        console.log('Item is ', item);
+
         return {
           variantId: item.variantId,
-          productId:item.productId._id,
+          productId: item.productId._id,
           quantity: item.quantity,
           offerId: finalOffer ? finalOffer._id : null,
           offerApplied: finalOffer ? true : false,
@@ -280,8 +282,8 @@ const placeOrder = async (req, res) => {
         orderId,
       });
     } else {
-      console.log('payment method is ',paymentMethod);
-      
+      console.log('payment method is ', paymentMethod);
+
       const options = {
         amount: orderTotal * 100,
         currency: "INR",
@@ -293,7 +295,7 @@ const placeOrder = async (req, res) => {
       const wallet = await Wallet.findOne({ userId });
       if (useWallet == true) {
         if (!wallet) {
-          return res.status(statusCodes.NOT_FOUND).json({ success: false, message:statusMessages.NOT_FOUND('Wallet')});
+          return res.status(statusCodes.NOT_FOUND).json({ success: false, message: statusMessages.NOT_FOUND('Wallet') });
         }
         if (wallet.balance < orderTotal) {
           console.log("insufficient balance");
@@ -354,7 +356,7 @@ const placeOrder = async (req, res) => {
       });
     }
 
-   
+
   } catch (error) {
     console.log("error in placing order", error);
     return res.status(statusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: statusMessages.SERVER_ERROR });
@@ -429,16 +431,16 @@ const varifyPayment = async (req, res, next) => {
 
       let orderId = newOrder._id;
 
-     return res.status(statusCodes.OK).json({
+      return res.status(statusCodes.OK).json({
         success: true,
         message: "Payment verified successfully",
         orderId,
       });
     } else {
       console.log("signature is not matching");
-      
+
       //throw new Error("Signature is not matching");
-      return res.status(statusCodes.BAD_REQUEST).json({success:false,message:"Signature is not matching"})
+      return res.status(statusCodes.BAD_REQUEST).json({ success: false, message: "Signature is not matching" })
     }
   } catch (error) {
     console.log(error);
@@ -451,12 +453,12 @@ const getPaymentFailure = async (req, res, next) => {
     res.render("user/orderFailure", {
       title: "Order Failure",
       order: req.session.tempOrder,
-      query:'',
-      priceRange:'',
-      sort:'',
-      categoryId:'',
-      user:req.session.user||'',
-      cartCount:0
+      query: '',
+      priceRange: '',
+      sort: '',
+      categoryId: '',
+      user: req.session.user || '',
+      cartCount: 0
     });
   } catch (error) {
     console.log(error);
@@ -475,25 +477,195 @@ const getOrderSuccess = async (req, res) => {
       "items.productId",
     );
     console.log("order.items", order.items);
-    
 
-    res.render("user/orderSuccess", { title: "Order Success", order,categoryId:'',
-      query:'',
-      priceRange:'',
-      sort:'',
-      user:req.session.user||'',
-      cartCount:0
-     });
+
+    res.render("user/orderSuccess", {
+      title: "Order Success", order, categoryId: '',
+      query: '',
+      priceRange: '',
+      sort: '',
+      user: req.session.user || '',
+      cartCount: 0
+    });
   } catch (error) {
     console.log(error);
     res.status(statusCodes.INTERNAL_SERVER_ERROR).send(statusMessages.SERVER_ERROR);
   }
 };
 
+const getOrders = async (req, res) => {
+  console.log("from user all orders page");
+  try {
+    const userId = req.session.user._id;
+    if (!userId) {
+      console.log("user not found");
 
-module.exports={
-    placeOrder,
-    varifyPayment,
-    getOrderSuccess,
-    getPaymentFailure
+      return res.status(statusCodes.NOT_FOUND).json({ success: false, message: 'Please login' });
+    }
+
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 5;
+    const skip = (page - 1) * limit;
+    const orders = await Order.find({ userId })
+      .populate("items.variantId")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+    if (!orders) {
+      console.log("orders are not found");
+
+      return res.status(statusCodes.NOT_FOUND).json({ success: false, message: statusMessages.NOT_FOUND("Orders are") });
+    }
+    console.log('your orders are ', orders);
+
+    const totalOrders = await Order.countDocuments({ userId });
+    console.log('total orders', totalOrders);
+
+    const totalPages = Math.ceil(totalOrders / limit);
+    console.log('totalPages ', totalPages);
+
+    //get cart count
+    const cart = await Cart.findOne({ userId }).populate("items.productId");
+    let cartCount = 0;
+    if (cart) {
+      cartCount = cart.items.length;
+      //  console.log('cart count is ', cartCount);
+    } else {
+      console.log("cart not fount");
+    }
+    // order status updating
+    const activeOrders = await Order.find({
+      status: { $nin: ["cancelled", "returned"] },
+    });
+    for (const order of activeOrders) {
+      if (order.deliveryDate <= new Date()) {
+        order.status = "Delivered";
+        await order.save();
+      }
+    }
+
+    res.render("user/userOrders", {
+      title: "See Your All-Orders",
+      orders,
+      totalPages,
+      currentPage: page || 1,
+      skip,
+      limit,
+      categoryId: null,
+      priceRange: null,
+      cartCount: cartCount || "",
+      user: req.session.user || "",
+      sort: null,
+      query: null,
+    });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: "error in fetching orders" });
+  }
+};
+//get order details page
+const getOrderDetails = async (req, res) => {
+  console.log("from user order details page");
+  try {
+    const orderId = req.params.orderId;
+    console.log(" orderId ", orderId);
+
+    //fetching orders
+    const order = await Order.findOne({ _id: orderId }).populate(
+      { path: "items.variantId", from: "Variant", select: 'images color size' }
+
+    ).populate({ path: 'items.productId', from: "Product", select: 'productName price' })
+    if (!order) {
+      res.status(statusCodes.NOT_FOUND).json({ success: false, message: statusMessages.NOT_FOUND('Order') });
+    }
+    console.log('order ', order);
+
+    let cartCount = 0
+    const cart = await Cart.findOne({ userId: req.session.user._id })
+    if (cart) {
+      cartCount = cart.items.length
+    }
+    res.render("user/orderDetails", {
+      title: "order details page",
+      order,
+      query: '',
+      priceRange: '', categoryId: '',
+      sort: '',
+      user: req.session.user || '',
+      cartCount: 0
+    });
+  } catch (error) {
+    console.log("error:", error);
+    return res.status(statusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: statusMessages.SERVER_ERROR });
+  }
+};
+const cancelOrder = async (req, res) => {
+  console.log("form order cancel route");
+  try {
+    let orderId = req.params.orderId;
+    console.log("order id ", orderId);
+    if (!orderId) {
+      console.log("order id is not fount");
+      return res.status(statusCodes.NOT_FOUND).json({ success: false, message: statusMessages.NOT_FOUND('Order id') });
+    }
+
+    // orderId = new mongoose.Types.ObjectId(orderId);
+    const order = await Order.findOne({ _id: new mongoose.Types.ObjectId(orderId) });
+    if (!order) {
+      console.log("order  is not fount");
+      return res.status(statusCodes.NOT_FOUND).json({ success: false, message: statusMessages.NOT_FOUND('Order') });
+    }
+    console.log('order', order);
+
+
+    order.status = "cancelled";
+    order.items.forEach((item) => (item.status = "cancelled"));
+    order.save();
+    const finalAmount = order.finalAmount;
+
+    // restoring wallet
+    if (order.useWallet == true) {
+      const wallet = await Wallet.findOne({ userId: req.session.user._id });
+      wallet.balance = wallet.balance + finalAmount;
+      wallet.transactions.push({
+        type: "credit",
+        amount: finalAmount,
+        date: new Date(),
+        description: "Order Cancelled,Amount refunded",
+      });
+      await wallet.save();
+    }
+
+    // restoring stock
+
+    for (item of order.items) {
+      const variant = await Variant.findById(item.variantId);
+      console.log('variant',variant);
+      
+      console.log(
+        `user cancelling before restoring  is ${variant.stock}`,
+      );
+      variant.stock = variant.stock + item.quantity;
+      await variant.save();
+      console.log(`after restoring is ${variant.stock}`);
+    }
+
+    console.log("order cancelled succeccfully");
+    return res.status(statusCodes.OK).json({ success: true, message: "Order cancelled successfully" });
+  } catch (error) {
+    console.log("error is ", error);
+    return res.status(statusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: statusMessages.SERVER_ERROR });
+  }
+};
+
+
+
+module.exports = {
+  placeOrder,
+  varifyPayment,
+  getOrderSuccess,
+  getPaymentFailure,
+  getOrderDetails,
+  getOrders,
+  cancelOrder
 }

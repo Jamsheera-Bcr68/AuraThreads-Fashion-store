@@ -17,6 +17,7 @@ const wishListController=require('../controllers/wishListConntroller')
 const cartController=require('../controllers/cartController')
 const orderController=require('../controllers/orderController')
 const addressController=require('../controllers/adressController')
+const WalletController=require('../controllers/walletController')
 
 router.use(csrfProtection);
 
@@ -175,11 +176,9 @@ router.get("/order-success", userAuth, orderController.getOrderSuccess);
 router.get("/order-failure", orderController.getPaymentFailure);
 
 //user all orderpage
-router.get("/orders", userAuth, userController.getOrders);
-//get orderdetails page
-router.get("/order-details/:orderId", userAuth, userController.getOrderDetails);
-
-router.delete("/cancel-order/:orderId", userController.deleteOrder);
+router.get("/orders", userAuth, orderController.getOrders);
+router.get("/order-details/:orderId", userAuth, orderController.getOrderDetails);
+router.delete("/cancel-order/:orderId", orderController.cancelOrder);
 //user logout
 router.post("/logout", userController.logout);
 
@@ -196,10 +195,9 @@ router.post("/wishList/add", wishListController.addToWishList);
 router.delete("/wishList/delete/:variantId", wishListController.deleteWishlistItem);
 
 // get wallet
-router.get("/wallet", userAuth, userController.getWallet);
-
-//add money to wallet
-router.post("/wallet/addMoney", userAuth, userController.addMoney);
+router.get("/wallet", userAuth, WalletController.getWallet);
+router.post("/wallet/addMoney", userAuth, WalletController.addMoney);
+router.get('/transactions',userAuth,WalletController.getTransactions)
 
 //cancel single product
 router.delete(

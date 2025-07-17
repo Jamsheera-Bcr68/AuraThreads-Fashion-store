@@ -9,10 +9,10 @@
 </head>
 
 <body>
-
+  <%- include('../partials/userHeader') %>
     <div class="order-container">
 
-        <h2>Order Details - ORD<%= order._id.toString().slice(-6).toUpperCase() %>
+        <h2>Order Details - ORD<%= order._id.toString().slice(-6) %>
         </h2>
 
         <div class="section mb-4">
@@ -72,13 +72,13 @@
             <div class="table-responsive">
                 <table class="table items-table">
                     <thead >
-                        <tr>
-                            <th>Product</th>
-                            <th>Image</th>
-                            <th>Qty</th>
-                            <th>Price</th>
-                            <th>Subtotal</th>
-                            <th>Actions</th>
+                        <tr style="color: white;">
+                            <th style="color: white;">Product</th>
+                            <th style="color: white;">Image</th>
+                            <th style="color: white;">Qty</th>
+                            <th style="color: white;">Price</th>
+                            <th style="color: white;">Subtotal</th>
+                            <th style="color: white;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -87,7 +87,7 @@
                                 <td>
                                     <%= item.productId.productName %>
                                 </td>
-                                <td><img src="<%= item.productId.images[0] %>" alt="<%= item.productId.productName %>"
+                                <td><img src="<%= item.variantId.images[0] %>" alt="<%= item.productId.productName %>"
                                         style="width: 60px;"></td>
                                 <td>
                                     <%= item.quantity %>
@@ -105,12 +105,12 @@
                                                 disabled>Returned</button>
                                             <% } else if(order.status.toLowerCase()=='delivered' ) { %>
                                                       
-                                                <button id="returnBtn" data-productid="<%= item.productId._id %>"
+                                                <button id="returnBtn" data-productid="<%= item.variantId._id %>"
                                                     data-orderid="<%= order._id %>"
                                                     class="returnProduct">Return</button>
                                                 <% }else { %>
-                                                    <button id="cancelBtn-<%= item.productId._id %>"
-                                                        onclick="cancelSingleProduct('<%= item.productId._id %>', '<%= order._id %>')"
+                                                    <button id="cancelBtn-<%= item.variantId._id %>"
+                                                        onclick="cancelSingleProduct('<%= item.variantId._id %>', '<%= order._id %>')"
                                                         class="orderCancel">Cancel</button>
                                                     <% } %>
                                 </td>
@@ -124,7 +124,7 @@
         <button class="btn-back mt-3" id="btn-back">← Back to Orders</button>
 
     </div>
-
+ <%- include('../partials/userFooter') %>
 
     <!--return product Modal -->
     <div id="returnModal" class="modal">
