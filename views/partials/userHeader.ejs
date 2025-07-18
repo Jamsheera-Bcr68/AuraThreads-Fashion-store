@@ -126,8 +126,15 @@
             <li class="nav-text active"><a class="nav-text active" href="/user/orders">My Orders</a></li> 
            <li class="nav-text active"><a class="nav-text active" href="/user/wallet">Wallet</a></li> 
             <li class="nav-text active"><a class="nav-text active" href="/user/contact">Contact</a></li>
-            <li id="login" class="nav-text active"><a class="nav-text active" href="/user/login">Login</a></li>
-            <li id="register" class="nav-text active"><a class="nav-text active" href="/user/register">Signup</a></li>
+           <% if (!user) { %>
+  <li id="login" class="nav-text active">
+    <a class="nav-text active" href="/user/login">Login</a>
+  </li>
+  <li id="register" class="nav-text active">
+    <a class="nav-text active" href="/user/register">Signup</a>
+  </li>
+<% } %>
+
           </ul>
         </div>
       </nav>
@@ -140,8 +147,9 @@
         document.querySelector("form").submit()
       }
       const loginBtn = document.getElementById('login');
-
-      loginBtn.addEventListener('click', function () {
+    
+      if(loginBtn){
+        loginBtn.addEventListener('click', function () {
         console.log("login button clicked");
 
         fetch('/user/test', {
@@ -160,6 +168,8 @@
           })
       });
 
+      }
+      
     </script>
 </body>
 

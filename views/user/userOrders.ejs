@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Your Orders | Aura Threads</title>
     <link rel="stylesheet" href="/css/userOrders.css">
-    <meta name="csrf-token" content="<%= csrfToken %>">  
+    
 </head>
 <body>
     <div class="site-wrap">
@@ -80,7 +80,7 @@
                                     <button onclick="cancelOrder('<%= order._id %>', this)" class="btn btn-sm bg-danger text-white btn-cancel">Cancel</button>
                                   <% } else if (order.status === 'Shipped' || order.status === 'Delivered') { %>
                                     <!-- <button class="btn btn-sm btn-track">Track</button> -->
-                                    <button class="btn btn-sm btn-cancel btn-disabled" disabled>Cancel</button>
+                                    <button class="btn btn-sm btn-cancel btn-disabled" disabled>Delivered</button>
                                   <% } else { %>
                                     <button onclick="cancelOrder('<%= order._id %>', this)" class="btn btn-sm bg-danger text-white btn-cancel">Cancel</button>
                                   <% } %>
@@ -139,7 +139,7 @@
     </div>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+       
         function displayOrderDetails(orderIdWithQuery){
             console.log('from user display order details scrit');
             window.location.href=`/user/order-details/${orderIdWithQuery}`
@@ -164,7 +164,7 @@
 
             fetch(`/user/cancel-order/${orderId}`, {
                 method: "DELETE",
-                headers:{ 'CSRF-Token': csrfToken}
+               
             })
             .then(res => {
                 return res.json();

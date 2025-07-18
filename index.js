@@ -43,17 +43,14 @@ app.use(
   })
 );
 
-const allowedOrigins = [
-  'http://localhost:3000', 
-  'http://127.0.0.1:3000',
-  'https://www.aurathreads.store',
-  'https://aurathreads.store'
-];
+// const allowedOrigins = [
+//   'http://localhost:3000', 
+//   'http://127.0.0.1:3000',
+//   'https://www.aurathreads.store',
+//   'https://aurathreads.store'
+// ];
 
-app.use(cors({
-  origin: allowedOrigins,
-  credentials: true // VERY IMPORTANT!
-}));
+// nodemon
 
 
 app.use(cors());
@@ -97,6 +94,12 @@ app.get(
   res.redirect("/user/setPassword"); 
   },
 );
+
+userRoute.use((req, res, next) => {
+  res.locals.user = req.session.user;  // or however you store user info
+  next();
+});
+
 
 app.use("/product", productRoute);
 app.use("/search", searchRoute);

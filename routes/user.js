@@ -18,6 +18,7 @@ const cartController=require('../controllers/cartController')
 const orderController=require('../controllers/orderController')
 const addressController=require('../controllers/adressController')
 const WalletController=require('../controllers/walletController')
+const couponController=require('../controllers/couponController')
 
 //router.use(csrfProtection);
 
@@ -130,6 +131,8 @@ router.get("/productList", productController.getProductList);
 
 //user account
 router.get("/account", userAuth, userController.getAccount);
+//removing profile image
+router.post("/removeProfileImage", userController.removeProfileImage);
 
 
 router.patch("/profile/update", userController.updateUser);
@@ -146,12 +149,12 @@ router.post(
   upload.single("profilePic"),
   userController.addProfileImage,
 );
-//removing profile image
-router.post("/removeProfileImage", userController.removeProfileImage);
+
+//user logout
+router.post("/logout", userController.logout);
 
 
-//address controller
-//router.post("/addres/add", addressController.addAddresses);
+
 //add anew address
 router.post("/address/add", addressController.addAddress);
 //user edit address
@@ -179,14 +182,12 @@ router.get("/order-failure", orderController.getPaymentFailure);
 router.get("/orders", userAuth, orderController.getOrders);
 router.get("/order-details/:orderId", userAuth, orderController.getOrderDetails);
 router.delete("/cancel-order/:orderId", orderController.cancelOrder);
-//user logout
-router.post("/logout", userController.logout);
+
 
 //apply coupon
-router.post("/applyCoupon/", userController.applyCoupon);
-
+router.post("/applyCoupon/", couponController.userApplyCoupon);
 //remove Coupon
-router.get("/removeCoupon", userController.removeCoupon);
+router.get("/removeCoupon", couponController.userRemoveCoupon);
 
 
 //user wishlist
@@ -200,11 +201,7 @@ router.post("/wallet/addMoney", userAuth, WalletController.addMoney);
 router.get('/transactions',userAuth,WalletController.getTransactions)
 
 //cancel single product
-router.delete(
-  "/cancelSingleProduct",
-  userAuth,
-  userController.cancelSingleProduct,
-);
+router.delete( "/cancelSingleProduct",userAuth,orderController.cancelSingleProduct,);
 
 //return product
 router.post("/return-product", userAuth, userController.returnProduct);

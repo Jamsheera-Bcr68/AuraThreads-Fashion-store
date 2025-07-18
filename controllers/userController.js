@@ -29,9 +29,8 @@ const getRegister = async (req, res) => {
 
   res.render("user/register", { errorMessage: null });
 };
-
-//  Generate OTp const generateOTP = () =>
-  Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP = () => Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
+//Generate OTp 
+const generateOTP = () =>Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP = () => Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
 
 //Handle post Register
 const postRegister = async (req, res) => {
@@ -66,8 +65,8 @@ const postRegister = async (req, res) => {
       console.log("User not existing");
 
       const otp = generateOTP();
-      req.session.otp = otp; //store otp in session
-      req.session.userData = { email, password, phone, referredBy }; // Store user data temporarily
+      req.session.otp = otp;
+      req.session.userData = { email, password, phone, referredBy }; 
 
       //send otp through email
       const mailOptions = {
@@ -412,15 +411,15 @@ const postResetPassword = async (req, res) => {
     if (password === "" || confirmPassword === "") {
       return res.json({ success: false, message: "Both fields are required" });
     } else if (password !== confirmPassword) {
-      return res.json({ success: false, message: "Password not matching" });
+      return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: "Password not matching" });
     }
     if (password.length < 4) {
-      return res.json({
+      return res.status(StatusCodes.BAD_REQUEST).json({
         success: false,
         message: "Password should be at least 4 charectors",
       });
     } else if (password.length > 8) {
-      return res.json({
+      return res.status(StatusCodes.BAD_REQUEST).json({
         success: false,
         message: "Password should not exeed 8 charectors",
       });
@@ -435,18 +434,20 @@ const postResetPassword = async (req, res) => {
       });
     }
     const hashedPassword = await bcrypt.hash(password, 10);
-    (user.password = hashedPassword),
-      (user.resetToken = undefined),
-      (user.resetTokenExpiry = undefined),
+    console.log('hashed password',hashedPassword);
+    
+    user.hashedPassword = hashedPassword
+      user.resetToken = undefined
+      user.resetTokenExpiry = undefined
       await user.save();
 
-    return res.json({
-      success: false,
+    return res.status(StatusCodes.OK).json({
+      success: TextTrackCue,
       message: "Password updated successfully",
     });
   } catch (error) {
     console.log("postResetPassword ");
-    return res.json({ success: false, message: "Error in setting password" });
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: statusMessages.SERVER_ERROR });
   }
 };
 
@@ -1116,298 +1117,180 @@ const logout = async (req, res) => {
   }
 };
 
-//apply coupen
-const applyCoupon = async (req, res) => {
-  console.log("from user apply coupon route");
-  try {
-    const userId = req.session.user._id;
-    const code = req.body.code;
 
-    let discountAmount = 0;
-    console.log("code is ", code);
 
-    const coupon = await Coupon.findOne({ coupenCode: code });
-    console.log("coupon is ", coupon);
+// const cancelSingleProduct = async (req, res) => {
+//   console.log("cancelSingleProduct");
 
-    if (!coupon) {
-      console.log("Coupon not found");
-      return res.json({ success: false, message: "Coupon not found" });
-    }
-    if (coupon.isActive == false) {
-      console.log("Coupon not active");
-      return res.json({ success: false, message: "Coupon not Active now" });
-    }
-    if (new Date() > coupon.expiryDate) {
-      console.log("Coupon Expired");
-      return res.json({ success: false, message: "Coupon Expired" });
-    }
-    if (req.session.netAmount < coupon.minPurchase) {
-      console.log("Not reach mini purchase");
-      return res.json({
-        success: false,
-        message: `You Should Purchse for minimum ${coupon.minPurchase} to get this coupon`,
-      });
-    }
-
-    console.log('userId', userId, 'coupenCode', code);
-
-    //check it is used by the same user
-    const isUsed = await Order.findOne({
-      userId,
-      couponCode: code,
-    });
-    console.log("Is used is ", isUsed);
-
-    if (isUsed) {
-      console.log('this code is alredy used');
-
-      return res.json({
-        success: false,
-        message: "You have already used this coupon",
-      });
-    }
-
-    if (coupon.discountType == "fixed") {
-      discountAmount = coupon.discountValue;
-    } else if (coupon.discountType == "percentage") {
-      discountAmount = req.session.totalAmount * (coupon.discountValue / 100);
-    }
-
-    console.log('req.session.netAmount', req.session.netAmount, 'coupon.discountValue', coupon.discountValue);
-
-    const finalAmount = req.session.netAmount - coupon.discountValue;
-    console.log("finalAmount ", finalAmount);
-
-    req.session.appliedCoupon = {
-      code: coupon.coupenCode,
-      discountAmount,
-      finalAmount,
-      discountType: coupon.discountType,
-      discountValue: coupon.discountValue,
-    };
-    req.session.discountAmount = discountAmount;
-    req.session.finalAmount = finalAmount;
-    req.session.code = code;
-    console.log("req.session.code", req.session.code);
-
-    return res.json({
-      success: true,
-      message: "Coupon Applied Successfully",
-      finalAmount,
-      discountAmount,
-      code,
-    });
-  } catch (error) {
-    console.log("error ", error);
-    return res.json({ success: false, message: "Error in fetching coupen" });
-  }
-};
-
-// //add money to wallet
-// const addMoney = async (req, res) => {
-//   console.log("from add money to wallet ");
 //   try {
-//     let { amount } = req.body;
-//     console.log("req.body ", req.body);
+//     const { productId, orderId } = req.body;
+//     console.log("productId,orderId ", productId, orderId);
 
-//     if (!amount) {
-//       console.log("enter an amount");
-//       return res.json({ success: false, message: "Enter a amount" });
+//     const order = await Order.findOne({ _id: orderId });
+//     if (!order) {
+//       console.log("order not found");
+//       return res.json({ success: false, message: "Order not found" });
 //     }
+
+//     let itemQuantity = 0;
+//     let itemPrice = 0;
+//     order.items.forEach((item) => {
+//       if (
+//         item.productId.toString() === productId &&
+//         item.status !== "cancelled"
+//       ) {
+//         item.status = "cancelled";
+//         console.log("deleting item", item);
+//         itemQuantity = item.quantity;
+//       }
+//     });
+
+//     console.log("one product cancelled");
+//     console.log("quantity ", itemQuantity);
+
+//     //stock restock
+//     const product = await Product.findOne({ _id: productId });
+//     if (!product) {
+//       console.log("Product not found");
+//       return res.json({ success: false, message: "Product not found" });
+//     }
+//     product.stock += itemQuantity;
+//     await product.save();
+//     console.log("stock restocked ", itemQuantity);
+//     itemPrice = product.price;
+//     console.log("price ", itemPrice);
+
+//     // amount refund
+//     let refundAmount = itemPrice * itemQuantity;
+//     let actualRefundAmount = refundAmount;
+
+//     if (order.items.length === 1) {
+//       console.log("Only one item in order.");
+
+//       if (order.isOfferApplied) {
+//         refundAmount -= order.offerDiscountAmount;
+//       }
+
+//       if (order.isCouponApplied) {
+//         refundAmount -= order.coupenDiscountAmount;
+//       }
+
+//       // Entire order is cancelled
+//       order.totalAmount = 0;
+//       order.finalAmount = 0;
+//       order.coupenDiscountAmount = 0;
+//       order.isCouponApplied = false;
+//     } else {
+//       //if offerapplied
+//       if (order.isOfferApplied) {
+//         let cancelItem = order.items.find(
+//           (item) => item.productId.toString() == product._id.toString(),
+//         );
+//         if (cancelItem.offerApplied) {
+//           order.offerDiscountAmount = Math.max(
+//             0,
+//             order.offerDiscountAmount - cancelItem.offerDiscount,
+//           );
+//           if (order.offerDiscountAmount == 0) {
+//             order.isOfferApplied = false;
+//           }
+//           refundAmount -= cancelItem.offerDiscount;
+//         }
+//       }
+//       // More than one item in the order
+//       if (order.isCouponApplied) {
+//         const code = order.couponCode;
+//         const coupon = await Coupon.findOne({ coupenCode: code });
+
+//         if (coupon.minPurchase > order.totalAmount - actualRefundAmount) {
+//           // Coupon no longer valid after refund
+//           order.totalAmount -= actualRefundAmount;
+//           console.log("now total amount is ", order.totalAmount);
+
+//           refundAmount -= order.coupenDiscountAmount; // Reduce refund
+//           order.finalAmount -= refundAmount;
+//           console.log("now final amount is ", order.finalAmount);
+//           // Remove coupon
+
+//           console.log("now final amount is ", order.finalAmount);
+//           order.coupenDiscountAmount = 0;
+//           order.isCouponApplied = false;
+//         } else {
+//           order.totalAmount -= actualRefundAmount;
+//           order.finalAmount -= refundAmount;
+//         }
+//       } else {
+//         // No coupon applied, normal refund
+//         order.totalAmount -= actualRefundAmount;
+//         order.finalAmount -= refundAmount;
+//       }
+//     }
+
+//     // Final checks
+//     if (order.finalAmount < 0) {
+//       order.finalAmount = 0;
+//     }
+
+//     // Check if all items cancelled
+//     const allItemsCancelled = order.items.every(
+//       (item) => item.status === "cancelled",
+//     );
+//     if (allItemsCancelled) {
+//       order.status = "cancelled";
+//     }
+
+//     await order.save();
+
 //     const userId = req.session.user._id;
+//     if (!userId) {
+//       console.log("User not registered");
+//       return res.json({ success: false, message: "User not registered" });
+//     }
 //     const wallet = await Wallet.findOne({ userId });
 //     if (!wallet) {
-//       console.log("Wallet is not found");
-//       return res.json({ success: false, message: "Wallet is not found" });
+//       console.log("wallet not found");
+//       return res.json({ success: false, message: "Wallet not found" });
 //     }
 
-//     wallet.balance = wallet.balance + parseInt(amount);
-//     wallet.transactions.push({
-//       type: "credit",
-//       amount: parseInt(amount),
-//       date: new Date(),
-//       description: "Fund Added",
-//     });
-//     await wallet.save();
-//     return res.json({ success: true, message: "Fund Added succesfully", balance: wallet.balance });
+//     if (order.useWallet == true) {
+//       wallet.balance += refundAmount;
+
+//       wallet.transactions.push({
+//         amount: refundAmount,
+//         type: "credit",
+//         date: new Date(),
+//         description: "Product Cancelled",
+//       });
+//       await wallet.save();
+
+//       console.log(refundAmount, "refunded to wallet");
+//     }
+//     return res.json({ success: true, message: "Product order cancelled" });
 //   } catch (error) {
 //     console.log("error is ", error);
-//     return res.json({ success: false, message: "server error" });
+//     return res.json({ success: false, message: "Server error" });
 //   }
 // };
-
-const cancelSingleProduct = async (req, res) => {
-  console.log("cancelSingleProduct");
-
-  try {
-    const { productId, orderId } = req.body;
-    console.log("productId,orderId ", productId, orderId);
-
-    const order = await Order.findOne({ _id: orderId });
-    if (!order) {
-      console.log("order not found");
-      return res.json({ success: false, message: "Order not found" });
-    }
-
-    let itemQuantity = 0;
-    let itemPrice = 0;
-    order.items.forEach((item) => {
-      if (
-        item.productId.toString() === productId &&
-        item.status !== "cancelled"
-      ) {
-        item.status = "cancelled";
-        console.log("deleting item", item);
-        itemQuantity = item.quantity;
-      }
-    });
-
-    console.log("one product cancelled");
-    console.log("quantity ", itemQuantity);
-
-    //stock restock
-    const product = await Product.findOne({ _id: productId });
-    if (!product) {
-      console.log("Product not found");
-      return res.json({ success: false, message: "Product not found" });
-    }
-    product.stock += itemQuantity;
-    await product.save();
-    console.log("stock restocked ", itemQuantity);
-    itemPrice = product.price;
-    console.log("price ", itemPrice);
-
-    // amount refund
-    let refundAmount = itemPrice * itemQuantity;
-    let actualRefundAmount = refundAmount;
-
-    if (order.items.length === 1) {
-      console.log("Only one item in order.");
-
-      if (order.isOfferApplied) {
-        refundAmount -= order.offerDiscountAmount;
-      }
-
-      if (order.isCouponApplied) {
-        refundAmount -= order.coupenDiscountAmount;
-      }
-
-      // Entire order is cancelled
-      order.totalAmount = 0;
-      order.finalAmount = 0;
-      order.coupenDiscountAmount = 0;
-      order.isCouponApplied = false;
-    } else {
-      //if offerapplied
-      if (order.isOfferApplied) {
-        let cancelItem = order.items.find(
-          (item) => item.productId.toString() == product._id.toString(),
-        );
-        if (cancelItem.offerApplied) {
-          order.offerDiscountAmount = Math.max(
-            0,
-            order.offerDiscountAmount - cancelItem.offerDiscount,
-          );
-          if (order.offerDiscountAmount == 0) {
-            order.isOfferApplied = false;
-          }
-          refundAmount -= cancelItem.offerDiscount;
-        }
-      }
-      // More than one item in the order
-      if (order.isCouponApplied) {
-        const code = order.couponCode;
-        const coupon = await Coupon.findOne({ coupenCode: code });
-
-        if (coupon.minPurchase > order.totalAmount - actualRefundAmount) {
-          // Coupon no longer valid after refund
-          order.totalAmount -= actualRefundAmount;
-          console.log("now total amount is ", order.totalAmount);
-
-          refundAmount -= order.coupenDiscountAmount; // Reduce refund
-          order.finalAmount -= refundAmount;
-          console.log("now final amount is ", order.finalAmount);
-          // Remove coupon
-
-          console.log("now final amount is ", order.finalAmount);
-          order.coupenDiscountAmount = 0;
-          order.isCouponApplied = false;
-        } else {
-          order.totalAmount -= actualRefundAmount;
-          order.finalAmount -= refundAmount;
-        }
-      } else {
-        // No coupon applied, normal refund
-        order.totalAmount -= actualRefundAmount;
-        order.finalAmount -= refundAmount;
-      }
-    }
-
-    // Final checks
-    if (order.finalAmount < 0) {
-      order.finalAmount = 0;
-    }
-
-    // Check if all items cancelled
-    const allItemsCancelled = order.items.every(
-      (item) => item.status === "cancelled",
-    );
-    if (allItemsCancelled) {
-      order.status = "cancelled";
-    }
-
-    await order.save();
-
-    const userId = req.session.user._id;
-    if (!userId) {
-      console.log("User not registered");
-      return res.json({ success: false, message: "User not registered" });
-    }
-    const wallet = await Wallet.findOne({ userId });
-    if (!wallet) {
-      console.log("wallet not found");
-      return res.json({ success: false, message: "Wallet not found" });
-    }
-
-    if (order.useWallet == true) {
-      wallet.balance += refundAmount;
-
-      wallet.transactions.push({
-        amount: refundAmount,
-        type: "credit",
-        date: new Date(),
-        description: "Product Cancelled",
-      });
-      await wallet.save();
-
-      console.log(refundAmount, "refunded to wallet");
-    }
-    return res.json({ success: true, message: "Product order cancelled" });
-  } catch (error) {
-    console.log("error is ", error);
-    return res.json({ success: false, message: "Server error" });
-  }
-};
 
 const returnProduct = async (req, res) => {
   console.log("from user return product");
   try {
-    const { productId, orderId, reason } = req.body;
-    if (!productId) {
-      console.log("product id is not found");
+    const { variantId, orderId, reason } = req.body;
+    if (!variantId) {
+      console.log("variant id is not found");
 
-      return res.json({ success: false, message: "Product id is not found" });
+      return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: statusMessages.NOT_FOUND('Variant Id') });
     } else if (!reason) {
       console.log("reson not found");
 
-      return res.json({
+      return res.status(StatusCodes.BAD_REQUEST).json({
         success: false,
         message: "Enter reason for returning",
       });
     } else if (!orderId) {
       console.log("OrderId not found");
 
-      return res.json({ success: false, message: "OrderId not found" });
+      return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: statusMessages.NOT_FOUND("Order Id") });
     }
 
     // fetching order
@@ -1415,41 +1298,42 @@ const returnProduct = async (req, res) => {
     if (!order) {
       console.log("Order not found");
 
-      return res.json({ success: false, message: "Order not found" });
+      return res.status(StatusCodes.NOT_FOUND).json({ success: false, message:statusMessages.NOT_FOUND("Order")});
     }
     if (order.status !== "Delivered") {
       console.log("the order is not delvered");
-      return res.json({
+      return res.status(StatusCodes.BAD_REQUEST).json({
         success: false,
         message: "YOu can return after delivered",
       });
     }
     const productInOrder = order.items.find(
-      (item) => item.productId.toString() === productId,
+      (item) => item.variantId.toString() === variantId,
     );
 
     if (productInOrder.isReturned == true) {
-      return res.json({ success: false, message: "Already Returned" });
+      return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: "Already Returned" });
     }
     //fetching product
-    const product = await Product.findOne({ _id: productId });
-    if (!product) {
-      console.log("Product  not found");
-      return res.json({ success: false, message: "Product not found" });
+    const variant = await Variant.findOne({ _id: variantId });
+    if (!variant) {
+      console.log("Variant  not found");
+      return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: statusMessages.NOT_FOUND("Variant") });
     }
     const existReturn = order.returnRequests.find(
-      (req) => req.productId.toString() == productId.toString(),
+      (req) => req.variantId.toString() == variantId.toString(),
     );
     if (existReturn) {
       console.log("already requested");
-      return res.json({ success: false, message: "Already requested" });
+      return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: "Already requested" });
     }
 
     productInOrder.status = "returnRequested";
     // saving reason in order
     order.returnRequests = order.returnRequests || [];
     order.returnRequests.push({
-      productId: productId,
+      variantId:variantId,
+      productId: variant.productId,
       reason: reason,
       status: "pending",
       date: new Date(),
@@ -1459,13 +1343,13 @@ const returnProduct = async (req, res) => {
     await order.save();
 
     console.log("Return request saved successfully");
-    return res.json({
+    return res.status(StatusCodes.OK).json({
       success: true,
       message: "Return request submitted successfully",
     });
   } catch (error) {
     console.log("error is ", error);
-    return res.json({ success: false, message: "Error in returning product" });
+    return res.StatusCodes.INTERNAL_SERVER_ERROR.json({ success: false, message:statusMessages.SERVER_ERROR });
   }
 };
 
@@ -1499,30 +1383,30 @@ const usertest = (req, res, next) => {
 };
 
 
-const removeCoupon = async (req, res, next) => {
-  console.log("removeCoupon");
-  try {
-    try {
-      req.session.appliedCoupon = null;
-      req.session.discountAmount = 0;
-      req.session.finalAmount = req.session.netAmount; // revert back to original
-      req.session.code = "";
-      console.log('final amount', req.session.finalAmount);
+// const removeCoupon = async (req, res, next) => {
+//   console.log("removeCoupon");
+//   try {
+//     try {
+//       req.session.appliedCoupon = null;
+//       req.session.discountAmount = 0;
+//       req.session.finalAmount = req.session.netAmount; // revert back to original
+//       req.session.code = "";
+//       console.log('final amount', req.session.finalAmount);
 
-      return res.json({
-        success: true,
-        message: "Coupon removed successfully",
-        finalAmount: req.session.finalAmount
-      });
-    } catch (error) {
-      console.log("Error removing coupon:", error);
-      return res.json({ success: false, message: "Something went wrong" });
-    }
-  } catch (error) {
-    console.log(error);
-    next(error);
-  }
-};
+//       return res.json({
+//         success: true,
+//         message: "Coupon removed successfully",
+//         finalAmount: req.session.finalAmount
+//       });
+//     } catch (error) {
+//       console.log("Error removing coupon:", error);
+//       return res.json({ success: false, message: "Something went wrong" });
+//     }
+//   } catch (error) {
+//     console.log(error);
+//     next(error);
+//   }
+// };
 
 const getContact = (req, res) => {
   res.render("user/about", {
@@ -1619,30 +1503,19 @@ module.exports = {
   getResetPassword,
   postResetPassword,
   getAccount,
-  
- 
   updateUser,
-
-  
-  changePassword,
+ changePassword,
   getOtp,
   getSetPassword,
   postSetPassword,
-
-  
-  
   logout,
-  applyCoupon,
  
-  cancelSingleProduct,
   returnProduct,
   addProfileImage,
   removeProfileImage,
   usertest,
  
   getAllCoupons,
-  
-  removeCoupon,
   getContact,
   emailChangeOtpVerifyOtp,
   getEmailChangeOtp,

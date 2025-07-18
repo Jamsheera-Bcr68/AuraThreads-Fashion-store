@@ -48,12 +48,12 @@
                       <% if (req.status === 'pending') { %>
                         <form id="approvalForm" method="POST" action="/admin/returns/approve" style="display:inline;">
                           <input type="hidden" name="orderId" value="<%= req.orderId %>">
-                          <input type="hidden" name="productId" value="<%= req.productId %>">
+                          <input type="hidden" name="variantId" value="<%= req.variantId %>">
                           <button class="btn btn-success btn-sm">Approve</button>
                         </form>
                         <form id="rejectingForm" method="POST" action="/admin/returns/reject" style="display:inline;">
                           <input type="hidden" name="orderId" value="<%= req.orderId %>">
-                          <input type="hidden" name="productId" value="<%= req.productId %>">
+                          <input type="hidden" name="variantId" value="<%= req.variantId %>">
                           <button class="btn btn-danger btn-sm">Reject</button>
                         </form>
                       <% } else { %>
@@ -117,7 +117,13 @@
       })
       .then(res => res.json())
       .then(data => {
-        Swal.fire(data.message).then(() => location.reload()); // refresh after rejection
+         Swal.fire({
+           icon: "success",
+          title: data.message,
+          showConfirmButton: false,
+          timer: 1000
+        })
+        .then(() => location.reload()); 
       })
       .catch(error => {
         console.log(error);

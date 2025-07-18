@@ -43,6 +43,9 @@ const orderSchema = mongoose.Schema({
 
   returnRequests: [
     {
+      variantId:{type:mongoose.Schema.Types.ObjectId,
+        ref:"Variant"
+      },
       productId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Product",

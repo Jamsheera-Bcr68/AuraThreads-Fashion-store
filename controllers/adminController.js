@@ -16,8 +16,11 @@ const path = require("path");
 const fs = require("fs");
 const puppeteer = require('puppeteer')
 const ExcelJS = require("exceljs");
+const Variant=require('../model/variantModel')
 
 const Razorpay = require("razorpay");
+const StatusCodes = require("../utils/statusCodes");
+const statusMessages = require("../utils/statusMessages");
 // get login
 const getLogin = async (req, res) => {
   res.render("admin/login", { errorMessage: null });
@@ -503,19 +506,21 @@ const getPendings = async (req, res, next) => {
     //fetching return requests
 
     const returnRequests = [];
-    const products = await Product.find();
+    const variants = await Variant.find();
+    const products=await Product.find()
     const users = await User.find();
     orders.forEach((order) => {
       order.returnRequests.forEach((request) => {
-        const product = products.find(
-          (product) => product._id.toString() == request.productId?.toString(),
+        const variant = variants.find(
+          (variant) => variant._id.toString() == request.variantId?.toString(),
         );
+        const product=products.find(p=>p._id?.toString()==variant.productId?.toString())
         const user = users.find(
           (user) => user._id.toString() == order.userId?.toString(),
         );
         returnRequests.push({
           userId: order.userId,
-          productId: request.productId,
+          variantId: request.variantId,
           reason: request.reason,
           requestedDate: request.date,
           orderId: order._id,
@@ -542,26 +547,26 @@ const getPendings = async (req, res, next) => {
 const approveReturn = async (req, res) => {
   try {
     console.log("From approveReturn");
-    const { orderId, productId } = req.body;
-    console.log("orderId, productId", orderId, productId);
+    const { orderId, variantId } = req.body;
+    console.log("orderId, variantId", orderId, variantId);
 
-    if (!orderId || !productId) {
-      throw new Error("Order ID or Product ID not found");
+    if (!orderId || !variantId) {
+      throw new Error("Order ID or Variant ID not found");
     }
 
     const order = await Order.findOne({ _id: orderId });
     if (!order) throw new Error("Order not found");
 
-    const product = order.items.find(
-      (item) => item.productId.toString() === productId.toString(),
+    const variant = order.items.find(
+      (item) => item.variantId.toString() === variantId.toString(),
     );
-    if (!product) throw new Error("Product not found in order items");
+    if (!variant) throw new Error("Product not found in order items");
 
-    console.log("returning product is ", product);
+    console.log("returning variant is ", variant);
 
     // Update product status
-    product.status = "returned";
-    product.isreturned = true;
+    variant.status = "returned";
+    variant.isreturned = true;
     order.markModified("items");
 
     // If all products are returned, mark the whole order as returned
@@ -571,7 +576,7 @@ const approveReturn = async (req, res) => {
 
     // Approve the return request
     const returnRequest = order.returnRequests.find(
-      (req) => req.productId?.toString() === productId.toString(),
+      (req) => req.variantId?.toString() === variantId.toString(),
     );
     if (!returnRequest)
       throw new Error("Return request not found for this product");
@@ -586,15 +591,17 @@ const approveReturn = async (req, res) => {
 
     console.log("returnrequest after save", order.returnRequests);
     // Restock product
-    const quantity = product.quantity;
-    const item = await Product.findOne({ _id: productId });
+    const quantity = variant.quantity;
+    const item = await Variant.findOne({ _id: variantId }).populate('productId');
     if (!item) throw new Error("Product not found in database");
     item.stock += quantity;
     await item.save();
-    console.log("Product restocked");
+    console.log("variant restocked");
 
+    console.log('quantity,item.productId.price',quantity,item.productId.price);
+    
     // calculating refund amount
-    let refundAmount = quantity * item.price;
+    let refundAmount = quantity * item.productId.price;
     let actualRefundAmount = refundAmount;
 
     if (order.items.length === 1) {
@@ -614,6 +621,7 @@ const approveReturn = async (req, res) => {
       order.coupenDiscountAmount = 0;
       order.isCouponApplied = false;
     } else {
+      const productId=variant.productId
       //if offerapplied
       if (order.isOfferApplied) {
         let returnlItem = order.items.find(
@@ -677,7 +685,7 @@ const approveReturn = async (req, res) => {
     if (!userId) throw new Error("User ID is not found");
     // Wallet refund
 
-    if (order.useWallet) {
+  
       const wallet = await Wallet.findOne({ userId });
       if (!wallet) throw new Error("Wallet not found");
       wallet.balance += refundAmount;
@@ -691,7 +699,7 @@ const approveReturn = async (req, res) => {
       });
 
       await wallet.save();
-    }
+    
 
     console.log("Wallet refunded with:", refundAmount);
 
@@ -703,7 +711,7 @@ const approveReturn = async (req, res) => {
     });
   } catch (error) {
     console.error("Error in approveReturn:", error.message, error);
-    return res.status(400).json({ success: false, message: error.message });
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message:statusMessages.SERVER_ERROR });
   }
 };
 
@@ -711,12 +719,12 @@ const rejectReturn = async (req, res) => {
   try {
     console.log("From rejectReturn");
 
-    const { orderId, productId } = req.body;
-    console.log(orderId, productId, "orderId, productId");
+    const { orderId, variantId } = req.body;
+    console.log(orderId, variantId, "orderId, variantid");
 
     // Validate inputs
     if (!orderId) throw new Error("Order ID not found");
-    if (!productId) throw new Error("Product ID not found");
+    if (!variantId) throw new Error("Product ID not found");
 
     // Find the order
     const order = await Order.findOne({ _id: orderId });
@@ -724,7 +732,7 @@ const rejectReturn = async (req, res) => {
 
     // Find the product in order items
     const product = order.items.find(
-      (item) => item.productId.toString() === productId.toString(),
+      (item) => item.variantId.toString() === variantId.toString(),
     );
     if (!product) throw new Error("Product not found in order items");
 
@@ -734,7 +742,7 @@ const rejectReturn = async (req, res) => {
 
     // Find and reject the return request
     const returnRequest = order.returnRequests.find(
-      (req) => req.productId?.toString() === productId.toString(),
+      (req) => req.variantId?.toString() === variantId.toString(),
     );
     if (!returnRequest)
       throw new Error("Return request not found for this product");

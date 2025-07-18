@@ -63,30 +63,72 @@ router.get("/dashboard",adminAuth, async (req, res) => {
   //console.log('salesData',salesData);
   //console.log('salesDates ',salesDates);
 
+  // const topProducts = await Order.aggregate([
+  //   matchStage,
+  //   { $unwind: "$items" },
+  //   {
+  //     $lookup: {
+  //       from: "products",
+  //       localField: "items.productId",
+  //       foreignField: "_id",
+  //       as: "productDetails",
+  //     },
+  //   },
+  //   { $unwind: "$productDetails" },
+  //   {
+  //     $group: {
+  //       _id: "$items.productId",
+  //       totalSold: { $sum: "$items.quantity" },
+  //       productName: { $first: "$productDetails.productName" },
+  //       images: { $first: "$productDetails.images" },
+  //     },
+  //   },
+  //   { $sort: { totalSold: -1 } },
+  //   { $limit: 5 },
+  // ]);
   const topProducts = await Order.aggregate([
-    matchStage,
-    { $unwind: "$items" },
-    {
-      $lookup: {
-        from: "products",
-        localField: "items.productId",
-        foreignField: "_id",
-        as: "productDetails",
-      },
-    },
-    { $unwind: "$productDetails" },
-    {
-      $group: {
-        _id: "$items.productId",
-        totalSold: { $sum: "$items.quantity" },
-        productName: { $first: "$productDetails.productName" },
-        images: { $first: "$productDetails.images" },
-      },
-    },
-    { $sort: { totalSold: -1 } },
-    { $limit: 5 },
-  ]);
-  //    console.log('topProduct ',topProducts);
+  matchStage, // your match stage (date, status, etc.)
+
+  { $unwind: "$items" },
+
+  // Lookup Variant
+  {
+    $lookup: {
+      from: "variants",
+      localField: "items.variantId",
+      foreignField: "_id",
+      as: "variantDetails"
+    }
+  },
+  { $unwind: "$variantDetails" },
+
+  // Lookup Product
+  {
+    $lookup: {
+      from: "products",
+      localField: "items.productId",
+      foreignField: "_id",
+      as: "productDetails"
+    }
+  },
+  { $unwind: "$productDetails" },
+
+  // Group by Variant
+  {
+    $group: {
+      _id: "$items.variantId",
+      totalSold: { $sum: "$items.quantity" },
+      productName: { $first: "$productDetails.productName" },
+      variantImages: { $first: "$variantDetails.images" },
+      productId: { $first: "$items.productId" }
+    }
+  },
+
+  { $sort: { totalSold: -1 } },
+  { $limit: 5 }
+]);
+
+   console.log('topProduct ',topProducts);
 
   const topCategories = await Order.aggregate([
     matchStage,

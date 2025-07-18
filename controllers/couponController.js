@@ -2,6 +2,8 @@ const { default: mongoose } = require('mongoose');
 const Coupen=require('../model/coupenModel')
 const statusCodes=require('../utils/statusCodes')
 const statusMessages=require('../utils/statusMessages')
+const Coupon=require('../model/coupenModel')
+const Order=require('../model/orderModel')
 
 //coupen management
 const getCouponPage = async (req, res) => {
@@ -245,11 +247,129 @@ const applyCoupon = async (req, res) => {
     return res.status(statusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: statusMessages.SERVER_ERROR });
   }
 };
+
+//user side
+//apply coupen
+const userApplyCoupon = async (req, res) => {
+  console.log("from user apply coupon route");
+  try {
+    const userId = req.session.user._id;
+    const code = req.body.code;
+
+    let discountAmount = 0;
+    console.log("code is ", code);
+
+    const coupon = await Coupon.findOne({ coupenCode: code });
+    console.log("coupon is ", coupon);
+
+    if (!coupon) {
+      console.log("Coupon not found");
+      return res.status(statusCodes.NOT_FOUND).json({ success: false, message: statusMessages.NOT_FOUND('Coupon') });
+    }
+    if (coupon.isActive == false) {
+      console.log("Coupon not active");
+      return res.status(statusCodes.BAD_REQUEST).json({ success: false, message: "Coupon not Active now" });
+    }
+    if (new Date() > coupon.expiryDate) {
+      console.log("Coupon Expired");
+      return res.status(statusCodes.BAD_REQUEST).json({ success: false, message: "Coupon Expired" });
+    }
+    if (req.session.netAmount < coupon.minPurchase) {
+      console.log("Not reach mini purchase");
+      return res.status(statusCodes.BAD_REQUEST).json({
+        success: false,
+        message: `You Should Purchse for minimum ${coupon.minPurchase} to get this coupon`,
+      });
+    }
+
+    console.log('userId', userId, 'coupenCode', code);
+
+    //check it is used by the same user
+    const isUsed = await Order.findOne({
+      userId,
+      couponCode: code,
+    });
+    console.log("Is used is ", isUsed);
+
+    if (isUsed) {
+      console.log('this code is alredy used');
+
+      return res.status(statusCodes.BAD_REQUEST).json({
+        success: false,
+        message: "You have already used this coupon",
+      });
+    }
+
+    if (coupon.discountType == "fixed") {
+      discountAmount = coupon.discountValue;
+    } else if (coupon.discountType == "percentage") {
+      discountAmount = req.session.totalAmount * (coupon.discountValue / 100);
+    }
+
+    console.log('req.session.netAmount', req.session.netAmount, 'coupon.discountValue', coupon.discountValue);
+
+    const finalAmount = req.session.netAmount - coupon.discountValue;
+    console.log("finalAmount ", finalAmount);
+
+    req.session.appliedCoupon = {
+      code: coupon.coupenCode,
+      discountAmount,
+      finalAmount,
+      discountType: coupon.discountType,
+      discountValue: coupon.discountValue,
+    };
+    req.session.discountAmount = discountAmount;
+    req.session.finalAmount = finalAmount;
+    req.session.code = code;
+    console.log("req.session.code", req.session.code);
+
+    return res.json({
+      success: true,
+      message: "Coupon Applied Successfully",
+      finalAmount,
+      discountAmount,
+      code,
+    });
+  } catch (error) {
+    console.log("error ", error);
+    return res.status(statusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message:statusMessages.SERVER_ERROR});
+  }
+};
+
+const userRemoveCoupon = async (req, res, next) => {
+  console.log("removeCoupon");
+  try {
+    try {
+      req.session.appliedCoupon = null;
+      req.session.discountAmount = 0;
+      req.session.finalAmount = req.session.netAmount; // revert back to original
+      req.session.code = "";
+      console.log('final amount', req.session.finalAmount);
+
+      return res.json({
+        success: true,
+        message: "Coupon removed successfully",
+        finalAmount: req.session.finalAmount
+      });
+    } catch (error) {
+      console.log("Error removing coupon:", error);
+      return res.json({ success: false, message: "Something went wrong" });
+    }
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
+
+
+
 module.exports={
     getCouponPage,
     addCoupon,
     editCoupon,
     getCouponData,
     removeCoupon,
-    applyCoupon
+    applyCoupon,
+    userApplyCoupon,
+    userRemoveCoupon
 }

@@ -1,9 +1,4 @@
-const csrfToken = document
-  .querySelector('meta[name="csrf-token"]')
-  .getAttribute("content");
 
-  console.log('csrfToken',csrfToken);
-  
 AOS.init({
   duration: 800,
   easing: "slide",
@@ -205,7 +200,7 @@ jQuery(document).ready(function ($) {
       method: "post",
       headers: {
         "Content-Type": "application/json",
-        "CSRF-Token": csrfToken,
+       
       },
     })
       .then((response) => response.json())
@@ -374,7 +369,7 @@ jQuery(document).ready(function ($) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "CSRF-Token": csrfToken,
+          
         },
         body: JSON.stringify({ variantId, quantity }),
       })
@@ -423,7 +418,7 @@ function addToWishlist(variantId) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "CSRF-Token": csrfToken,
+     
     },
     body: JSON.stringify({ variantId}),
   })
@@ -452,7 +447,7 @@ function addToWishlist(variantId) {
       Swal.fire("Server Error");
     });
 }
-// till this
+
 //from cart.ejs
 const removeBtns = document.querySelectorAll(".js-remove-item");
 removeBtns.forEach((btn) =>
@@ -474,7 +469,7 @@ removeBtns.forEach((btn) =>
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
-            "CSRF-Token": csrfToken,
+            
           },
         })
           .then((response) => response.json())
@@ -534,7 +529,7 @@ function applyCoupon(cartTotal) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "CSRF-Token": csrfToken,
+        
       },
       body: JSON.stringify({ inputCode }),
     })
@@ -572,7 +567,7 @@ cartButton.forEach(btn => btn.addEventListener('click', function () {
     method: 'post',
     headers: {
       'content-Type': 'application/json',
-      'CSRF-Token': csrfToken
+     
     },
     body: JSON.stringify({ variantId, quantity: Number(1) })
   }).then(response => response.json())
@@ -612,7 +607,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const variantId = heart.getAttribute('data-id');
         const isNotInWishlist = heart.classList.contains('far');
         console.log('wishlist button clicked')
-        console.log(csrfToken);
+        
         ;
         
         if (isNotInWishlist) {
@@ -620,7 +615,7 @@ document.addEventListener('DOMContentLoaded', function () {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'CSRF-Token': csrfToken
+              
             },
             body: JSON.stringify({ variantId }),
              credentials: 'include'
@@ -656,10 +651,10 @@ document.addEventListener('DOMContentLoaded', function () {
             method: 'DELETE',
             headers: {
               'Content-Type': 'application/json',
-              'CSRF-Token': csrfToken
+              
             },
             body: JSON.stringify({ variantId }),
-             credentials: 'include'
+            
           })
           .then(response => {
             if (!response.ok) throw new Error(`Server responded ${response.status}`);

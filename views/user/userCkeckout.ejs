@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Checkout - Aura Threads</title>
   <link rel="stylesheet" href="/css/checkout.css">
-  <meta name="csrf-token" content="<%= csrfToken %>">
+ 
 </head>
 
 <body>
@@ -321,7 +321,7 @@
           <label for="address-state">State/Province</label>
           <input type="text" id="address-state" name="state" required>
         </div>
-        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+       
 
         <div class="form-group">
           <label for="address-zip">ZIP/Postal Code</label>
@@ -357,7 +357,7 @@
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
     <script>
-      const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+      
       document.addEventListener("DOMContentLoaded", function () {
         const useWalletCheckbox = document.getElementById('useWallet');
         const paymentSection = document.getElementById('paymentSection');
@@ -491,7 +491,7 @@
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "CSRF-Token": csrfToken,
+          
           },
           body: JSON.stringify(orderData),
         })
@@ -523,7 +523,7 @@
 
                   fetch("/user/varifyPayment", {
                     method: "POST",
-                    headers: { "Content-Type": "application/json", 'CSRF-Token': csrfToken },
+                    headers: { "Content-Type": "application/json"},
                     body: JSON.stringify({
                       razorpay_payment_id: response.razorpay_payment_id,
                       razorpay_order_id: response.razorpay_order_id,
@@ -593,9 +593,7 @@
 
           fetch('/user/removeCoupon', {
             method: 'GET',
-            headers: {
-              'CSRF-Token': csrfToken
-            }
+           
           })
             .then((res) => res.json())
             .then((data) => {
@@ -626,7 +624,7 @@
           method: 'POST',
           headers: {
             "Content-Type": "application/json",
-            'CSRF-Token': csrfToken
+           
           },
           body: JSON.stringify({ code })
         })
@@ -819,7 +817,7 @@
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            'CSRF-Token': csrfToken
+           
           },
           body: JSON.stringify(formObject)
         }).then(res => res.json())
@@ -903,7 +901,7 @@
             method: "PATCH",
             headers: {
               "Content-Type": "application/json",
-              'CSRF-Token': csrfToken
+              
             },
             body: JSON.stringify(formObject)
           });
