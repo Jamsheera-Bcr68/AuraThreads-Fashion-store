@@ -16,6 +16,7 @@ const categoryController=require('../controllers/categoryController')
 const userController=require('../controllers/userController')
 const couponController=require('../controllers/couponController')
 const offerController=require('../controllers/offerController')
+const orderController=require('../controllers/orderController')
 
 // Display Login Page
 router.get("/login", adminController.getLogin);
@@ -270,11 +271,14 @@ router.get("/users",adminAuth,userController.getUsers)
 //block user
 router.patch("/block-user/:userId",adminAuth,userController.blockUser)
 
-router.get("/orders",adminAuth, adminController.getOrder);
-router.get("/orderDetails/:orderId",adminAuth, adminController.getOrderDetails);
-router.get("/updateOrder/:orderId",adminAuth, adminController.getUpdateOrder);
-router.post("/updateOrder", adminController.postUpdateOrder);
-router.delete("/cancelOrder/:orderId",adminAuth, adminController.cancelOrder);
+router.get("/orders",adminAuth, orderController.getAdminOrders);
+router.get("/orderDetails/:orderId",adminAuth, orderController.adminOrderDetails);
+router.get("/updateOrder/:orderId",adminAuth, orderController.getUpdateOrder);
+router.post("/updateOrder", orderController.postUpdateOrder);
+router.delete("/cancelOrder/:orderId",adminAuth, orderController.adminCancelOrder);
+
+
+
 router.post("/logout",adminAuth, adminController.postLogout);
 
 //admin couponMangement
@@ -313,7 +317,7 @@ router.get("/getSingleOffer/:offerId",adminAuth, offerController.getSingleOffer)
 router.put("/editOffer/:offerId",adminAuth,offerController.editOffer);
 
 //add refferal offer
-router.post("/addrefferalOffer",adminAuth, adminController.addrefferalOffer);
+//router.post("/addrefferalOffer",adminAuth, adminController.addrefferalOffer);
 
 
 // get approval page

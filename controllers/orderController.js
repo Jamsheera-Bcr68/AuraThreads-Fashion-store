@@ -13,6 +13,7 @@ const crypto = require("crypto");
 const path = require('path')
 const mongoose = require('mongoose')
 const Coupon=require('../model/coupenModel')
+const User=require('../model/userModel')
 
 
 const placeOrder = async (req, res) => {
@@ -792,7 +793,12 @@ const cancelSingleProduct = async (req, res) => {
     }
 
     if(order.items.length==1){
+      refundAmount=refundAmount+order.shippingCharge
       order.shippingCharge=0
+    }else{
+      if(order.items.every(item=>item.status=='cancelled')){
+        refundAmount=refundAmount+order.shippingCharge
+      }
     }
 
     await order.save();
@@ -831,7 +837,315 @@ const cancelSingleProduct = async (req, res) => {
   }
 };
 
+const returnProduct = async (req, res) => {
+  console.log("from user return product");
+  try {
+    const { variantId, orderId, reason } = req.body;
+    if (!variantId) {
+      console.log("variant id is not found");
 
+      return res.status(statusCodes.NOT_FOUND).json({ success: false, message: statusMessages.NOT_FOUND('Variant Id') });
+    } else if (!reason) {
+      console.log("reson not found");
+
+      return res.status(statusCodes.BAD_REQUEST).json({
+        success: false,
+        message: "Enter reason for returning",
+      });
+    } else if (!orderId) {
+      console.log("OrderId not found");
+
+      return res.status(statusCodes.NOT_FOUND).json({ success: false, message: statusMessages.NOT_FOUND("Order Id") });
+    }
+
+    // fetching order
+    const order = await Order.findOne({ _id: orderId });
+    if (!order) {
+      console.log("Order not found");
+
+      return res.status(screentatusCodes.NOT_FOUND).json({ success: false, message:statusMessages.NOT_FOUND("Order")});
+    }
+    if (order.status !== "Delivered") {
+      console.log("the order is not delvered");
+      return res.status(statusCodes.BAD_REQUEST).json({
+        success: false,
+        message: "YOu can return after delivered",
+      });
+    }
+    const productInOrder = order.items.find(
+      (item) => item.variantId.toString() === variantId,
+    );
+
+    if (productInOrder.isReturned == true) {
+      return res.status(statusCodes.BAD_REQUEST).json({ success: false, message: "Already Returned" });
+    }
+    //fetching product
+    const variant = await Variant.findOne({ _id: variantId });
+    if (!variant) {
+      console.log("Variant  not found");
+      return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: statusMessages.NOT_FOUND("Variant") });
+    }
+    const existReturn = order.returnRequests.find(
+      (req) => req.variantId.toString() == variantId.toString(),
+    );
+    if (existReturn) {
+      console.log("already requested");
+      return res.status(statusCodes.BAD_REQUEST).json({ success: false, message: "Already requested" });
+    }
+
+    productInOrder.status = "returnRequested";
+    // saving reason in order
+    order.returnRequests = order.returnRequests || [];
+    order.returnRequests.push({
+      variantId:variantId,
+      productId: variant.productId,
+      reason: reason,
+      status: "pending",
+      date: new Date(),
+    });
+
+    productInOrder.status = "return-requested";
+    await order.save();
+
+    console.log("Return request saved successfully");
+    return res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Return request submitted successfully",
+    });
+  } catch (error) {
+    console.log("error is ", error);
+    return res.status(statusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message:statusMessages.SERVER_ERROR });
+  }
+};
+
+const getAdminOrders = async (req, res) => {
+  console.log("from admin get order page");
+  try {
+
+
+    //dummy datas
+    const adminUser = {
+      name: "Admin User",
+      role: "Administrator",
+      profileImage: "/images/admin-avatar.jpg",
+    };
+    const filter = {
+      status: "all",
+      date: "",
+      search: '',
+    };
+    let page = parseInt(req.query.page) || 1;
+    limit = parseInt(req.query.limit) || 5;
+    let skip = (page - 1) * limit;
+    console.log(`page is ${page} and limt is ${limit}`);
+
+    const totalOrders = await Order.countDocuments();
+    const totalPages = Math.ceil(totalOrders / limit);
+
+    const orders = await Order.find()
+      .populate("userId")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+
+    const activeOrders = await Order.find({
+      status: { $nin: ["cancelled", "returned"] },
+    });
+    for (const order of activeOrders) {
+      if (order.deliveryDate <= new Date()) {
+        order.status = "Delivered";
+        await order.save();
+      }
+    }
+
+    //console.log("activeOrders ", activeOrders);
+
+    console.log("orders are ", orders);
+    return res.render("admin/orders", {
+      title: "Admin Orders",
+      adminUser,
+      filter,
+      orders,
+      currentPage: page,
+      thisPage: 'orders',
+      totalPages,
+    });
+  } catch (error) {
+    console.log("error in fetching orders", error);
+  return  res.status(statusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: statusMessages.SERVER_ERROR });
+  }
+};
+
+const adminOrderDetails = async (req, res) => {
+  console.log("from admin get order details");
+  const orderId = req.params.orderId;
+  const order = await Order.findOne({ _id: orderId }).populate(
+    "items.productId",
+  );
+  if (!order) {
+    console.log("order not found");
+    return res.status(statusCodes.NOT_FOUND).json({ success: false, message: statusMessages.NOT_FOUND('Order') });
+  }
+  const userId = order.userId;
+  console.log("user Id is ", userId);
+
+  const user = await User.findOne({ _id: userId });
+  if (!user) {
+    console.log("user not found");
+    return res.status(statusCodes.NOT_FOUND).json({ success: false, message:statusMessages.NOT_FOUND('User') });
+  }
+  res.render("admin/adminViewOrder", {
+    user,
+    order,
+    title:"Order details",
+    thisPage:'orders'
+  });
+};
+
+const getUpdateOrder = async (req, res) => {
+  console.log("from admin order update route");
+  try {
+    const orderId = req.params.orderId;
+    const order = await Order.findOne({ _id: orderId }).populate(
+      "items.productId",
+    );
+    if (!order) {
+      console.log("order not found");
+    return res.status(statusCodes.NOT_FOUND).json({ success: false, message:statusMessages.NOT_FOUND('Order') });
+    }
+
+    res.render("admin/adminEditOrder", {
+      order,
+      title:"Edit Order",
+      thisPage:"orders"
+    });
+  } catch (error) {
+    console.log(error);
+   return res.status(statusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: statusMessages.SERVER_ERROR });
+  }
+};
+
+//post update user
+const postUpdateOrder = async (req, res) => {
+  console.log("from post update order");
+  const formObject = req.body;
+  const orderId = formObject.orderId;
+  const order = await Order.findOne({ _id: orderId });
+  if (!order) {
+    console.log("order not found");
+    return res.status(statusCodes.NOT_FOUND).json({ success: false, message:statusMessages.NOT_FOUND('Order') });
+  }
+  order.status = formObject.status;
+  let activeitems = order.items.filter(item => item.status === 'active')
+  activeitems.forEach(item => item.status = order.status)
+  await order.save();
+ if(order.status=='cancelled'){
+  for (item of order.items) {
+      const variant = await Variant.findById(item.variantId);
+      const product=await Product.findOne({_id:variant.productId})
+
+      variant.stock = variant.stock + item.quantity;
+      await variant.save();
+      console.log(`after restoring ${product.productName} is ${product.stock}`);
+    }
+
+    
+    if(order.paymentMethod!=="COD"){
+      const userId=order.userId
+      const wallet=await Wallet.findOne({userId})
+      if(!wallet){
+        return res.status(statusCodes.NOT_FOUND).json({success:false,message:statusMessages.NOT_FOUND('Wallet')})
+      }
+      const refundAmount=order.finalAmount+order.shippingCharge
+      console.log('refundAmount',refundAmount);
+      wallet.balance+=refundAmount
+      wallet.transactions.push({
+        amount:refundAmount,
+        type:'credit',
+        description:'Order Cancelled',
+        date:new Date()
+
+      })
+      wallet.save()
+    }
+
+ }
+  console.log("order staus updated succesfully");
+  return res.status(statusCodes.OK).json({
+    success: true,
+    message: "order status updated succesfully",
+    orderStatus: order.status
+  });
+};
+
+const adminCancelOrder = async (req, res) => {
+  console.log("from admin order Cancel route");
+
+  try {
+    const orderId = req.params.orderId;
+    if (!orderId) {
+      console.log("Order id is not found");
+
+      return res.status(statusCodes.NOT_FOUND).json({ success: false, message: statusMessages.NOT_FOUND('Order Id') });
+    }
+    const order = await Order.findOne({ _id: orderId }).populate(
+      "items.productId",
+    );
+
+    if (!order) {
+      console.log("order not found");
+
+      return res.status(statusCodes.NOT_FOUND).json({ success: false, message: statusMessages.NOT_FOUND('Order') });
+    }
+    if (order.status == "cancelled") {
+      console.log("order already cancelled");
+
+      return res.status(statusCodes.BAD_REQUEST).json({ success: false, message: "order already cancelled" });
+    }
+    order.status = "cancelled";
+    await order.save();
+
+
+    console.log("order cancelled successfully");
+
+    //restore the stock
+
+    for (item of order.items) {
+      const variant = await Variant.findById(item.variantId);
+      const product=await Product.findOne({_id:variant.productId})
+
+      variant.stock = variant.stock + item.quantity;
+      await variant.save();
+      console.log(`after restoring ${product.productName} is ${product.stock}`);
+    }
+
+    if(order.paymentMethod!=="COD"){
+      const userId=order.userId
+      const wallet=await Wallet.findOne({userId})
+      if(!wallet){
+        return res.status(statusCodes.NOT_FOUND).json({success:false,message:statusMessages.NOT_FOUND('Wallet')})
+      }
+      const refundAmount=order.finalAmount+order.shippingCharge
+      console.log('refundAmount',refundAmount);
+      wallet.balance+=refundAmount
+      wallet.transactions.push({
+        amount:refundAmount,
+        type:'credit',
+        description:'Order Cancelled',
+        date:new Date()
+
+      })
+      wallet.save()
+    }
+
+
+    return res.status(statusCodes.OK).json({ success: true, message: "Order cancelled successfully" });
+  } catch (error) {
+    console.log("error in fetching order");
+    return res.status(statusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: statusMessages.SERVER_ERROR });
+  }
+};
 module.exports = {
   placeOrder,
   varifyPayment,
@@ -840,6 +1154,14 @@ module.exports = {
   getOrderDetails,
   getOrders,
   cancelOrder,
-  cancelSingleProduct
+  cancelSingleProduct,
+  returnProduct,
+
+  //admin
+  getAdminOrders,
+  adminOrderDetails,
+  getUpdateOrder,
+  postUpdateOrder,
+  adminCancelOrder
 
 }

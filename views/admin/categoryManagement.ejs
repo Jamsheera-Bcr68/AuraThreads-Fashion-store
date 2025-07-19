@@ -854,7 +854,9 @@
               title: 'image uploaded ',
               showConfirmButton: false,
               timer: 1000
-            });
+            }).then(()=>{
+               document.getElementById('cropButton').style.display = 'none'
+            })
             console.log('uploadedImagesInput', uploadedImagesInput);
             console.log('uploadedImagePaths', uploadedImagePaths);
 

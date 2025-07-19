@@ -322,12 +322,15 @@ const userApplyCoupon = async (req, res) => {
     req.session.finalAmount = finalAmount;
     req.session.code = code;
     console.log("req.session.code", req.session.code);
+    const shippingCharge=req.session.shippingCharge||50
+    const total=req.session.finalAmount+parseInt(shippingCharge)
 
     return res.json({
       success: true,
       message: "Coupon Applied Successfully",
       finalAmount,
       discountAmount,
+      total,
       code,
     });
   } catch (error) {
@@ -345,11 +348,13 @@ const userRemoveCoupon = async (req, res, next) => {
       req.session.finalAmount = req.session.netAmount; // revert back to original
       req.session.code = "";
       console.log('final amount', req.session.finalAmount);
+      const shippingCharge=req.session.shippingCharge ||50
 
+      const finalAmount=req.session.finalAmount+parseInt(shippingCharge)
       return res.json({
         success: true,
         message: "Coupon removed successfully",
-        finalAmount: req.session.finalAmount
+        finalAmount
       });
     } catch (error) {
       console.log("Error removing coupon:", error);

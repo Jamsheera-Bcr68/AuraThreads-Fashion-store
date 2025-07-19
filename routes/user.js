@@ -86,7 +86,7 @@ router.post("/forgot-password", async (req, res) => {
       userExist.resetTokenExpiry = Date.now() + 3600000; // 1 hour
       await userExist.save();
       //create reset link with token
-      const resetLink = `http://localhost:3000/user/reset-password/${token}`;
+      const resetLink = `https://aurathreads.store/user/reset-password/${token}`;
 
       // reset password message
       const mailOptions = {
@@ -202,10 +202,8 @@ router.get('/transactions',userAuth,WalletController.getTransactions)
 
 //cancel single product
 router.delete( "/cancelSingleProduct",userAuth,orderController.cancelSingleProduct,);
-
 //return product
-router.post("/return-product", userAuth, userController.returnProduct);
-
+router.post("/return-product", userAuth, orderController.returnProduct);
 router.post("/test", userController.usertest);
 
 

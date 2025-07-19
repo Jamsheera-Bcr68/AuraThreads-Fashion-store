@@ -85,9 +85,9 @@ const getProducts = async (req, res) => {
     // ]);
 
     const products = await Variant.aggregate([
-      // Group by productId to get only one variant per product
+      
       {
-        $sort: { createdAt: -1 } // sort if you want to pick the first variant
+        $sort: { createdAt: -1 } 
       },
       {
         $group: {
@@ -150,8 +150,7 @@ const getProducts = async (req, res) => {
       { $limit: limit }
     ]);
 
-    // console.log(products);
-
+     
 
     const totalProducts = await Product.countDocuments(searchQuery);
     const totalPages = Math.ceil(totalProducts / limit);
@@ -805,7 +804,7 @@ const deleteVariant = async (req, res) => {
     if (!variantId) {
       console.log('No variant id');
 
-      return res.status(StatusCodes.NOT_FOUND), json({ success: false, message: statusMessages.NOT_FOUND("variant Id") })
+      return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: statusMessages.NOT_FOUND("variant Id") })
     }
 
     const variant = await Variant.findOne({ _id: new mongoose.Types.ObjectId(variantId) })
@@ -817,6 +816,13 @@ const deleteVariant = async (req, res) => {
 
     variant.isDeleted = true
     await variant.save()
+
+    const product=await Product.findOne({_id:variant.productId})
+    const productVariants=await Variant.find({productId:variant.productId})
+    if(productVariants.every(variant=>variant.isDeleted)){
+      product.isDeleted=true
+      await product.save()
+    }
 
     return res.status(StatusCodes.OK).json({ success: true, message: statusMessages.DELETED("Variant") })
   } catch (error) {

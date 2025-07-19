@@ -64,7 +64,7 @@ const getUsers = async (req, res) => {
 //searchProducts
 
 const searchProducts = async (req, res) => {
-  console.log("from admin searchproducts");
+  console.log("from admin searchproducts route");
 
   try {
     const { query, type } = req.query;
@@ -153,187 +153,191 @@ const searchProducts = async (req, res) => {
 
 //admin get order page
 
-const getOrder = async (req, res) => {
-  console.log("from admin get order page");
-  try {
+// const getOrder = async (req, res) => {
+//   console.log("from admin get order page");
+//   try {
 
 
-    //dummy datas
-    const adminUser = {
-      name: "Admin User",
-      role: "Administrator",
-      profileImage: "/images/admin-avatar.jpg",
-    };
-    const filter = {
-      status: "all",
-      date: "",
-      search: '',
-    };
-    let page = parseInt(req.query.page) || 1;
-    limit = parseInt(req.query.limit) || 5;
-    let skip = (page - 1) * limit;
-    console.log(`page is ${page} and limt is ${limit}`);
+//     //dummy datas
+//     const adminUser = {
+//       name: "Admin User",
+//       role: "Administrator",
+//       profileImage: "/images/admin-avatar.jpg",
+//     };
+//     const filter = {
+//       status: "all",
+//       date: "",
+//       search: '',
+//     };
+//     let page = parseInt(req.query.page) || 1;
+//     limit = parseInt(req.query.limit) || 5;
+//     let skip = (page - 1) * limit;
+//     console.log(`page is ${page} and limt is ${limit}`);
 
-    const totalOrders = await Order.countDocuments();
-    const totalPages = Math.ceil(totalOrders / limit);
+//     const totalOrders = await Order.countDocuments();
+//     const totalPages = Math.ceil(totalOrders / limit);
 
-    const orders = await Order.find()
-      .populate("userId")
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
+//     const orders = await Order.find()
+//       .populate("userId")
+//       .sort({ createdAt: -1 })
+//       .skip(skip)
+//       .limit(limit);
 
 
-    const activeOrders = await Order.find({
-      status: { $nin: ["cancelled", "returned"] },
-    });
-    for (const order of activeOrders) {
-      if (order.deliveryDate <= new Date()) {
-        order.status = "Delivered";
-        await order.save();
-      }
-    }
+//     const activeOrders = await Order.find({
+//       status: { $nin: ["cancelled", "returned"] },
+//     });
+//     for (const order of activeOrders) {
+//       if (order.deliveryDate <= new Date()) {
+//         order.status = "Delivered";
+//         await order.save();
+//       }
+//     }
 
-    //console.log("activeOrders ", activeOrders);
+//     //console.log("activeOrders ", activeOrders);
 
-    console.log("orders are ", orders);
-    return res.render("admin/orders", {
-      title: "Admin Orders",
-      adminUser,
-      filter,
-      orders,
-      currentPage: page,
-      thisPage: 'orders',
-      totalPages,
-    });
-  } catch (error) {
-    console.log("error in fetching orders", error);
-    res.json({ success: false, message: "Order fetching failed" });
-  }
-};
+//     console.log("orders are ", orders);
+//     return res.render("admin/orders", {
+//       title: "Admin Orders",
+//       adminUser,
+//       filter,
+//       orders,
+//       currentPage: page,
+//       thisPage: 'orders',
+//       totalPages,
+//     });
+//   } catch (error) {
+//     console.log("error in fetching orders", error);
+//     res.json({ success: false, message: "Order fetching failed" });
+//   }
+// };
 
 //get order details
 
-const getOrderDetails = async (req, res) => {
-  console.log("from admin get order details");
-  const orderId = req.params.orderId;
-  const order = await Order.findOne({ _id: orderId }).populate(
-    "items.productId",
-  );
-  if (!order) {
-    console.log("order not found");
-    res.json({ success: false, message: "Order not found" });
-  }
-  const userId = order.userId;
-  console.log("user Id is ", userId);
+// const getOrderDetails = async (req, res) => {
+//   console.log("from admin get order details");
+//   const orderId = req.params.orderId;
+//   const order = await Order.findOne({ _id: orderId }).populate(
+//     "items.productId",
+//   );
+//   if (!order) {
+//     console.log("order not found");
+//     res.json({ success: false, message: "Order not found" });
+//   }
+//   const userId = order.userId;
+//   console.log("user Id is ", userId);
 
-  const user = await User.findOne({ _id: userId });
-  if (!user) {
-    console.log("user not found");
-    res.json({ success: false, message: "User not found" });
-  }
-  res.render("admin/adminViewOrder", {
-    user,
-    order,
-  });
-};
+//   const user = await User.findOne({ _id: userId });
+//   if (!user) {
+//     console.log("user not found");
+//     res.json({ success: false, message: "User not found" });
+//   }
+//   res.render("admin/adminViewOrder", {
+//     user,
+//     order,
+//     title:"Order details",
+//     thisPage:'orders'
+//   });
+// };
 
-//get ipdate order
-const getUpdateOrder = async (req, res) => {
-  console.log("from admin order update route");
-  try {
-    const orderId = req.params.orderId;
-    const order = await Order.findOne({ _id: orderId }).populate(
-      "items.productId",
-    );
-    if (!order) {
-      console.log("order not found");
-      res.json({ success: false, message: "Order not found" });
-    }
+// //get ipdate order
+// const getUpdateOrder = async (req, res) => {
+//   console.log("from admin order update route");
+//   try {
+//     const orderId = req.params.orderId;
+//     const order = await Order.findOne({ _id: orderId }).populate(
+//       "items.productId",
+//     );
+//     if (!order) {
+//       console.log("order not found");
+//       res.json({ success: false, message: "Order not found" });
+//     }
 
-    res.render("admin/adminEditOrder", {
-      order,
-    });
-  } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: "Order not found" });
-  }
-};
+//     res.render("admin/adminEditOrder", {
+//       order,
+//       title:"Edit Order",
+//       thisPage:"orders"
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     res.json({ success: false, message: "Order not found" });
+//   }
+// };
 
 //post update user
-const postUpdateOrder = async (req, res) => {
-  console.log("from post update order");
-  const formObject = req.body;
-  const orderId = formObject.orderId;
-  const order = await Order.findOne({ _id: orderId });
-  if (!order) {
-    console.log("order not found");
-    return res.json({ success: false, message: "Order not found" });
-  }
-  order.status = formObject.status;
-  let activeitems = order.items.filter(item => item.status === 'active')
-  activeitems.forEach(item => item.status = order.status)
-  await order.save();
-  console.log("order staus updated succesfully");
-  return res.json({
-    success: true,
-    message: "order status updated succesfully",
-    orderStatus: order.status
-  });
-};
+// const postUpdateOrder = async (req, res) => {
+//   console.log("from post update order");
+//   const formObject = req.body;
+//   const orderId = formObject.orderId;
+//   const order = await Order.findOne({ _id: orderId });
+//   if (!order) {
+//     console.log("order not found");
+//     return res.json({ success: false, message: "Order not found" });
+//   }
+//   order.status = formObject.status;
+//   let activeitems = order.items.filter(item => item.status === 'active')
+//   activeitems.forEach(item => item.status = order.status)
+//   await order.save();
+//   console.log("order staus updated succesfully");
+//   return res.json({
+//     success: true,
+//     message: "order status updated succesfully",
+//     orderStatus: order.status
+//   });
+// };
 
 //admin delete order
-const cancelOrder = async (req, res) => {
-  console.log("from admin order Cancel route");
+// const cancelOrder = async (req, res) => {
+//   console.log("from admin order Cancel route");
 
-  try {
-    const orderId = req.params.orderId;
-    if (!orderId) {
-      console.log("Order id is not found");
+//   try {
+//     const orderId = req.params.orderId;
+//     if (!orderId) {
+//       console.log("Order id is not found");
 
-      return res.json({ success: false, message: "Order id is not found" });
-    }
-    const order = await Order.findOne({ _id: orderId }).populate(
-      "items.productId",
-    );
+//       return res.json({ success: false, message: "Order id is not found" });
+//     }
+//     const order = await Order.findOne({ _id: orderId }).populate(
+//       "items.productId",
+//     );
 
-    if (!order) {
-      console.log("order not found");
+//     if (!order) {
+//       console.log("order not found");
 
-      return res.json({ success: false, message: "order not found" });
-    }
-    if (order.status == "cancelled") {
-      console.log("order already cancelled");
+//       return res.json({ success: false, message: "order not found" });
+//     }
+//     if (order.status == "cancelled") {
+//       console.log("order already cancelled");
 
-      return res.json({ success: false, message: "order already cancelled" });
-    }
-    order.status = "cancelled";
-    await order.save();
-
-
-    console.log("order cancelled successfully");
-
-    //restore the stock
-
-    for (item of order.items) {
-      const product = await Product.findById(item.productId);
-      console.log(
-        `before restoring ${product.productName} is ${product.stock}`,
-      );
-
-      product.stock = product.stock + item.quantity;
-      await product.save();
-      console.log(`after restoring ${product.productName} is ${product.stock}`);
-    }
+//       return res.json({ success: false, message: "order already cancelled" });
+//     }
+//     order.status = "cancelled";
+//     await order.save();
 
 
+//     console.log("order cancelled successfully");
 
-    return res.json({ success: true, message: "Order cancelled successfully" });
-  } catch (error) {
-    console.log("error in fetching order");
-    return res.json({ success: false, message: "error in fetching order" });
-  }
-};
+//     //restore the stock
+
+//     for (item of order.items) {
+//       const product = await Product.findById(item.productId);
+//       console.log(
+//         `before restoring ${product.productName} is ${product.stock}`,
+//       );
+
+//       product.stock = product.stock + item.quantity;
+//       await product.save();
+//       console.log(`after restoring ${product.productName} is ${product.stock}`);
+//     }
+
+
+
+//     return res.json({ success: true, message: "Order cancelled successfully" });
+//   } catch (error) {
+//     console.log("error in fetching order");
+//     return res.json({ success: false, message: "error in fetching order" });
+//   }
+// };
 
 //admin logout
 const postLogout = async (req, res) => {
@@ -344,164 +348,14 @@ const postLogout = async (req, res) => {
 };
 
 
-
-const addrefferalOffer = async (req, res, next) => {
-  console.log("from addrefferalOffer");
-  try {
-    const bonusAmount = req.body.bonusAmount;
-    const minOrderAmount = req.body.minOrderAmount;
-    const rewardType = req.body.rewardType;
-    const status = req.body.status == "enabled" ? "active" : "inactive";
-    if (
-      status == "" ||
-      rewardType == "" ||
-      minOrderAmount == "" || bonusAmount == ""
-    ) {
-      console.log("all field are required");
-      throw new Error("All fields are required");
-    }
-
-    const offer = new RefferalOffer({
-      bonusAmount,
-      rewardType,
-      minOrderAmount,
-      status,
-      isActive: status == "enabled" ? true : false,
-      createAt: new Date(),
-    });
-    await offer.save();
-    return res.json({
-      success: true,
-      message: "Refferal offer created successfully",
-    });
-  } catch (error) {
-    console.log("error is ", error);
-    next(error);
-  }
-};
-
-const referalOffers = async (req, res) => {
-  console.log("referalOffers");
-  let date = new Date();
-  const totalOffers = await Offer.countDocuments();
-  const pendingOffers = await Offer.countDocuments({ status: "pending" });
-  const activeOffers = await Offer.countDocuments({ status: "active" });
-  const expiredOffers = await Offer.countDocuments({ endDate: { $lt: date } });
-  const stats = {
-    totalOffers,
-    activeOffers,
-    pendingOffers,
-    expiredOffers,
-  };
-  try {
-    const offers = await RefferalOffer.find().sort({ createdAt: -1 });
-
-    res.render("admin/referalOffer", {
-      offers,
-      stats,
-      title: "Offer Management",
-    });
-  } catch (error) {
-    console.log("error is", error);
-    res.json({ success: false, message: "error in fetching orders" });
-  }
-};
-
-const deleteReferalOffers = async (req, res, next) => {
-  console.log("deleteReferalOffers");
-  try {
-    const offerId = req.params.offerId;
-    if (!offerId) {
-      console.log("offer id is not found");
-      throw new Error("Offer id is not found");
-    }
-
-    const offer = await RefferalOffer.findOne({ _id: offerId });
-    if (!offer) {
-      console.log("offer  not found");
-      throw new Error("Offer not found");
-    }
-    offer.status = "inactive";
-    await offer.save();
-    return res.json({ success: false, message: "Offer deleted successfully" });
-  } catch (error) {
-    console.log("error", error);
-    next(error);
-  }
-};
-
-const getSinglerefferal = async (req, res, next) => {
-  try {
-    console.log("getSinglerefferal");
-
-    const offerId = req.params.offerId;
-    console.log("offer id ", offerId);
-
-    if (!offerId) {
-      throw new Error("Offer id is not found");
-    }
-    const offer = await RefferalOffer.findOne({ _id: offerId });
-    console.log("offer ", offer);
-
-    if (!offer) {
-      throw new Error("Offer is not found");
-    }
-    return res.json({
-      success: true,
-      message: "Offer founduccessfully",
-      offer,
-    });
-  } catch (error) {
-    console.log("error is ", error);
-
-    next(error);
-  }
-};
-
-const editReffferalOffer = async (req, res, next) => {
-  console.log("editReffferalOffer");
-  try {
-    const { bonusAmount, minOrderAmount, rewardType, status } = req.body;
-    const offerId = req.params.offerId;
-    console.log(
-      "offerId,bonusAmount,minOrderAmount,rewardType,status",
-      offerId,
-      bonusAmount,
-      minOrderAmount,
-      rewardType,
-      status,
-    );
-    if (!offerId) {
-      console.log("offer id is not fount");
-      throw new Error("Offer Id is not found");
-    }
-    const offer = await RefferalOffer.findOne({ _id: offerId });
-    if (!offer) {
-      console.log("Offer not fount");
-      throw new Error("Offer not found");
-    }
-    offer.bonusAmount = bonusAmount;
-    offer.minOrderAmount = minOrderAmount;
-    offer.rewardType = rewardType;
-    offer.status = status == "enabled" ? "active" : "inactive";
-    offer.isActive = status == "enabled" ? true : false;
-    await offer.save();
-
-    return res.json({ success: true, message: "Offer edited successfully" });
-  } catch (error) {
-    console.log("error is ", error);
-
-    next(error);
-  }
-};
-
 const getPendings = async (req, res, next) => {
   try {
+    const limit=parseInt(req.query.limit)||5
+    const page=parseInt(req.query.page) ||1
+    const skip=parseInt( page-1)*limit
     const orders = await Order.find({
       returnRequests: { $exists: true, $ne: [] },
     });
-
-
 
     //fetching return requests
 
@@ -531,13 +385,23 @@ const getPendings = async (req, res, next) => {
       });
     });
 
+ const totalRequests = orders.reduce((count, order) => {
+  const requests = Array.isArray(order.returnRequests) ? order.returnRequests : [];
+  return count + requests.length;
+}, 0);
 
+ const totalPages=Math.ceil(totalRequests/limit)
     // console.log('requestedItems ', returnRequests);
 
     res.render("admin/aprovalPage", {
       title: "Approvals Management",
       returnRequests,
-      thisPage: 'pendings'
+      thisPage: 'pendings',
+      totalPages,
+      currentPage:page||1,
+      skip,
+      limit,
+      limit
     });
   } catch (error) {
     console.log(error);
@@ -1642,23 +1506,11 @@ const downloadSaleReportExcel = async (req, res, next) => {
 module.exports = {
   getLogin,
   postLogin,
- 
-  
   getUsers,
   
   searchProducts,
-  getOrder,
-  getOrderDetails,
-  getUpdateOrder,
-  postUpdateOrder,
-  cancelOrder,
   postLogout,
 
-  addrefferalOffer,
-  referalOffers,
-  deleteReferalOffers,
-  getSinglerefferal,
-  editReffferalOffer,
   getPendings,
   approveReturn,
   rejectReturn,

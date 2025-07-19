@@ -1272,86 +1272,86 @@ const logout = async (req, res) => {
 //   }
 // };
 
-const returnProduct = async (req, res) => {
-  console.log("from user return product");
-  try {
-    const { variantId, orderId, reason } = req.body;
-    if (!variantId) {
-      console.log("variant id is not found");
+// const returnProduct = async (req, res) => {
+//   console.log("from user return product");
+//   try {
+//     const { variantId, orderId, reason } = req.body;
+//     if (!variantId) {
+//       console.log("variant id is not found");
 
-      return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: statusMessages.NOT_FOUND('Variant Id') });
-    } else if (!reason) {
-      console.log("reson not found");
+//       return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: statusMessages.NOT_FOUND('Variant Id') });
+//     } else if (!reason) {
+//       console.log("reson not found");
 
-      return res.status(StatusCodes.BAD_REQUEST).json({
-        success: false,
-        message: "Enter reason for returning",
-      });
-    } else if (!orderId) {
-      console.log("OrderId not found");
+//       return res.status(StatusCodes.BAD_REQUEST).json({
+//         success: false,
+//         message: "Enter reason for returning",
+//       });
+//     } else if (!orderId) {
+//       console.log("OrderId not found");
 
-      return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: statusMessages.NOT_FOUND("Order Id") });
-    }
+//       return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: statusMessages.NOT_FOUND("Order Id") });
+//     }
 
-    // fetching order
-    const order = await Order.findOne({ _id: orderId });
-    if (!order) {
-      console.log("Order not found");
+//     // fetching order
+//     const order = await Order.findOne({ _id: orderId });
+//     if (!order) {
+//       console.log("Order not found");
 
-      return res.status(StatusCodes.NOT_FOUND).json({ success: false, message:statusMessages.NOT_FOUND("Order")});
-    }
-    if (order.status !== "Delivered") {
-      console.log("the order is not delvered");
-      return res.status(StatusCodes.BAD_REQUEST).json({
-        success: false,
-        message: "YOu can return after delivered",
-      });
-    }
-    const productInOrder = order.items.find(
-      (item) => item.variantId.toString() === variantId,
-    );
+//       return res.status(StatusCodes.NOT_FOUND).json({ success: false, message:statusMessages.NOT_FOUND("Order")});
+//     }
+//     if (order.status !== "Delivered") {
+//       console.log("the order is not delvered");
+//       return res.status(StatusCodes.BAD_REQUEST).json({
+//         success: false,
+//         message: "YOu can return after delivered",
+//       });
+//     }
+//     const productInOrder = order.items.find(
+//       (item) => item.variantId.toString() === variantId,
+//     );
 
-    if (productInOrder.isReturned == true) {
-      return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: "Already Returned" });
-    }
-    //fetching product
-    const variant = await Variant.findOne({ _id: variantId });
-    if (!variant) {
-      console.log("Variant  not found");
-      return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: statusMessages.NOT_FOUND("Variant") });
-    }
-    const existReturn = order.returnRequests.find(
-      (req) => req.variantId.toString() == variantId.toString(),
-    );
-    if (existReturn) {
-      console.log("already requested");
-      return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: "Already requested" });
-    }
+//     if (productInOrder.isReturned == true) {
+//       return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: "Already Returned" });
+//     }
+//     //fetching product
+//     const variant = await Variant.findOne({ _id: variantId });
+//     if (!variant) {
+//       console.log("Variant  not found");
+//       return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: statusMessages.NOT_FOUND("Variant") });
+//     }
+//     const existReturn = order.returnRequests.find(
+//       (req) => req.variantId.toString() == variantId.toString(),
+//     );
+//     if (existReturn) {
+//       console.log("already requested");
+//       return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: "Already requested" });
+//     }
 
-    productInOrder.status = "returnRequested";
-    // saving reason in order
-    order.returnRequests = order.returnRequests || [];
-    order.returnRequests.push({
-      variantId:variantId,
-      productId: variant.productId,
-      reason: reason,
-      status: "pending",
-      date: new Date(),
-    });
+//     productInOrder.status = "returnRequested";
+//     // saving reason in order
+//     order.returnRequests = order.returnRequests || [];
+//     order.returnRequests.push({
+//       variantId:variantId,
+//       productId: variant.productId,
+//       reason: reason,
+//       status: "pending",
+//       date: new Date(),
+//     });
 
-    productInOrder.status = "return-requested";
-    await order.save();
+//     productInOrder.status = "return-requested";
+//     await order.save();
 
-    console.log("Return request saved successfully");
-    return res.status(StatusCodes.OK).json({
-      success: true,
-      message: "Return request submitted successfully",
-    });
-  } catch (error) {
-    console.log("error is ", error);
-    return res.StatusCodes.INTERNAL_SERVER_ERROR.json({ success: false, message:statusMessages.SERVER_ERROR });
-  }
-};
+//     console.log("Return request saved successfully");
+//     return res.status(StatusCodes.OK).json({
+//       success: true,
+//       message: "Return request submitted successfully",
+//     });
+//   } catch (error) {
+//     console.log("error is ", error);
+//     return res.StatusCodes.INTERNAL_SERVER_ERROR.json({ success: false, message:statusMessages.SERVER_ERROR });
+//   }
+// };
 
 const getAllCoupons = async (req, res, next) => {
   console.log("from getAllCoupons");
@@ -1510,7 +1510,7 @@ module.exports = {
   postSetPassword,
   logout,
  
-  returnProduct,
+
   addProfileImage,
   removeProfileImage,
   usertest,

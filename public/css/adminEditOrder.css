@@ -8,7 +8,7 @@ body {
   color: #333;
 }
 
-.container {
+.inner-container {
   max-width: 600px;
   margin: 50px auto;
   background: #ffffff;
@@ -52,10 +52,10 @@ select:focus {
 
 button {
   font-weight: bold;
-  width: 35%;
+  width: 50%;
   display: block;
-  margin: 20px auto; /* This centers it */
-  padding: 12px;
+  margin: 10px !important;
+  
   background: #2d7a22;
   color: white;
   border: none;
