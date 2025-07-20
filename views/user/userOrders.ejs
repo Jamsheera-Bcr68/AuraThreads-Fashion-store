@@ -63,7 +63,7 @@
                             <td style="color: red;"> ₹ <%= order.finalAmount.toFixed(2) %></td>
                             
                             <td>
-                                <span class="status-badge status-<%= order.status.toLowerCase() %>">
+                                <span id="span-<%= order._id %>" class="status-badge status-<%= order.status.toLowerCase() %>">
                                     <%= order.status %>
                                 </span>
                             </td>
@@ -73,7 +73,7 @@
                                   <button onclick="displayOrderDetails('<%= order._id %>?source=all')" class="btn btn-sm bg-success text-white btn-details">Details</button>
                               
                                   <% if (order.status === 'cancelled') { %>
-                                    <button class="btn btn-sm btn-secondary" disabled>Cancelled</button>
+                                    <button  class="btn btn-sm btn-secondary" disabled>Cancelled</button>
                                   <% }else if (order.status === 'returned') { %>
                                     <button  class="btn btn-sm text-danger btn-cancel" disabled>Returned</button>
                                   <% } else if (order.status === 'Processing') { %>
@@ -186,6 +186,10 @@
                         btn.classList.remove('bg-danger', 'text-white');
                         btn.classList.add('btn-secondary');
                         console.log(' Button disabled and updated');
+                        const statusSpan=document.getElementById(`span-${orderId}`)
+                        statusSpan.innerHTML="cancelled"
+                        statusSpan.style.color='#c62828'
+                        statusSpan.style.background='#ffebee'
                     } else {
                         console.warn(' Button element is undefined or not passed');
                     }

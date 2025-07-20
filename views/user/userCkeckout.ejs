@@ -416,6 +416,18 @@
 
 
           if (!isEditable) {
+            fetch('/user/data',{
+              method:"GET"
+            }).then(res=>res.json())
+            .then(data=>{
+              if(data && data.success){
+                console.log('user from backend',data.user);
+                
+                document.getElementById('email').value=data.user.email
+                document.getElementById('phone').value=data.user.phone||''
+                document.getElementById('fullname').value=data.user.fullName||""
+              }
+            })
 
             console.log("Saved values:", {
               email: document.getElementById('email').value,
@@ -426,7 +438,7 @@
         });
 
 
-      });
+});
 
       const placeorderform = document.getElementById('productCheckoutForm')
 

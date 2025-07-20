@@ -20,7 +20,8 @@ const crypto = require("crypto");
 const { title } = require("process");
 const StatusCodes = require("../utils/statusCodes");
 const statusMessages = require("../utils/statusMessages");
-const Variant =require('../model/variantModel')
+const Variant =require('../model/variantModel');
+const messages = require("dote/src/messages");
 
 
 //get Register
@@ -1491,6 +1492,25 @@ const blockUser = async (req, res) => {
     return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: statusMessages.SERVER_ERROR })
   }
 }
+
+const getUserdata=async(req,res)=>{
+  try{
+    console.log('from user ata fetch');
+    
+    if(req.session.user){
+     let userId=req.session.user._id
+     const user=await User.findOne({_id:userId})
+     console.log('user found',user);
+     
+      return res.status(StatusCodes.OK).json({success:true,message:'User found',user})
+    }else{
+      return res.status(StatusCodes.UNAUTHORIZED).json({success:false,message:'You are not registered'})
+    }
+  }catch(error){
+    console.log(error);
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({success:false,message:statusMessages.SERVER_ERROR})
+  }
+}
 module.exports = {
   getLogin,
   postLogin,
@@ -1509,7 +1529,7 @@ module.exports = {
   getSetPassword,
   postSetPassword,
   logout,
- 
+ getUserdata,
 
   addProfileImage,
   removeProfileImage,

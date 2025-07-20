@@ -152,6 +152,7 @@ router.post(
 
 //user logout
 router.post("/logout", userController.logout);
+router.get('/data',userAuth,userController.getUserdata)
 
 
 

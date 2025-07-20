@@ -213,12 +213,12 @@
               </div>
 
               <!-- Is Listed -->
-              <div class="form-check mb-2">
+              <!-- <div class="form-check mb-2">
                 <input class="form-check-input" type="checkbox" value="true" id="editProductIsListed" name="isListed">
                 <label class="form-check-label" for="editProductIsListed">
                   Listed
                 </label>
-              </div>
+              </div> -->
 
               <!-- Is Active -->
               <div class="form-check mb-3">
@@ -314,7 +314,7 @@
               document.getElementById('editProductPrice').value = product.price;
               document.getElementById('editProductDescription').value = product.description || '';
               document.getElementById('editProductBrand').value = product.brand || '';
-              document.getElementById('editProductIsListed').checked = product.isListed;
+             
               document.getElementById('editProductIsActive').checked = product.isActive;
 
               // Fill category options:

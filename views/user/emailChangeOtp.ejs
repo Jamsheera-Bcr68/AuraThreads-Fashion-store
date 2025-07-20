@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="csrf-token" content="<%= csrfToken %>">
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>OTP Verification</title>
   <link rel="stylesheet" href="/css/otp.css">
@@ -93,7 +93,7 @@
       try {
         const res = await fetch('/user/emailChangeResendOtp', {
           method: "POST",
-          headers: { 'CSRF-Token': csrfToken }
+         
         });
         const data = await res.json();
         Swal.fire(data.message);
