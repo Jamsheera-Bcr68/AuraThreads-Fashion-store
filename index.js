@@ -104,11 +104,11 @@ userRoute.use((req, res, next) => {
 app.use("/product", productRoute);
 app.use("/search", searchRoute);
 
-// app.use((req, res, next) => {
-//   const err = new Error("Page Not Found");
-//   err.status = 404;
-//   next(err); // Pass to errorHandler
-// });
+app.use((req, res, next) => {
+  const err = new Error("Page Not Found");
+  err.status = 404;
+  next(err); // Pass to errorHandler
+});
 
 app.use(errorHandler);
 

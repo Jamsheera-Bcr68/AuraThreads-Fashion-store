@@ -60,7 +60,7 @@ router.get("/setPassword", userController.getSetPassword);
 router.post("/setPassword", userController.postSetPassword);
 //get forgot password
 router.get("/forgot-password", async (req, res) => {
-  console.log("from forgot password");
+  console.log("from forgot password just after login");
 
   res.render("../views/user/forgotPassword.ejs");
 });
@@ -71,6 +71,8 @@ router.post("/forgot-password", async (req, res) => {
 
   const { email } = req.body;
   try {
+    console.log('email',email);
+    
     const userExist = await user.findOne({ email });
     console.log("user Exist" + userExist);
 
@@ -106,8 +108,8 @@ router.post("/forgot-password", async (req, res) => {
       res.render("../views/user/succesforgotpassword");
     }
   } catch (error) {
-    console.log("Error in fetching user" + error);
-    res.redirect("/user/register");
+    console.log("Error in fetching user" ,error);
+    res.redirect("/user/login");
   }
 });
 
@@ -205,7 +207,7 @@ router.get('/transactions',userAuth,WalletController.getTransactions)
 router.delete( "/cancelSingleProduct",userAuth,orderController.cancelSingleProduct,);
 //return product
 router.post("/return-product", userAuth, orderController.returnProduct);
-router.post("/test", userController.usertest);
+//router.post("/test", userController.usertest);
 
 
 //get contact page

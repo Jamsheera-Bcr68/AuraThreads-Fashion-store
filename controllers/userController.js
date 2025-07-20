@@ -382,7 +382,7 @@ const postLogin = async (req, res) => {
 // reset forgot password
 
 const getResetPassword = async (req, res) => {
-  console.log("resetPassword-forgot password");
+  console.log("resetPassword-forgot password after tocken from mail");
   try {
     let token = req.params.token;
     console.log("token params", token);
@@ -393,7 +393,7 @@ const getResetPassword = async (req, res) => {
     });
 
     if (!user) {
-      return res.render("reset-expired", {
+      return res.render("user/reset-expired", {
         message: "Token expired or invalid.",
       });
     }
@@ -406,11 +406,11 @@ const getResetPassword = async (req, res) => {
 
 const postResetPassword = async (req, res) => {
   try {
-    console.log("from postResetPassword form");
+    console.log("from postResetPassword form after entering new password");
     const { password, confirmPassword, token } = req.body;
     console.log("password,confirmPassword", password, confirmPassword);
     if (password === "" || confirmPassword === "") {
-      return res.json({ success: false, message: "Both fields are required" });
+      return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: "Both fields are required" });
     } else if (password !== confirmPassword) {
       return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: "Password not matching" });
     }
@@ -443,11 +443,11 @@ const postResetPassword = async (req, res) => {
       await user.save();
 
     return res.status(StatusCodes.OK).json({
-      success: TextTrackCue,
+      success: true,
       message: "Password updated successfully",
     });
   } catch (error) {
-    console.log("postResetPassword ");
+    console.log("postResetPassword ",error);
     return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: statusMessages.SERVER_ERROR });
   }
 };
