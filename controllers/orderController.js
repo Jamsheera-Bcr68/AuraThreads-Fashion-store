@@ -863,7 +863,7 @@ const returnProduct = async (req, res) => {
     if (!order) {
       console.log("Order not found");
 
-      return res.status(screentatusCodes.NOT_FOUND).json({ success: false, message:statusMessages.NOT_FOUND("Order")});
+      return res.status(statusCodes.NOT_FOUND).json({ success: false, message:statusMessages.NOT_FOUND("Order")});
     }
     if (order.status !== "Delivered") {
       console.log("the order is not delvered");
@@ -883,7 +883,7 @@ const returnProduct = async (req, res) => {
     const variant = await Variant.findOne({ _id: variantId });
     if (!variant) {
       console.log("Variant  not found");
-      return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: statusMessages.NOT_FOUND("Variant") });
+      return res.status(statusCodes.NOT_FOUND).json({ success: false, message: statusMessages.NOT_FOUND("Variant") });
     }
     const existReturn = order.returnRequests.find(
       (req) => req.variantId.toString() == variantId.toString(),
@@ -908,7 +908,7 @@ const returnProduct = async (req, res) => {
     await order.save();
 
     console.log("Return request saved successfully");
-    return res.status(StatusCodes.OK).json({
+    return res.status(statusCodes.OK).json({
       success: true,
       message: "Return request submitted successfully",
     });
