@@ -151,193 +151,8 @@ const searchProducts = async (req, res) => {
   }
 };
 
-//admin get order page
-
-// const getOrder = async (req, res) => {
-//   console.log("from admin get order page");
-//   try {
 
 
-//     //dummy datas
-//     const adminUser = {
-//       name: "Admin User",
-//       role: "Administrator",
-//       profileImage: "/images/admin-avatar.jpg",
-//     };
-//     const filter = {
-//       status: "all",
-//       date: "",
-//       search: '',
-//     };
-//     let page = parseInt(req.query.page) || 1;
-//     limit = parseInt(req.query.limit) || 5;
-//     let skip = (page - 1) * limit;
-//     console.log(`page is ${page} and limt is ${limit}`);
-
-//     const totalOrders = await Order.countDocuments();
-//     const totalPages = Math.ceil(totalOrders / limit);
-
-//     const orders = await Order.find()
-//       .populate("userId")
-//       .sort({ createdAt: -1 })
-//       .skip(skip)
-//       .limit(limit);
-
-
-//     const activeOrders = await Order.find({
-//       status: { $nin: ["cancelled", "returned"] },
-//     });
-//     for (const order of activeOrders) {
-//       if (order.deliveryDate <= new Date()) {
-//         order.status = "Delivered";
-//         await order.save();
-//       }
-//     }
-
-//     //console.log("activeOrders ", activeOrders);
-
-//     console.log("orders are ", orders);
-//     return res.render("admin/orders", {
-//       title: "Admin Orders",
-//       adminUser,
-//       filter,
-//       orders,
-//       currentPage: page,
-//       thisPage: 'orders',
-//       totalPages,
-//     });
-//   } catch (error) {
-//     console.log("error in fetching orders", error);
-//     res.json({ success: false, message: "Order fetching failed" });
-//   }
-// };
-
-//get order details
-
-// const getOrderDetails = async (req, res) => {
-//   console.log("from admin get order details");
-//   const orderId = req.params.orderId;
-//   const order = await Order.findOne({ _id: orderId }).populate(
-//     "items.productId",
-//   );
-//   if (!order) {
-//     console.log("order not found");
-//     res.json({ success: false, message: "Order not found" });
-//   }
-//   const userId = order.userId;
-//   console.log("user Id is ", userId);
-
-//   const user = await User.findOne({ _id: userId });
-//   if (!user) {
-//     console.log("user not found");
-//     res.json({ success: false, message: "User not found" });
-//   }
-//   res.render("admin/adminViewOrder", {
-//     user,
-//     order,
-//     title:"Order details",
-//     thisPage:'orders'
-//   });
-// };
-
-// //get ipdate order
-// const getUpdateOrder = async (req, res) => {
-//   console.log("from admin order update route");
-//   try {
-//     const orderId = req.params.orderId;
-//     const order = await Order.findOne({ _id: orderId }).populate(
-//       "items.productId",
-//     );
-//     if (!order) {
-//       console.log("order not found");
-//       res.json({ success: false, message: "Order not found" });
-//     }
-
-//     res.render("admin/adminEditOrder", {
-//       order,
-//       title:"Edit Order",
-//       thisPage:"orders"
-//     });
-//   } catch (error) {
-//     console.log(error);
-//     res.json({ success: false, message: "Order not found" });
-//   }
-// };
-
-//post update user
-// const postUpdateOrder = async (req, res) => {
-//   console.log("from post update order");
-//   const formObject = req.body;
-//   const orderId = formObject.orderId;
-//   const order = await Order.findOne({ _id: orderId });
-//   if (!order) {
-//     console.log("order not found");
-//     return res.json({ success: false, message: "Order not found" });
-//   }
-//   order.status = formObject.status;
-//   let activeitems = order.items.filter(item => item.status === 'active')
-//   activeitems.forEach(item => item.status = order.status)
-//   await order.save();
-//   console.log("order staus updated succesfully");
-//   return res.json({
-//     success: true,
-//     message: "order status updated succesfully",
-//     orderStatus: order.status
-//   });
-// };
-
-//admin delete order
-// const cancelOrder = async (req, res) => {
-//   console.log("from admin order Cancel route");
-
-//   try {
-//     const orderId = req.params.orderId;
-//     if (!orderId) {
-//       console.log("Order id is not found");
-
-//       return res.json({ success: false, message: "Order id is not found" });
-//     }
-//     const order = await Order.findOne({ _id: orderId }).populate(
-//       "items.productId",
-//     );
-
-//     if (!order) {
-//       console.log("order not found");
-
-//       return res.json({ success: false, message: "order not found" });
-//     }
-//     if (order.status == "cancelled") {
-//       console.log("order already cancelled");
-
-//       return res.json({ success: false, message: "order already cancelled" });
-//     }
-//     order.status = "cancelled";
-//     await order.save();
-
-
-//     console.log("order cancelled successfully");
-
-//     //restore the stock
-
-//     for (item of order.items) {
-//       const product = await Product.findById(item.productId);
-//       console.log(
-//         `before restoring ${product.productName} is ${product.stock}`,
-//       );
-
-//       product.stock = product.stock + item.quantity;
-//       await product.save();
-//       console.log(`after restoring ${product.productName} is ${product.stock}`);
-//     }
-
-
-
-//     return res.json({ success: true, message: "Order cancelled successfully" });
-//   } catch (error) {
-//     console.log("error in fetching order");
-//     return res.json({ success: false, message: "error in fetching order" });
-//   }
-// };
 
 //admin logout
 const postLogout = async (req, res) => {
@@ -357,6 +172,8 @@ const getPendings = async (req, res, next) => {
       returnRequests: { $exists: true, $ne: [] },
     });
 
+    console.log('page ',page,'limit',limit,'skip',skip);
+    
     //fetching return requests
 
     const returnRequests = [];
@@ -385,6 +202,8 @@ const getPendings = async (req, res, next) => {
       });
     });
 
+    const allRequests = [...returnRequests];
+    const paginatedRequests = allRequests.slice(skip, skip + limit);
  const totalRequests = orders.reduce((count, order) => {
   const requests = Array.isArray(order.returnRequests) ? order.returnRequests : [];
   return count + requests.length;
@@ -395,7 +214,7 @@ const getPendings = async (req, res, next) => {
 
     res.render("admin/aprovalPage", {
       title: "Approvals Management",
-      returnRequests,
+      returnRequests:paginatedRequests,
       thisPage: 'pendings',
       totalPages,
       currentPage:page||1,
