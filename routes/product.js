@@ -12,6 +12,7 @@ const Cart = require("../model/cartModel");
 const fs = require("fs");
 const productController=require('../controllers/productController')
 const adminAuth=require('../middleweres/adminAuth')
+const variantController=require('../controllers/variantController')
 
 const router = express.Router();
 
@@ -53,11 +54,13 @@ router.get("/products/edit/:productId",upload.array('images',5),productControlle
 
 router.post( "/products/edit/:productId",upload.array("images", 5),productController.postEditProduct)
 router.delete("/products/delete/:productId",productController.deleteProduct)
-router.get('/viewVariants/:productId/:categoryId',productController.getVariants)
-router.post('/variant/add', upload.array('images', 5),productController.addVariant)
-router.get('/getvariant/:variantId',productController.getVariant)
-router.patch('/variant/edit/:variantId', upload.array('images',5),productController.editVariant)
-router.delete(`/variant/:variantId`,productController.deleteVariant)
+
+//variantController
+router.get('/viewVariants/:productId/:categoryId',variantController.getVariants)
+router.post('/variant/add', upload.array('images', 5),variantController.addVariant)
+router.get('/getvariant/:variantId',variantController.getVariant)
+router.patch('/variant/edit/:variantId', upload.array('images',5),variantController.editVariant)
+router.delete(`/variant/:variantId`,variantController.deleteVariant)
 
 router.get(`/product/:productId`,productController.getAdminProduct)
 

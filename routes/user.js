@@ -19,29 +19,24 @@ const orderController=require('../controllers/orderController')
 const addressController=require('../controllers/adressController')
 const WalletController=require('../controllers/walletController')
 const couponController=require('../controllers/couponController')
+const userProductController=require('../controllers/userProductController')
+const profileController=require('../controllers/profileController')
+const otpController=require('../controllers/otpController')
 
-//router.use(csrfProtection);
 
-// router.use((req, res, next) => {
-//   try {
-//     res.locals.csrfToken = req.csrfToken();
-//   } catch (err) {
-//     res.locals.csrfToken = null;
-//   }
-//   next();
-// });
 //display register page
 router.get("/register", userController.getRegister);
-
 router.post("/register", userController.postRegister);
-router.get("/otp", userController.getOtp);
 
-// Display Login Page
 router.get("/login", userController.getLogin);
 router.post("/login", userController.postLogin);
 
-router.post("/verifyOtp", userController.varifyOtp);
-router.post("/resendOtp", userController.resendOtp);
+
+//otp Controller
+router.get("/otp", otpController.getOtp);
+
+router.post("/verifyOtp", otpController.varifyOtp);
+router.post("/resendOtp", otpController.resendOtp);
 
 // Route to start Google OAuth login
 router.get(
@@ -125,16 +120,15 @@ router.post("/profile/change-password", userController.changePassword);
 //get home page
 router.get("/home", userController.getHome);
 
-//product controller
-router.get("/products/:variantId", productController.getSingleProduct);
-router.get("/productList", productController.getProductList);
+//user product controller
+router.get("/products/:variantId", userProductController.getSingleProduct);
+router.get("/productList", userProductController.getProductList);
 
 
 
-//user account
-router.get("/account", userAuth, userController.getAccount);
-//removing profile image
-router.post("/removeProfileImage", userController.removeProfileImage);
+//user profile controller account
+router.get("/account", userAuth, profileController.getAccount);
+router.post("/removeProfileImage", profileController.removeProfileImage);
 
 
 router.patch("/profile/update", userController.updateUser);
@@ -146,11 +140,8 @@ router.post("/emailChangeResendOtp", userController.emailChangeResendOtp);
 router.post("/emailChangeOtpVerifyOtp", userController.emailChangeOtpVerifyOtp);
 
 //user profile pic adding
-router.post(
-  "/addProfileImage",
-  upload.single("profilePic"),
-  userController.addProfileImage,
-);
+router.post("/addProfileImage",upload.single("profilePic"),profileController.addProfileImage);
+
 
 //user logout
 router.post("/logout", userController.logout);
@@ -208,6 +199,7 @@ router.delete( "/cancelSingleProduct",userAuth,orderController.cancelSingleProdu
 //return product
 router.post("/return-product", userAuth, orderController.returnProduct);
 //router.post("/test", userController.usertest);
+
 
 
 //get contact page

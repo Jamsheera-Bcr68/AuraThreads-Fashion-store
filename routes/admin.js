@@ -16,7 +16,8 @@ const categoryController=require('../controllers/categoryController')
 const userController=require('../controllers/userController')
 const couponController=require('../controllers/couponController')
 const offerController=require('../controllers/offerController')
-const orderController=require('../controllers/orderController')
+const adminOrderController=require('../controllers/adminOrderController')
+const salesController=require('../controllers/salesController')
 
 // Display Login Page
 router.get("/login", adminController.getLogin);
@@ -263,27 +264,28 @@ router.post('/category/add',upload.none(),categoryController.addCategory)
 router.post('/upload',upload.single('image'),categoryController.uploadImage)
 router.put('/category/edit/:id',adminAuth,categoryController.editCategory)
 router.delete('/category/delete/:id',adminAuth,categoryController.deleteCategory)
+const adminUserController=require('../controllers/adminUserController')
 
-
-//get usermangement
-router.get("/users",adminAuth,userController.getUsers)
-
+//get user controller
+router.get("/users",adminAuth,adminUserController.getUsers)
 //block user
-router.patch("/block-user/:userId",adminAuth,userController.blockUser)
+router.patch("/block-user/:userId",adminAuth,adminUserController.blockUser)
 
-router.get("/orders",adminAuth, orderController.getAdminOrders);
-router.get("/orderDetails/:orderId",adminAuth, orderController.adminOrderDetails);
-router.get("/updateOrder/:orderId",adminAuth, orderController.getUpdateOrder);
-router.post("/updateOrder", orderController.postUpdateOrder);
-router.delete("/cancelOrder/:orderId",adminAuth, orderController.adminCancelOrder);
+//admin order controller
+router.get("/orders",adminAuth, adminOrderController.getAdminOrders);
+router.get("/orderDetails/:orderId",adminAuth, adminOrderController.adminOrderDetails);
+router.get("/updateOrder/:orderId",adminAuth, adminOrderController.getUpdateOrder);
+router.post("/updateOrder", adminOrderController.postUpdateOrder);
+router.delete("/cancelOrder/:orderId",adminAuth, adminOrderController.adminCancelOrder);
 
 
-
+//adminControler
 router.post("/logout",adminAuth, adminController.postLogout);
+
+
 
 //admin couponMangement
 router.get("/coupens",adminAuth, couponController.getCouponPage);
-
 //admin add coupon
 router.post("/addCoupon",adminAuth, couponController.addCoupon);
 
@@ -298,8 +300,6 @@ router.delete("/removeCoupon/:couponId",adminAuth, couponController.removeCoupon
 
 //applyCoupon
 router.put("/applyCoupon/:couponId",adminAuth, couponController.applyCoupon);
-
-
 
 //get offer mangement
 router.get("/offers",adminAuth, offerController.getOffers);
@@ -316,27 +316,28 @@ router.get("/getSingleOffer/:offerId",adminAuth, offerController.getSingleOffer)
 //edit offer
 router.put("/editOffer/:offerId",adminAuth,offerController.editOffer);
 
-//add refferal offer
-//router.post("/addrefferalOffer",adminAuth, adminController.addrefferalOffer);
-
 
 // get approval page
-router.get("/pendings", adminAuth, adminController.getPendings);
+router.get("/pendings", adminAuth, adminOrderController.getPendings);
 
 //admin return approval
-router.post("/returns/approve",adminAuth, adminController.approveReturn);
+router.post("/returns/approve",adminAuth, adminOrderController.approveReturn);
 
 //admin reject return
-router.post("/returns/reject",adminAuth, adminController.rejectReturn);
+router.post("/returns/reject",adminAuth, adminOrderController.rejectReturn);
 
-//admin report get
-router.get("/reports", adminController.getSalesReport);
 
-router.get("/updateReport",adminAuth, adminController.updateSaleReport);
+
+//admin sales Controller
+router.get("/reports", salesController.getSalesReport);
+
+router.get("/updateReport",adminAuth, salesController.updateSaleReport);
 
 // get salesreport pdf
-router.post("/downloadSaleReportpdf",adminAuth, adminController.downloadSaleReportpdf);
+router.post("/downloadSaleReportpdf",adminAuth, salesController.downloadSaleReportpdf);
 
 //downloadSaleReportExcel
-router.get("/downloadSaleReportExcel",adminAuth, adminController.downloadSaleReportExcel);
+router.get("/downloadSaleReportExcel",adminAuth, salesController.downloadSaleReportExcel);
+
+
 module.exports = router;
