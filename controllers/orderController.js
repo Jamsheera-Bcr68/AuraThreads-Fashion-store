@@ -12,14 +12,16 @@ const razorpay = require("../config/razorPay");
 const crypto = require("crypto");
 const path = require('path')
 const mongoose = require('mongoose')
-const Coupon=require('../model/coupenModel')
-const User=require('../model/userModel')
+const Coupon = require('../model/coupenModel')
+const User = require('../model/userModel')
+
 
 
 const placeOrder = async (req, res) => {
   console.log("from place order");
 
   try {
+    const session = await mongoose.startSession();
     let { paymentMethod, paymentDetails } = req.body;
     let totalAmount = Number(req.body.totalAmount)
 
@@ -43,7 +45,7 @@ const placeOrder = async (req, res) => {
     if (cart.items.length < 1) {
       return res.status(statusCodes.BAD_REQUEST).json({ success: false, message: "No items found" });
     }
-   ;
+    ;
 
 
 
@@ -86,32 +88,26 @@ const placeOrder = async (req, res) => {
 
     //checking product availability
     let items = cart.items;
-
     for (let item of items) {
-      // const variant = await Variant.findById(item.variantId).populate('productId')
-
-      // if (!variant) {
-      //   return res
-      //     .status(statusCodes.NOT_FOUND)
-      //     .json({ success: false, message: statusCodes.NOT_FOUND('Variant') });
-      // }
-
-      // if (variant.stock < item.quantity) {
-      //   console.log("the product is out of stock from route");
-
-      //   return res.status(statusCodes.BAD_REQUEST).json({
-      //     success: false,
-      //     message: ` ${variant.productId.productName} is out of stock`,
-      //   });
-      // }
-
-      const result=await Variant.updateOne({_id:item.variantId,stock:{$gte:item.quantity}},
-        {$inc:{stock:-item.quantity}}
-      )
-      if(result.matchedCount== 0 && result.modifiedCount==0){
-        return res.status(statusCodes.BAD_REQUEST).json({success:false,message:`Product is out of stock for variant ID: ${item.variantId}`})
+      const variant = await Variant.findById(item.variantId)
+      const product = await Product.findById(item.productId)
+      if (!variant || variant.stock < item.quantity) {
+        return res.status(statusCodes.BAD_REQUEST).json({
+          success: false,
+          message: ` ${product.productName} with ${variant.color},${variant.size} is out of stock`,
+        });
       }
     }
+
+    // for (let item of items) {
+
+    //   const result=await Variant.updateOne({_id:item.variantId,stock:{$gte:item.quantity}},
+    //     {$inc:{stock:-item.quantity}}
+    //   )
+    //   if(result.matchedCount== 0 && result.modifiedCount==0){
+    //     return res.status(statusCodes.BAD_REQUEST).json({success:false,message:`Product is out of stock for variant ID: ${item.variantId}`})
+    //   }
+    // }
 
     const createdAt = new Date();
     const deliveryDate = new Date(
@@ -260,36 +256,113 @@ const placeOrder = async (req, res) => {
         shippingCharge,
         useWallet,
       });
-      await newOrder.save();
 
-      //update stock
-      for (let item of cart.items) {
-        await Variant.findByIdAndUpdate(item.variantId, {
-          $inc: { stock: -item.quantity },
+      await session.withTransaction(async () => {
+        await newOrder.save({ session });
+
+        for (let item of cart.items) {
+          await Variant.findByIdAndUpdate(item.variantId, {
+            $inc: { stock: -item.quantity },
+          }, { session });
+        }
+
+        await Cart.updateOne({ userId }, { $set: { items: [] } }, { session });
+
+        req.session.discountAmount = 0;
+        req.session.finalAmount = 0;
+        req.session.code = "";
+        req.session.appliedCoupon = null;
+        req.session.offer = null;
+        req.session.cartTotal = 0;
+        req.session.netAmount = 0;
+        req.session.totalDiscount = 0;
+
+        let orderId = newOrder._id;
+
+        res.status(statusCodes.OK).json({
+          success: true,
+          message: "Order Placed Succesfully",
+          paymentMethod,
+          orderId,
         });
+
+        
+      })
+
+      session.endSession()
+        return
+    } else if (paymentMethod == "wallet") {
+      console.log('from paymentMethod == "wallet"');
+
+      // check for wallet
+      const wallet = await Wallet.findOne({ userId });
+
+      if (!wallet) {
+        return res.status(statusCodes.NOT_FOUND).json({ success: false, message: statusMessages.NOT_FOUND('Wallet') });
+      }
+      if (wallet.balance < orderTotal) {
+        console.log("insufficient balance");
+        return res.status(statusCodes.BAD_REQUEST).json({ success: false, message: "Insufficient balance" });
       }
 
-      //making cart empty
-
-      // making cart empty
-      await Cart.updateOne({ userId }, { $set: { items: [] } });
-      req.session.discountAmount = 0;
-      req.session.finalAmount = 0;
-      req.session.code = "";
-      req.session.appliedCoupon = null;
-      req.session.offer = null;
-      req.session.cartTotal = 0;
-      req.session.netAmount = 0;
-      req.session.totalDiscount = 0;
-
-      let orderId = newOrder._id;
-
-      return res.status(statusCodes.OK).json({
-        success: true,
-        message: "Order Placed Succesfully",
+      const newOrder = new Order({
+        userId: req.session.user._id,
+        address,
+        coupenDiscountAmount,
+        offerDiscountAmount,
+        isCouponApplied,
+        isOfferApplied,
+        couponCode,
+        finalAmount,
         paymentMethod,
-        orderId,
+        totalAmount,
+        status: "Processing",
+        items: orderItems,
+        createdAt,
+        deliveryDate,
+        orderTotal,
+        shippingCharge,
+        useWallet,
       });
+
+      await session.withTransaction(async () => {
+        await newOrder.save({ session });
+        wallet.balance -= newOrder.orderTotal
+        wallet.transactions.push({
+          amount: newOrder.orderTotal,
+          type: 'debit',
+          description: "Order Placed using wallet"
+        })
+        await wallet.save({ session })
+
+        for (let item of cart.items) {
+          await Variant.findByIdAndUpdate(item.variantId, {
+            $inc: { stock: -item.quantity },
+          }, { session });
+        }
+
+        await Cart.updateOne({ userId }, { $set: { items: [] } }, { session })
+        req.session.discountAmount = 0;
+        req.session.finalAmount = 0;
+        req.session.code = "";
+        req.session.appliedCoupon = null;
+        req.session.offer = null;
+        req.session.cartTotal = 0;
+        req.session.netAmount = 0;
+        req.session.totalDiscount = 0;
+
+        let orderId = newOrder._id;
+
+        res.status(statusCodes.OK).json({
+          success: true,
+          message: "Order Placed Succesfully",
+          paymentMethod,
+          orderId,
+        });
+      })
+
+      session.endSession()
+      return
     } else {
       console.log('payment method is ', paymentMethod);
 
@@ -300,18 +373,7 @@ const placeOrder = async (req, res) => {
       };
       const razorpayOrder = await razorpay.orders.create(options);
 
-      // check for wallet
-      const wallet = await Wallet.findOne({ userId });
-      if (useWallet == true) {
-        if (!wallet) {
-          return res.status(statusCodes.NOT_FOUND).json({ success: false, message: statusMessages.NOT_FOUND('Wallet') });
-        }
-        if (wallet.balance < orderTotal) {
-          console.log("insufficient balance");
-          return res.status(statusCodes.BAD_REQUEST).json({ success: false, message: "Insufficient balance" });
-        }
-        paymentMethod = "wallet";
-      }
+
       //creating new order document
       req.session.tempOrder = {
         userId: req.session.user._id,
@@ -374,8 +436,15 @@ const placeOrder = async (req, res) => {
 
 
 const varifyPayment = async (req, res, next) => {
+  const session = await mongoose.startSession();
   console.log("varifyPayment");
   try {
+    let userId
+    if (req.session.user) {
+      userId = req.session.user._id
+    } else {
+      return res.status(statusCodes.UNAUTHORIZED).json({ success: false, message: "You are not logined" })
+    }
     const {
       razorpay_order_id,
       razorpay_payment_id,
@@ -402,49 +471,39 @@ const varifyPayment = async (req, res, next) => {
       console.log("payment verified");
       const newOrder = new Order(req.session.tempOrder);
       console.log(newOrder);
-      await newOrder.save();
 
-      //update wallet
-      const userId = req.session.user._id;
-      const wallet = await Wallet.findOne({ userId });
+      await session.withTransaction(async () => {
+        await newOrder.save({ session });
 
-      if (newOrder.useWallet == true) {
-        wallet.balance = wallet.balance - newOrder.orderTotal;
-        wallet.transactions.push({
-          amount: newOrder.orderTotal,
-          type: "debit",
-          date: new Date(),
-          description: "Orer placed using wallet",
+        let cart = await Cart.findOne({ userId });
+        for (let item of cart.items) {
+          await Variant.findByIdAndUpdate(item.variantId, {
+            $inc: { stock: -item.quantity },
+          }, { session });
+        }
+        await Cart.updateOne({ userId }, { $set: { items: [] } }, { session });
+        req.session.discountAmount = 0;
+        req.session.finalAmount = 0;
+        req.session.code = "";
+        req.session.appliedCoupon = null;
+        req.session.offer = null;
+        req.session.cartTotal = 0;
+        req.session.netAmount = 0;
+        req.session.totalDiscount = 0;
+
+        let orderId = newOrder._id;
+
+        res.status(statusCodes.OK).json({
+          success: true,
+          message: "Payment verified successfully",
+          orderId,
         });
 
-        await wallet.save();
-      }
+        
+      })
+      session.endSession()
+        return
 
-      let cart = await Cart.findOne({ userId });
-      for (let item of cart.items) {
-        await Variant.findByIdAndUpdate(item.variantId, {
-          $inc: { stock: -item.quantity },
-        });
-      }
-
-      // making cart empty
-      await Cart.updateOne({ userId }, { $set: { items: [] } });
-      req.session.discountAmount = 0;
-      req.session.finalAmount = 0;
-      req.session.code = "";
-      req.session.appliedCoupon = null;
-      req.session.offer = null;
-      req.session.cartTotal = 0;
-      req.session.netAmount = 0;
-      req.session.totalDiscount = 0;
-
-      let orderId = newOrder._id;
-
-      return res.status(statusCodes.OK).json({
-        success: true,
-        message: "Payment verified successfully",
-        orderId,
-      });
     } else {
       console.log("signature is not matching");
 
@@ -631,29 +690,29 @@ const cancelOrder = async (req, res) => {
     order.items.forEach((item) => (item.status = "cancelled"));
     order.save();
     const finalAmount = order.finalAmount;
-    const shippingCharge=order.shippingCharge
+    const shippingCharge = order.shippingCharge
 
     // restoring wallet
-    if(order.paymentMethod!=='COD'){
-        const wallet = await Wallet.findOne({ userId: req.session.user._id });
-      wallet.balance = wallet.balance + finalAmount+shippingCharge;
+    if (order.paymentMethod !== 'COD') {
+      const wallet = await Wallet.findOne({ userId: req.session.user._id });
+      wallet.balance = wallet.balance + finalAmount + shippingCharge;
       wallet.transactions.push({
         type: "credit",
-        amount: (finalAmount+shippingCharge),
+        amount: (finalAmount + shippingCharge),
         date: new Date(),
         description: "Order Cancelled,Amount refunded",
       });
       await wallet.save();
     }
-    
-    
+
+
 
     // restoring stock
 
     for (item of order.items) {
       const variant = await Variant.findById(item.variantId);
-      console.log('variant',variant);
-      
+      console.log('variant', variant);
+
       console.log(
         `user cancelling before restoring  is ${variant.stock}`,
       );
@@ -704,20 +763,20 @@ const cancelSingleProduct = async (req, res) => {
     const variant = await Variant.findOne({ _id: variantId });
     if (!variant) {
       console.log("Variant not found");
-      return res.status(statusCodes.NOT_FOUND).json({ success: false, message:statusMessages.NOT_FOUND("Variant") });
+      return res.status(statusCodes.NOT_FOUND).json({ success: false, message: statusMessages.NOT_FOUND("Variant") });
     }
     variant.stock += itemQuantity;
     await variant.save();
     console.log("stock restocked ", itemQuantity);
 
-    const product=await Product.findOne({_id:variant.productId})
+    const product = await Product.findOne({ _id: variant.productId })
 
-    if(!product){
+    if (!product) {
       console.log("product not found");
-      return res.status(statusCodes.NOT_FOUND).json({success:false,message:statusMessages.NOT_FOUND('Product')})
+      return res.status(statusCodes.NOT_FOUND).json({ success: false, message: statusMessages.NOT_FOUND('Product') })
     }
 
-        itemPrice = product.price;
+    itemPrice = product.price;
     console.log("price ", itemPrice);
 
     // amount refund
@@ -799,12 +858,12 @@ const cancelSingleProduct = async (req, res) => {
       order.status = "cancelled";
     }
 
-    if(order.items.length==1){
-      refundAmount=refundAmount+order.shippingCharge
-      order.shippingCharge=0
-    }else{
-      if(order.items.every(item=>item.status=='cancelled')){
-        refundAmount=refundAmount+order.shippingCharge
+    if (order.items.length == 1) {
+      refundAmount = refundAmount + order.shippingCharge
+      order.shippingCharge = 0
+    } else {
+      if (order.items.every(item => item.status == 'cancelled')) {
+        refundAmount = refundAmount + order.shippingCharge
       }
     }
 
@@ -819,11 +878,11 @@ const cancelSingleProduct = async (req, res) => {
     const wallet = await Wallet.findOne({ userId });
     if (!wallet) {
       console.log("wallet not found");
-      return res.status(statusCodes.NOT_FOUND).json({ success: false, message:statusMessages.NOT_FOUND("Wallet")});
+      return res.status(statusCodes.NOT_FOUND).json({ success: false, message: statusMessages.NOT_FOUND("Wallet") });
     }
 
-    if(order.paymentMethod!=="COD"){
-       wallet.balance += refundAmount;
+    if (order.paymentMethod !== "COD") {
+      wallet.balance += refundAmount;
 
       wallet.transactions.push({
         amount: refundAmount,
@@ -835,12 +894,12 @@ const cancelSingleProduct = async (req, res) => {
 
       console.log(refundAmount, "refunded to wallet");
     }
-     
-    
+
+
     return res.status(statusCodes.OK).json({ success: true, message: "Product order cancelled" });
   } catch (error) {
     console.log("error is ", error);
-    return res.status(statusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: statusMessages.SERVER_ERROR});
+    return res.status(statusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: statusMessages.SERVER_ERROR });
   }
 };
 
@@ -870,7 +929,7 @@ const returnProduct = async (req, res) => {
     if (!order) {
       console.log("Order not found");
 
-      return res.status(statusCodes.NOT_FOUND).json({ success: false, message:statusMessages.NOT_FOUND("Order")});
+      return res.status(statusCodes.NOT_FOUND).json({ success: false, message: statusMessages.NOT_FOUND("Order") });
     }
     if (order.status !== "Delivered") {
       console.log("the order is not delvered");
@@ -904,7 +963,7 @@ const returnProduct = async (req, res) => {
     // saving reason in order
     order.returnRequests = order.returnRequests || [];
     order.returnRequests.push({
-      variantId:variantId,
+      variantId: variantId,
       productId: variant.productId,
       reason: reason,
       status: "pending",
@@ -921,7 +980,7 @@ const returnProduct = async (req, res) => {
     });
   } catch (error) {
     console.log("error is ", error);
-    return res.status(statusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message:statusMessages.SERVER_ERROR });
+    return res.status(statusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: statusMessages.SERVER_ERROR });
   }
 };
 

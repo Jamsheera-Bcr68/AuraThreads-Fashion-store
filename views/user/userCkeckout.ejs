@@ -535,8 +535,17 @@
                 window.location.href = `/user/order-success?orderId=${data.orderId}`;
               });
 
-            }
-            else if (data && data.success && data.razorpayOrderId) {
+            }else if(data.paymentMethod == 'wallet'){
+              Swal.fire({
+                title: "Order Placed!",
+                text: data.message,
+                icon: "success",
+                confirmButtonText: "View Order Details",
+              }).then(() => {
+                window.location.href = `/user/order-success?orderId=${data.orderId}`;
+              });
+              
+            }else if (data && data.success && data.razorpayOrderId) {
               console.log(('data', data));
 
               const options = {

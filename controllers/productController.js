@@ -85,7 +85,11 @@ const getProducts = async (req, res) => {
     // ]);
 
     const products = await Variant.aggregate([
-      
+      {
+    $match: {
+      isDeleted: false // <--- only keep active variants
+    }
+  },
       {
         $sort: { createdAt: -1 } 
       },
@@ -98,10 +102,11 @@ const getProducts = async (req, res) => {
           stock: { $first: "$stock" },
           images: { $first: "$images" },
           productId: { $first: "$productId" },
-          createdAt: { $first: "$createdAt" }
+          createdAt: { $first: "$createdAt" },
+           
         }
       },
-
+     
       // Lookup product info
       {
         $lookup: {
